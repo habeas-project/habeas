@@ -17,4 +17,6 @@ What we need right now:
   - Tagalog
   - Arabic
 
-This project is still in the requirements gathering phase. Updates to follow. Please contact me if you are interested in being involved: habeas-project(at)proton.me
+This project is still in the requirements gathering phase. Updates to follow. 
+
+Please contact me if you are interested in being involved: habeas-project(at)proton.me
