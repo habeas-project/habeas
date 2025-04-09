@@ -8,7 +8,7 @@ The recent 5-4 SCOTUS decision allows the administration to continue to deport p
 Per Justice Sotoymayor:
 > “[D]etainees scattered across the country must each obtain counsel and file habeas petitions on their own accord, all without knowing whether they will remain in detention where they were arrested or be secretly transferred to an alternative location." 
 
-The goal if this project is to make it easier for people to meet that burden by rapidly pairing detained individuals with legal representatives who are able to file those petitions on their behalf and in the appropriate jurisdictions.
+The goal of this project is to make it easier for people to meet that burden by rapidly pairing detained individuals with legal representatives who are able to file those petitions on their behalf and in the appropriate jurisdictions.
 
 ## What we need right now:
 - Immigration Lawyers
