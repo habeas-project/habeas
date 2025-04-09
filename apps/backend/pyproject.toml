@@ -1,0 +1,111 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "habeas-backend"
+version = "0.1.0"
+description = "FastAPI backend for the Habeas application"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+dependencies = [
+    "fastapi==0.95.1",
+    "uvicorn==0.22.0",
+    "sqlalchemy==2.0.12",
+    "pydantic==1.10.7",
+    "psycopg2-binary==2.9.6",
+    "alembic==1.10.4",
+    "python-dotenv==1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==7.3.1",
+    "httpx==0.24.0",
+    "ruff==0.0.261",
+    "mypy==1.2.0",
+]
+
+[tool.ruff]
+select = ["E", "F", "I"]
+line-length = 120
+target-version = "py312"
+fix = true
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.ruff.lint]
+select = ["E", "F", "B", "I", "W", "I001", "TID"]
+ignore = [
+    "B008",  # Do not perform function call in argument defaults (needed for FastAPI Depends)
+    "N805",  # First argument of a method should be named 'self' (needed for Pydantic validators)
+    "A003",  # Class attribute shadowing a Python builtin (needed for SQLAlchemy models)
+    "F811",  # Redefinition of unused name (needed for re-exports in __init__.py files)
+    "B904",  # Within an except clause, raise exceptions with raise ... from err
+    "E501",  # Line too long
+]
+
+# Allow autofix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+unfixable = []
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401", "F403", "F405"]
+"tests/**/*.py" = ["D"]
+
+# Ban TestClient imports in test files to enforce AsyncClient usage
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"fastapi.testclient.TestClient" = {msg = "Use AsyncClient from httpx instead of TestClient for testing FastAPI applications"}
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+known-third-party = ["fastapi", "pydantic", "sqlalchemy", "starlette"]
+lines-between-types = 1
+[tool.ruff.lint.flake8-quotes]
+docstring-quotes = "double"
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"] 

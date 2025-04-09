@@ -25,6 +25,7 @@ logs/
 *~ # Editor backup files
 *.swp # Vim swap files
 *.swo # Vim swap files
+temp/
 
 # Development Tools & Settings
 # ============================
