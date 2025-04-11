@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
 from typing import List
+
+from fastapi import APIRouter, HTTPException
 
 # Import schemas
 from app.schemas.example_schema import Example, ExampleCreate
@@ -15,15 +16,17 @@ fake_examples_db = [
     {"id": 2, "name": "Example 2", "description": "Description for example 2"},
 ]
 
+
 @router.get("/", response_model=List[Example])
-async def get_examples():
+def get_examples():
     """
     Retrieve all examples.
     """
     return fake_examples_db
 
+
 @router.get("/{example_id}", response_model=Example)
-async def get_example(example_id: int):
+def get_example(example_id: int):
     """
     Retrieve a specific example by ID.
     """
@@ -32,15 +35,13 @@ async def get_example(example_id: int):
             return example
     raise HTTPException(status_code=404, detail="Example not found")
 
+
 @router.post("/", response_model=Example)
-async def create_example(example: ExampleCreate):
+def create_example(example: ExampleCreate):
     """
     Create a new example.
     """
     # This is just a stub - in a real application, you would save to a database
-    new_example = {
-        "id": len(fake_examples_db) + 1,
-        **example.dict()
-    }
+    new_example = {"id": len(fake_examples_db) + 1, **example.dict()}
     fake_examples_db.append(new_example)
-    return new_example 
+    return new_example

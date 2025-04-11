@@ -1,5 +1,7 @@
-from fastapi.testclient import TestClient
 import pytest
+
+from fastapi.testclient import TestClient
+
 from app.main import app
 
 # Create test client
@@ -27,7 +29,7 @@ def test_read_example():
     # First, get all examples to find a valid ID
     examples_response = client.get("/examples/")
     examples = examples_response.json()
-    
+
     if examples:
         # Use the first example's ID
         example_id = examples[0]["id"]
@@ -44,11 +46,11 @@ def test_create_example():
         "name": "Test Example",
         "description": "Created during testing"
     }
-    
+
     response = client.post("/examples/", json=new_example)
     assert response.status_code == 200
-    
+
     created = response.json()
     assert created["name"] == new_example["name"]
     assert created["description"] == new_example["description"]
-    assert "id" in created 
+    assert "id" in created

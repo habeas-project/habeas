@@ -1,5 +1,7 @@
-from pydantic import BaseModel
 from typing import Optional
+
+from pydantic import BaseModel
+
 
 class ExampleBase(BaseModel):
     """Base schema for Example data"""
@@ -15,4 +17,4 @@ class Example(ExampleBase):
     id: int
 
     class Config:
-        orm_mode = True 
+        orm_mode = True
