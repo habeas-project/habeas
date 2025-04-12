@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text  # Import the text function
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
+import logging
 
 # Import database session dependency
 from app.database import get_db
@@ -15,6 +16,9 @@ app = FastAPI(
     description="API for the Habeas application - connecting detained individuals with legal representatives",
     version="0.1.0",
 )
+
+# Configure logging
+logging.basicConfig(level=logging.ERROR)
 
 # Configure CORS
 app.add_middleware(
@@ -40,12 +44,14 @@ def health_check(response: Response, db: Session = Depends(get_db)):
         db.execute(text("SELECT 1"))  # Use text() for raw SQL
         return {"status": "ok"}
     except SQLAlchemyError as e:
+        logging.error(f"Database connection failed: {e}")
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
-        return {"status": "error", "detail": f"Database connection failed: {e}"}
+        return {"status": "error", "detail": "Database connection failed"}
     except Exception as e:
         # Catch any other unexpected errors during the health check
+        logging.error(f"An unexpected error occurred: {e}")
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-        return {"status": "error", "detail": f"An unexpected error occurred: {e}"}
+        return {"status": "error", "detail": "An unexpected error occurred"}
 
 
 # Register routers
