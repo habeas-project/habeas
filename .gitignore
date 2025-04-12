@@ -193,6 +193,7 @@ venv.bak/
 *.p12
 *.pfx
 *.secret
+.secrets
 credentials.*
 secrets.*
 
