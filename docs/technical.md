@@ -93,6 +93,155 @@ The following Python packages are installed via `uv sync`:
 - typing-extensions==4.13.1
 - uvicorn==0.22.0
 
+## API Development Patterns
+
+### Core Principles
+- Use synchronous endpoints for simplicity and testing consistency
+- Use `TestClient` for testing (not `AsyncClient`)
+- Keep CRUD operations within router files for straightforward implementation
+- Focus on maintainability over performance optimization
+
+### Directory Structure
+
+The backend follows a clear directory structure for organizing code:
+
+```
+apps/backend/app/
+├── routers/             # API route handlers with CRUD operations
+├── models/              # SQLAlchemy models
+├── schemas/             # Pydantic schemas
+└── services/            # Business logic
+```
+
+> **Note on CRUD Operation Location:** All database interaction logic (Create, Read, Update, Delete) is intentionally handled directly within the API route handlers located in `app/routers/`. This approach simplifies the structure for synchronous calls and keeps related logic colocated. There is not a separate `app/crud/` directory for these operations in the current architecture.
+
+### Router Implementation Pattern
+
+Each router follows this structure:
+
+```python
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+from app.models import Model
+from app.schemas import ModelCreate, ModelUpdate, ModelResponse
+
+router = APIRouter(
+    prefix="/models",
+    tags=["models"],
+    responses={404: {"description": "Not found"}},
+)
+
+@router.post("/", response_model=ModelResponse, status_code=status.HTTP_201_CREATED)
+def create_model(model: ModelCreate, db: Session = Depends(get_db)):
+    """Create a new model record"""
+    db_model = Model(**model.dict())
+    db.add(db_model)
+    db.commit()
+    db.refresh(db_model)
+    return db_model
+
+@router.get("/", response_model=List[ModelResponse])
+def read_models(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    """Retrieve models with pagination"""
+    models = db.query(Model).offset(skip).limit(limit).all()
+    return models
+
+@router.get("/{model_id}", response_model=ModelResponse)
+def read_model(model_id: int, db: Session = Depends(get_db)):
+    """Retrieve a specific model by ID"""
+    db_model = db.query(Model).filter(Model.id == model_id).first()
+    if db_model is None:
+        raise HTTPException(status_code=404, detail="Model not found")
+    return db_model
+
+@router.patch("/{model_id}", response_model=ModelResponse)
+def update_model(model_id: int, model: ModelUpdate, db: Session = Depends(get_db)):
+    """Update a model's information"""
+    db_model = db.query(Model).filter(Model.id == model_id).first()
+    if db_model is None:
+        raise HTTPException(status_code=404, detail="Model not found")
+
+    # Update only provided fields
+    update_data = model.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_model, key, value)
+
+    db.commit()
+    db.refresh(db_model)
+    return db_model
+
+@router.delete("/{model_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_model(model_id: int, db: Session = Depends(get_db)):
+    """Delete a model"""
+    db_model = db.query(Model).filter(Model.id == model_id).first()
+    if db_model is None:
+        raise HTTPException(status_code=404, detail="Model not found")
+
+    db.delete(db_model)
+    db.commit()
+    return None
+```
+### Schema Organization
+
+Pydantic schemas follow a consistent pattern:
+
+1. **Base Schema**: Contains common fields and validation rules
+2. **Create Schema**: Inherits from base, adds required fields for creation
+3. **Update Schema**: Inherits from base, makes all fields optional
+4. **Response Schema**: Inherits from base, adds read-only fields
+
+Example:
+```python
+class ModelBase(BaseModel):
+    # Common fields and validation
+
+class ModelCreate(ModelBase):
+    # Additional required fields
+
+class ModelUpdate(ModelBase):
+    # All fields optional
+
+class ModelResponse(ModelBase):
+    # Read-only fields (id, timestamps)
+```
+
+### Testing Strategy
+
+We use FastAPI's `TestClient` for testing, which requires synchronous endpoints:
+
+```python
+from fastapi.testclient import TestClient
+
+def test_create_model(client: TestClient):
+    response = client.post("/models/", json={"name": "Test Model"})
+    assert response.status_code == 201
+    data = response.json()
+    assert data["name"] == "Test Model"
+```
+
+### Common Issues
+
+#### Async/await Implementation
+- **Problem**: Mixing async and sync patterns
+- **Solution**: Stick to synchronous implementation for consistency with testing
+- **Why**: Simplifies testing and maintenance without significant performance impact
+
+#### Database Sessions
+- **Problem**: Incorrect session handling
+- **Solution**: Use `Session = Depends(get_db)` consistently
+- **Why**: Ensures proper session lifecycle management
+
+#### Response Models
+- **Problem**: Inconsistent response models
+- **Solution**: Always specify response_model in route decorators
+- **Why**: Ensures consistent API responses and documentation
+
 ## Common Issues
 
 ### pg_config executable not found

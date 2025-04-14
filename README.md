@@ -32,6 +32,6 @@ When someone is in imminent threat of detention, they or their friends and famil
   - Tagalog
   - Arabic
 
-This project is in early phases. Updates will follow. There's an amazing team of engineers and lawyers working to build this. Please contact us if you are interested in being involved: 
+This project is still in the requirements gathering phase. Updates will follow. There's an amazing team of engineers and lawyers working to build this. Please contact me if you are interested in being involved: 
 
-habeas-project(at)proton(dot)me
+habeas-project(at)proton.me

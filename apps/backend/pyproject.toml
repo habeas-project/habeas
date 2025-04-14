@@ -10,25 +10,25 @@ readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "MIT" }
 dependencies = [
-    "fastapi==0.95.1",
-    "uvicorn==0.22.0",
-    "sqlalchemy==2.0.12",
-    "pydantic==1.10.16",
-    "psycopg2-binary==2.9.6",
-    "alembic==1.10.4",
-    "python-dotenv==1.0.0",
+    "fastapi>=0.95.1",
+    "uvicorn>=0.22.0",
+    "sqlalchemy>=2.0.12",
+    "pydantic>=1.10.16",
+    "pydantic-extra-types>=2.0.0",
+    "psycopg2-binary>=2.9.6",
+    "alembic>=1.10.4",
+    "python-dotenv>=1.0.0",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest==7.3.1",
-    "httpx==0.24.0",
-    "ruff==0.0.261",
-    "mypy==1.2.0",
+    "pytest>=7.3.1",
+    "httpx>=0.24.0",
+    "ruff>=0.0.261",
+    "mypy>=1.2.0",
 ]
 
 [tool.ruff]
-select = ["E", "F", "I"]
 line-length = 120
 target-version = "py312"
 fix = true
@@ -86,10 +86,6 @@ exclude = [
 "__init__.py" = ["F401", "F403", "F405"]
 "tests/**/*.py" = ["D"]
 
-# Ban TestClient imports in test files to enforce AsyncClient usage
-[tool.ruff.lint.flake8-tidy-imports.banned-api]
-"fastapi.testclient.TestClient" = {msg = "Use AsyncClient from httpx instead of TestClient for testing FastAPI applications"}
-
 [tool.ruff.lint.mccabe]
 max-complexity = 10
 
@@ -99,6 +95,10 @@ known-third-party = ["fastapi", "pydantic", "sqlalchemy", "starlette"]
 lines-between-types = 1
 [tool.ruff.lint.flake8-quotes]
 docstring-quotes = "double"
+
+# Configure to prefer TestClient over AsyncClient
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"httpx.AsyncClient" = {msg = "Use TestClient from fastapi.testclient instead of AsyncClient for testing FastAPI applications"}
 
 [tool.mypy]
 python_version = "3.12"

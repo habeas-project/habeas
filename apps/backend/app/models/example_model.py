@@ -9,4 +9,4 @@ class Example(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
-    description = Column(Text, nullable=True) 
+    description = Column(Text, nullable=True)
