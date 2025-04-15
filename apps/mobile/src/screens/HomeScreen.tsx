@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
 import api from '../api/client';
 
 // Define the Example type based on our API schema
@@ -9,7 +9,7 @@ type Example = {
     description?: string;
 };
 
-export default function HomeScreen() {
+export default function HomeScreen({ navigation }: any) {
     const [examples, setExamples] = useState<Example[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -38,6 +38,13 @@ export default function HomeScreen() {
             <Text style={styles.description}>
                 Connecting detained individuals with legal representatives
             </Text>
+
+            <TouchableOpacity 
+                style={styles.signupButton}
+                onPress={() => navigation.navigate('AttorneySignup')}
+            >
+                <Text style={styles.signupButtonText}>Register as an Attorney</Text>
+            </TouchableOpacity>
 
             {loading ? (
                 <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
@@ -83,7 +90,19 @@ const styles = StyleSheet.create({
         fontSize: 16,
         textAlign: 'center',
         color: '#555',
+        marginBottom: 20,
+    },
+    signupButton: {
+        backgroundColor: '#4a90e2',
+        padding: 15,
+        borderRadius: 5,
+        alignItems: 'center',
         marginBottom: 30,
+    },
+    signupButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
     },
     loader: {
         marginTop: 20,

@@ -30,6 +30,18 @@ const api = {
         return response.data;
     },
 
+        // Attorney registration
+    registerAttorney: async (data: { 
+        name: string; 
+        phoneNumber: string;
+        email: string;
+        zipCode: string;
+        jurisdiction: string;
+    }) => {
+        const response = await apiClient.post('/attorneys/register', data);
+        return response.data;
+    },
+
     // Add more API functions as needed
 };
 
