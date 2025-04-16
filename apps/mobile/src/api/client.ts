@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { Configuration, DefaultApi } from './generated';
 
 // Base URL for the API
 // In a real app, you would use environment variables or config based on the build environment
@@ -12,9 +13,18 @@ const apiClient = axios.create({
     },
 });
 
-// Example API functions
+// Initialize the generated API client
+const configuration = new Configuration({
+    basePath: API_URL,
+});
+const generatedApi = new DefaultApi(configuration);
+
+// API functions combining manual and generated clients
 const api = {
-    // Examples
+    // Generated API client
+    api: generatedApi,
+    
+    // Legacy API functions
     getExamples: async () => {
         const response = await apiClient.get('/examples');
         return response.data;
@@ -30,7 +40,7 @@ const api = {
         return response.data;
     },
 
-        // Attorney registration
+    // Attorney registration
     registerAttorney: async (data: { 
         name: string; 
         phoneNumber: string;
@@ -41,8 +51,6 @@ const api = {
         const response = await apiClient.post('/attorneys/register', data);
         return response.data;
     },
-
-    // Add more API functions as needed
 };
 
-export default api; 
+export default api;
