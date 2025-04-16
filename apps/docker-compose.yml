@@ -7,6 +7,10 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/habeas
+    volumes:
+      - ./backend/app:/app/app
+      - ./backend/migrations:/app/migrations
+
     depends_on:
       - db
 
