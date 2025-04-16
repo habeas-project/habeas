@@ -1,14 +1,44 @@
 # Habeas - Technical Documentation
 
+<!-- TOC -->
+- [Development Requirements](#development-requirements)
+  - [System Dependencies](#system-dependencies)
+    - [PostgreSQL and Development Package](#postgresql-and-development-package)
+    - [Yarn Package Manager](#yarn-package-manager)
+  - [Python Environment Setup](#python-environment-setup)
+    - [Python Command Note](#python-command-note)
+    - [Virtual Environment Activation](#virtual-environment-activation)
+  - [Python Dependencies](#python-dependencies)
+- [API Development Patterns](#api-development-patterns)
+  - [Core Principles](#core-principles)
+  - [Directory Structure](#directory-structure)
+  - [Router Implementation Pattern](#router-implementation-pattern)
+  - [Schema Organization](#schema-organization)
+  - [Testing Strategy](#testing-strategy)
+- [Database Migrations](#database-migrations)
+  - [Overview](#overview)
+  - [Migration Structure](#migration-structure)
+  - [Running Migrations](#running-migrations)
+- [Common Troubleshooting](#common-troubleshooting)
+  - [pg_config executable not found](#pgconfig-executable-not-found)
+  - [Python module not found](#python-module-not-found)
+- [Development Tools](#development-tools)
+  - [Pre-commit Hooks](#pre-commit-hooks)
+    - [Setup](#setup)
+    - [Configured Hooks](#configured-hooks)
+    - [Configuration Files](#configuration-files)
+    - [Troubleshooting](#troubleshooting)
+<!-- /TOC -->
+
 ## Development Requirements
 
 ### System Dependencies
 
-The following system-level dependencies are required for development:
+System-level dependencies required for development.
 
 #### PostgreSQL and Development Package
 
-The PostgreSQL development package is required for building the `psycopg2-binary` Python package during dependency installation.
+Required for building the `psycopg2-binary` Python package.
 
 **Ubuntu/Debian:**
 ```bash
@@ -23,18 +53,14 @@ brew install postgresql
 
 #### Yarn Package Manager
 
-Yarn is required for JavaScript dependency management and running project scripts.
+Required for JavaScript dependency management and running project scripts via `package.json`. See official Yarn installation guides if needed.
 
-**Ubuntu/Debian:**
+**Ubuntu/Debian Example (Repository Method):**
 ```bash
-# Option 1: Add the official Yarn repository
 curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
 echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
 sudo apt update
 sudo apt install yarn
-
-# Option 2: Install via npm 
-sudo npm install -g yarn
 ```
 
 **macOS (with Homebrew):**
@@ -44,251 +70,167 @@ brew install yarn
 
 ### Python Environment Setup
 
-1. Make sure you have Python 3.12+ installed
-2. Install uv for Python package management:
-   ```bash
-   pip install uv
-   ```
-3. Install system dependencies (including PostgreSQL development files)
-4. Run the setup commands from the README.md
+1.  Ensure Python 3.12+ is installed.
+2.  Install [uv](https://github.com/astral-sh/uv) for Python package management: `pip install uv`.
+3.  Install system dependencies (see above).
+4.  Run `yarn backend:install-dev` from the project root to set up the virtual environment and install dependencies using `uv sync` based on `apps/backend/pyproject.toml`.
 
-#### Python Command
+#### Python Command Note
 
-On many systems, `python` refers to Python 2.x, while `python3` refers to Python 3.x. The scripts in package.json should use the appropriate command for your system. If you encounter a "python: not found" error, update the scripts to use `python3` instead.
+Scripts in `package.json` use `python3`. If you encounter "python: not found" or similar errors, ensure `python3` points to your Python 3.12+ installation or adjust the scripts accordingly.
 
 #### Virtual Environment Activation
 
-The Python dependencies are installed in a virtual environment located in the `apps/backend/.venv` directory. If you encounter module import errors, you may need to activate the virtual environment before running Python commands:
+Python dependencies are installed via `uv` into `.venv` within `apps/backend/`. If running Python commands directly (outside of `yarn` scripts), activate the virtual environment first:
 
 ```bash
 # From the apps/backend directory
 source .venv/bin/activate
 ```
 
-Alternatively, update the package.json scripts to activate the virtual environment before running Python commands:
-
-```json
-"dev:backend": "cd apps/backend && source .venv/bin/activate && python3 -m uvicorn app.main:app --reload"
-```
-
 ### Python Dependencies
 
-The following Python packages are installed via `uv sync`:
+Backend Python dependencies are managed using `uv` and defined in `apps/backend/pyproject.toml`. This includes main dependencies under `[project.dependencies]` and development dependencies under `[project.optional-dependencies.dev]`.
 
-- alembic==1.10.4
-- anyio==4.9.0
-- click==8.1.8
-- fastapi==0.95.1
-- greenlet==3.1.1
-- h11==0.14.0
-- idna==3.10
-- mako==1.3.9
-- markupsafe==3.0.2
-- psycopg2-binary==2.9.6
-- pydantic==1.10.7
-- python-dotenv==1.0.0
-- sniffio==1.3.1
-- sqlalchemy==2.0.12
-- starlette==0.26.1
-- typing-extensions==4.13.1
-- uvicorn==0.22.0
+Run `yarn backend:sync` from the project root to install or update dependencies after changes to `pyproject.toml`.
 
 ## API Development Patterns
 
 ### Core Principles
-- Use synchronous endpoints for simplicity and testing consistency
-- Use `TestClient` for testing (not `AsyncClient`)
-- Keep CRUD operations within router files for straightforward implementation
-- Focus on maintainability over performance optimization
+
+-   Use synchronous FastAPI endpoints for simplicity and testing consistency.
+-   Use FastAPI's synchronous `TestClient` for testing (configured in `pyproject.toml` via Ruff to disallow `httpx.AsyncClient` in tests).
+-   Keep database interaction logic (CRUD) directly within router files for straightforward implementation and colocation.
+-   Prioritize maintainability and clarity.
 
 ### Directory Structure
 
-The backend follows a clear directory structure for organizing code:
+The backend code is organized within `apps/backend/app/`:
 
 ```
-apps/backend/app/
-├── routers/             # API route handlers with CRUD operations
+app/
+├── routers/             # API route handlers with CRUD logic
 ├── models/              # SQLAlchemy models
-├── schemas/             # Pydantic schemas
-└── services/            # Business logic
+├── schemas/             # Pydantic schemas for request/response validation
+└── services/            # Business logic distinct from CRUD operations
 ```
 
-> **Note on CRUD Operation Location:** All database interaction logic (Create, Read, Update, Delete) is intentionally handled directly within the API route handlers located in `app/routers/`. This approach simplifies the structure for synchronous calls and keeps related logic colocated. There is not a separate `app/crud/` directory for these operations in the current architecture.
+> **Note on CRUD Location:** Database interaction logic (Create, Read, Update, Delete) resides directly within the API route handlers in `app/routers/`. There is no separate `app/crud/` directory.
 
 ### Router Implementation Pattern
 
-Each router follows this structure:
+Routers define API endpoints, handle request validation using Pydantic schemas, interact with the database via SQLAlchemy sessions (`Depends(get_db)`), and return responses.
 
-```python
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.orm import Session
+Key elements include:
+-   `APIRouter` instance with prefix and tags.
+-   Standard HTTP methods (`@router.post`, `@router.get`, etc.).
+-   Dependency injection for database sessions (`db: Session = Depends(get_db)`).
+-   Pydantic models for request bodies (`model: ModelCreate`) and response models (`response_model=ModelResponse`).
+-   Standard CRUD operations performed directly using the `db` session.
+-   HTTPExceptions for error handling (e.g., 404 Not Found).
 
-from app.database import get_db
-from app.models import Model
-from app.schemas import ModelCreate, ModelUpdate, ModelResponse
+Refer to files within [`apps/backend/app/routers/`](../../apps/backend/app/routers/) for concrete examples.
 
-router = APIRouter(
-    prefix="/models",
-    tags=["models"],
-    responses={404: {"description": "Not found"}},
-)
-
-@router.post("/", response_model=ModelResponse, status_code=status.HTTP_201_CREATED)
-def create_model(model: ModelCreate, db: Session = Depends(get_db)):
-    """Create a new model record"""
-    db_model = Model(**model.dict())
-    db.add(db_model)
-    db.commit()
-    db.refresh(db_model)
-    return db_model
-
-@router.get("/", response_model=List[ModelResponse])
-def read_models(
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=100),
-    db: Session = Depends(get_db),
-):
-    """Retrieve models with pagination"""
-    models = db.query(Model).offset(skip).limit(limit).all()
-    return models
-
-@router.get("/{model_id}", response_model=ModelResponse)
-def read_model(model_id: int, db: Session = Depends(get_db)):
-    """Retrieve a specific model by ID"""
-    db_model = db.query(Model).filter(Model.id == model_id).first()
-    if db_model is None:
-        raise HTTPException(status_code=404, detail="Model not found")
-    return db_model
-
-@router.patch("/{model_id}", response_model=ModelResponse)
-def update_model(model_id: int, model: ModelUpdate, db: Session = Depends(get_db)):
-    """Update a model's information"""
-    db_model = db.query(Model).filter(Model.id == model_id).first()
-    if db_model is None:
-        raise HTTPException(status_code=404, detail="Model not found")
-
-    # Update only provided fields
-    update_data = model.dict(exclude_unset=True)
-    for key, value in update_data.items():
-        setattr(db_model, key, value)
-
-    db.commit()
-    db.refresh(db_model)
-    return db_model
-
-@router.delete("/{model_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_model(model_id: int, db: Session = Depends(get_db)):
-    """Delete a model"""
-    db_model = db.query(Model).filter(Model.id == model_id).first()
-    if db_model is None:
-        raise HTTPException(status_code=404, detail="Model not found")
-
-    db.delete(db_model)
-    db.commit()
-    return None
-```
 ### Schema Organization
 
-Pydantic schemas follow a consistent pattern:
+Pydantic schemas, located in [`apps/backend/app/schemas/`](../../apps/backend/app/schemas/), define the data structures for API requests and responses. They follow a consistent pattern:
 
-1. **Base Schema**: Contains common fields and validation rules
-2. **Create Schema**: Inherits from base, adds required fields for creation
-3. **Update Schema**: Inherits from base, makes all fields optional
-4. **Response Schema**: Inherits from base, adds read-only fields
+1.  **Base Schema**: Contains common fields and validation logic (`ModelBase`).
+2.  **Create Schema**: Inherits from base, adding fields required only for creation (`ModelCreate`).
+3.  **Update Schema**: Inherits from base, making fields optional for partial updates (`ModelUpdate`).
+4.  **Response Schema**: Inherits from base, adding read-only fields like IDs or timestamps (`ModelResponse`).
 
-Example:
-```python
-class ModelBase(BaseModel):
-    # Common fields and validation
-
-class ModelCreate(ModelBase):
-    # Additional required fields
-
-class ModelUpdate(ModelBase):
-    # All fields optional
-
-class ModelResponse(ModelBase):
-    # Read-only fields (id, timestamps)
-```
+This structure promotes code reuse and clear data contracts.
 
 ### Testing Strategy
 
-We use FastAPI's `TestClient` for testing, which requires synchronous endpoints:
+API tests are located in [`apps/backend/tests/`](../../apps/backend/tests/). We use `pytest` and FastAPI's `TestClient` for synchronous integration testing against the API endpoints.
 
-```python
-from fastapi.testclient import TestClient
-
-def test_create_model(client: TestClient):
-    response = client.post("/models/", json={"name": "Test Model"})
-    assert response.status_code == 201
-    data = response.json()
-    assert data["name"] == "Test Model"
-```
-
-### Common Issues
-
-#### Async/await Implementation
-- **Problem**: Mixing async and sync patterns
-- **Solution**: Stick to synchronous implementation for consistency with testing
-- **Why**: Simplifies testing and maintenance without significant performance impact
-
-#### Database Sessions
-- **Problem**: Incorrect session handling
-- **Solution**: Use `Session = Depends(get_db)` consistently
-- **Why**: Ensures proper session lifecycle management
-
-#### Response Models
-- **Problem**: Inconsistent response models
-- **Solution**: Always specify response_model in route decorators
-- **Why**: Ensures consistent API responses and documentation
+Key practices:
+-   Use the `client: TestClient` fixture provided by FastAPI/Starlette.
+-   Make requests to endpoint paths (e.g., `client.post("/models/", json=...)`).
+-   Assert status codes (`response.status_code`) and response data (`response.json()`).
 
 ## Database Migrations
 
 ### Overview
-Our project uses Alembic for database migrations. Migrations are stored in `apps/backend/migrations/versions/` and follow a sequential naming pattern.
+
+[Alembic](https://alembic.sqlalchemy.org/) manages database schema migrations. Migration scripts are stored in [`apps/backend/migrations/versions/`](../../apps/backend/migrations/versions/).
 
 ### Migration Structure
-- `migrations/versions/`: Contains all migration files
-- `migrations/env.py`: Alembic environment configuration
-- `migrations/script.py.mako`: Template for new migration files
 
-### Migration Files
-1. `initial_schema.py`: Initial database setup including:
-   - Clients table
-   - Emergency contacts table
-   - Courts table
-   - All necessary indexes and constraints
+-   `migrations/versions/`: Contains individual, ordered migration scripts.
+-   `migrations/env.py`: Alembic environment configuration (defines how to connect to the DB and find models).
+-   `migrations/script.py.mako`: Template for generating new migration files.
 
 ### Running Migrations
+
+Use the `alembic` command (typically run from the `apps/backend` directory or via a `yarn` script if configured):
+
 ```bash
-# Upgrade to latest version
+# Apply all migrations up to the latest version
 alembic upgrade head
 
-# Create new migration
-alembic revision --autogenerate -m "description"
+# Generate a new migration file based on model changes
+# Review the generated script carefully before applying!
+alembic revision --autogenerate -m "Brief description of changes"
 
-# Downgrade one version
+# Revert the last applied migration
 alembic downgrade -1
 ```
 
-## Common Issues
+## Common Troubleshooting
 
 ### pg_config executable not found
 
-**Error:**
-```
-error: pg_config executable not found
-```
+**Error:** `error: pg_config executable not found`
 
-**Solution:**
-This error occurs when trying to build psycopg2 without the PostgreSQL development files installed. Install the appropriate package for your system as described in the "PostgreSQL Development Package" section above.
+**Cause:** Missing PostgreSQL development headers needed to build `psycopg2`.
+**Solution:** Install the PostgreSQL development package for your OS (see [System Dependencies](#postgresql-and-development-package) section).
 
 ### Python module not found
 
-**Error:**
-```
-No module named 'uvicorn' (or any other module)
-```
+**Error:** `ModuleNotFoundError: No module named 'fastapi'` (or similar)
 
-**Solution:**
-This usually means you're not running Python from the virtual environment where the packages were installed. Activate the virtual environment before running Python commands or update your scripts to do so automatically (see "Virtual Environment Activation" section). 
+**Cause:** The Python interpreter is running outside the project's virtual environment where dependencies are installed.
+**Solution:** Activate the virtual environment (`source apps/backend/.venv/bin/activate`) before running Python commands directly, or use the configured `yarn` scripts which handle activation.
+
+## Development Tools
+
+### Pre-commit Hooks
+
+This project uses [pre-commit](https://pre-commit.com/) hooks to automate code quality checks before each commit.
+
+#### Setup
+
+1.  Ensure development dependencies are installed: `yarn backend:install-dev` (from project root).
+2.  Install the hooks into your local `.git` configuration:
+    ```bash
+    # Run from the project root or apps/backend directory
+    pre-commit install
+    ```
+
+Hooks will now run automatically on `git commit`. To bypass them (not recommended): `git commit --no-verify`.
+
+#### Configured Hooks
+
+The project uses various hooks for:
+-   Basic checks (whitespace, file endings, large files, merge conflicts, private keys).
+-   Python linting and formatting (`ruff`).
+-   Python type checking (`mypy`).
+-   JavaScript/TypeScript linting (`eslint`).
+-   Security scanning (`gitleaks`, `bandit`).
+
+#### Configuration Files
+
+-   Hook definitions and versions: [`.pre-commit-config.yaml`](../../.pre-commit-config.yaml) (root).
+-   Python tool configurations (Ruff, MyPy, Bandit): [`apps/backend/pyproject.toml`](../../apps/backend/pyproject.toml).
+
+#### Troubleshooting
+
+If hooks fail unexpectedly:
+1.  Ensure all dependencies are installed (`yarn backend:install-dev`).
+2.  Verify the correct Python version/virtual environment is active if running manually.
+3.  Try updating hook repositories: `pre-commit autoupdate`.
+4.  Run hooks manually on all files to isolate issues: `pre-commit run --all-files`.
+Refer to the official pre-commit documentation for more details.
