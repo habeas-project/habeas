@@ -1,21 +1,26 @@
 FROM python:3.12-slim
 
-
 WORKDIR /app
 
+# Install build dependencies
 RUN apt-get update && apt-get install -y \
     gcc libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# Install uv for dependency management
 RUN pip install uv
 
-# Copy only necessary files for dependency installation
 COPY pyproject.toml README.md* alembic.ini ./
 
+# Install dependencies
 RUN uv venv
 RUN uv pip install -e .
 
-# Application source code will be mounted via docker-compose
+# Copy application source code
+COPY ./app ./app
+COPY ./migrations ./migrations
+
+
 
 EXPOSE 8000
 

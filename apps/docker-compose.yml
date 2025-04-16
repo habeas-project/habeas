@@ -8,8 +8,9 @@ services:
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/habeas
     volumes:
-      # Mount specific source code directories needed for runtime/dev
-      - ./backend:/app
+      - ./backend/app:/app/app
+      - ./backend/migrations:/app/migrations
+
     depends_on:
       - db
 
