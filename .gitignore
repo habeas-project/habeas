@@ -65,10 +65,12 @@ cython_debug/
 # AI stuff
 .cursorrules
 .cursor/rules
+.cursor/*
 .clinerules
 .windsurfrules
 .ai-config
 .ai-config.json
+.llm-context/*
 aiconfig.yaml
 
 # Project Build & Environment

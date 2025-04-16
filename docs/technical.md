@@ -242,6 +242,35 @@ def test_create_model(client: TestClient):
 - **Solution**: Always specify response_model in route decorators
 - **Why**: Ensures consistent API responses and documentation
 
+## Database Migrations
+
+### Overview
+Our project uses Alembic for database migrations. Migrations are stored in `apps/backend/migrations/versions/` and follow a sequential naming pattern.
+
+### Migration Structure
+- `migrations/versions/`: Contains all migration files
+- `migrations/env.py`: Alembic environment configuration
+- `migrations/script.py.mako`: Template for new migration files
+
+### Migration Files
+1. `initial_schema.py`: Initial database setup including:
+   - Clients table
+   - Emergency contacts table
+   - Courts table
+   - All necessary indexes and constraints
+
+### Running Migrations
+```bash
+# Upgrade to latest version
+alembic upgrade head
+
+# Create new migration
+alembic revision --autogenerate -m "description"
+
+# Downgrade one version
+alembic downgrade -1
+```
+
 ## Common Issues
 
 ### pg_config executable not found
