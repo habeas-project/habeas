@@ -1,0 +1,47 @@
+{
+    "root": true,
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+        "@typescript-eslint",
+        "react",
+        "react-native"
+    ],
+    "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:react/recommended",
+        "plugin:react-native/all",
+        "prettier" // Add prettier to avoid conflicts, must be last
+    ],
+    "parserOptions": {
+        "ecmaVersion": 2021,
+        "sourceType": "module",
+        "ecmaFeatures": {
+            "jsx": true
+        }
+    },
+    "settings": {
+        "react": {
+            "version": "detect" // Automatically detect the React version
+        }
+    },
+    "env": {
+        "react-native/react-native": true,
+        "es6": true,
+        "node": true
+    },
+    "rules": {
+        // Add specific rule overrides here if needed
+        "react/react-in-jsx-scope": "off", // Not needed with newer React versions
+        "react/prop-types": "off", // Handled by TypeScript
+        "@typescript-eslint/no-unused-vars": [
+            "warn",
+            {
+                "argsIgnorePattern": "^_"
+            }
+        ],
+        "react-native/no-inline-styles": "warn",
+        "react-native/no-color-literals": "off" // Disable this rule
+        // Add other project-specific rules
+    }
+}
