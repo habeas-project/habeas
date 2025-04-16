@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   backend:
     build:
@@ -9,6 +7,9 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/habeas
+    volumes:
+      # Mount specific source code directories needed for runtime/dev
+      - ./backend:/app
     depends_on:
       - db
 
