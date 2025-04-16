@@ -28,6 +28,9 @@ dev = [
     "httpx>=0.24.0",
     "ruff>=0.0.261",
     "mypy>=1.2.0",
+    "pre-commit>=3.5.0",
+    "bandit[toml]>=1.7.6",
+    "types-requests>=2.31.0",
 ]
 data-import = [
     "pandas>=2.0.0",
@@ -116,4 +119,8 @@ disallow_untyped_defs = true
 disallow_incomplete_defs = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["app"] 
+packages = ["app"]
+
+[tool.bandit]
+exclude_dirs = ["tests", "migrations"]
+skips = ["B101"]
