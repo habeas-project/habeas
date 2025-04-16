@@ -72,53 +72,53 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 20,
     },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginTop: 40,
-        marginBottom: 16,
-        textAlign: 'center',
-    },
     description: {
-        fontSize: 16,
-        textAlign: 'center',
         color: '#555',
+        fontSize: 16,
         marginBottom: 30,
+        textAlign: 'center',
     },
-    loader: {
-        marginTop: 20,
+    emptyMessage: {
+        color: '#666',
+        fontStyle: 'italic',
+        textAlign: 'center',
     },
     error: {
         color: 'red',
-        textAlign: 'center',
         marginTop: 20,
+        textAlign: 'center',
+    },
+    exampleDescription: {
+        color: '#666',
+        fontSize: 14,
+        marginTop: 5,
+    },
+    exampleItem: {
+        backgroundColor: '#f5f5f5',
+        borderRadius: 5,
+        marginBottom: 10,
+        padding: 15,
+    },
+    exampleName: {
+        fontSize: 16,
+        fontWeight: 'bold',
     },
     examplesContainer: {
         flex: 1,
+    },
+    loader: {
+        marginTop: 20,
     },
     sectionTitle: {
         fontSize: 18,
         fontWeight: 'bold',
         marginBottom: 10,
     },
-    exampleItem: {
-        backgroundColor: '#f5f5f5',
-        padding: 15,
-        borderRadius: 5,
-        marginBottom: 10,
-    },
-    exampleName: {
-        fontSize: 16,
+    title: {
+        fontSize: 24,
         fontWeight: 'bold',
-    },
-    exampleDescription: {
-        fontSize: 14,
-        color: '#666',
-        marginTop: 5,
-    },
-    emptyMessage: {
+        marginBottom: 16,
+        marginTop: 40,
         textAlign: 'center',
-        color: '#666',
-        fontStyle: 'italic',
     },
-}); 
+});

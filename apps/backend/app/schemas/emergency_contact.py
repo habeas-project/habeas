@@ -18,13 +18,11 @@ class EmergencyContactBase(BaseModel):
     notes: Optional[str] = Field(None, description="Additional notes about the emergency contact")
 
     @computed_field
-    @property
     def formatted_phone(self) -> str:
         """Returns the phone number in E.164 format"""
         return str(self.phone_number)
 
     @computed_field
-    @property
     def display_name(self) -> str:
         """Returns a display-friendly name with relationship"""
         return f"{self.full_name} ({self.relationship_to_client})"

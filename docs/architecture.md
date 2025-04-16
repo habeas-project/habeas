@@ -94,7 +94,6 @@ The API will handle authentication, data retrieval/storage, and any other server
 
 ### Adding Dependencies
 - **Frontend:** `yarn workspace mobile add <package-name>`
-- **Backend:** 
+- **Backend:**
   - Add dependencies to `apps/backend/pyproject.toml`
   - Run `yarn backend:sync` to update the virtual environment
-
