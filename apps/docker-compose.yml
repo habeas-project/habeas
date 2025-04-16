@@ -25,6 +25,19 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  migration:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: uv run alembic upgrade head
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/habeas
+    volumes:
+      - ./backend/app:/app/app
+      - ./backend/migrations:/app/migrations
+    depends_on:
+      - db
+
 #  mobile:
 #    build:
 #      context: ./mobile
