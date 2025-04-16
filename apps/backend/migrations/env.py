@@ -21,9 +21,9 @@ if config.config_file_name is not None:
 # Import models and database connection from the app
 from app.database import Base  # noqa: E402
 
-# For autogenerate support, we'll set a dummy URL
-# The actual connection will only be used when applying migrations
-config.set_main_option("sqlalchemy.url", "postgresql://postgres:postgres@localhost:5432/habeas")
+# Get the database URL from environment variables
+database_url = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@db:5432/habeas")
+config.set_main_option("sqlalchemy.url", database_url)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
@@ -82,8 +82,4 @@ def run_migrations_online() -> None:
 if context.is_offline_mode():
     run_migrations_offline()
 else:
-    # Use offline mode for generating migrations to avoid database connection
-    if context.command.revision and not context.command.is_up_to_date:
-        run_migrations_offline()
-    else:
-        run_migrations_online()
+    run_migrations_online()
