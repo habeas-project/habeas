@@ -7,17 +7,25 @@ from pydantic import BaseModel, EmailStr, Field, field_validator
 from pydantic_extra_types.phone_numbers import PhoneNumber
 
 # Configure PhoneNumber format globally
-PhoneNumber.phone_format = "E164"  # Use E164 format to avoid "tel:" prefix
-
+PhoneNumber.phone_format = 'E164' #'INTERNATIONAL', 'NATIONAL'
 
 class AttorneyBase(BaseModel):
     """Base schema for Attorney data"""
 
     name: str = Field(min_length=1, max_length=255, examples=["Jane Doe"])
-    phone_number: PhoneNumber = Field(examples=["+15551234567"])
+    phone_number :str  = Field(examples=["+15551234567"])
     email: EmailStr = Field(examples=["jane.doe@example.com"])
     zip_code: str = Field(min_length=5, max_length=10, examples=["12345", "12345-6789"])
     state: str = Field(min_length=2, max_length=2, examples=["CA"])
+    
+    @field_validator("phone_number")
+    @classmethod
+    def validate_phone_number(cls, v: PhoneNumber) -> PhoneNumber:
+        """Validate phone number format: must be in E164 format (+1 followed by 10 digits)"""
+        phone_str = str(v)
+        if not re.match(r"^\+1\d{10}$", phone_str):
+            raise ValueError("Phone number must be in E164 format: +1 followed by 10 digits (e.g., +15551234567)")
+        return v
 
     @field_validator("zip_code")
     @classmethod
@@ -50,6 +58,17 @@ class AttorneyUpdate(BaseModel):
     email: Optional[EmailStr] = None
     zip_code: Optional[str] = Field(None, min_length=5, max_length=10)
     state: Optional[str] = Field(None, min_length=2, max_length=2)
+    
+    # Validator for optional phone number
+    @field_validator("phone_number")
+    @classmethod
+    def validate_optional_phone_number(cls, v: Optional[PhoneNumber]) -> Optional[PhoneNumber]:
+        if v is None:
+            return v
+        phone_str = str(v)
+        if not re.match(r"^\+1\d{10}$", phone_str):
+            raise ValueError("Phone number must be in E164 format: +1 followed by 10 digits (e.g., +15551234567)")
+        return v
 
     # Validator for optional ZIP code
     @field_validator("zip_code")

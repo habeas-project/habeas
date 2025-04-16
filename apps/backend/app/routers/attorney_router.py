@@ -7,6 +7,7 @@ from app.database import get_db
 from app.models import Attorney
 from app.schemas import Attorney as AttorneySchema
 from app.schemas import AttorneyCreate, AttorneyUpdate
+from pydantic_extra_types.phone_numbers import PhoneNumber
 
 router = APIRouter(
     prefix="/attorneys",
