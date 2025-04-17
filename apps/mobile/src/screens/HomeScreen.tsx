@@ -2,35 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
 import api from '../api/client';
 
-// Define the Example type based on our API schema
-type Example = {
-    id: number;
-    name: string;
-    description?: string;
-};
 
 export default function HomeScreen({ navigation }: any) {
-    const [examples, setExamples] = useState<Example[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
 
-    useEffect(() => {
-        const fetchExamples = async () => {
-            try {
-                setLoading(true);
-                const data = await api.getExamples();
-                setExamples(data);
-                setError('');
-            } catch (err) {
-                console.error('Error fetching examples:', err);
-                setError('Failed to fetch examples. The API might not be running.');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchExamples();
-    }, []);
 
     return (
         <View style={styles.container}>
@@ -39,37 +13,13 @@ export default function HomeScreen({ navigation }: any) {
                 Connecting detained individuals with legal representatives
             </Text>
 
-            <TouchableOpacity 
+            <TouchableOpacity
                 style={styles.signupButton}
                 onPress={() => navigation.navigate('AttorneySignup')}
             >
                 <Text style={styles.signupButtonText}>Register as an Attorney</Text>
             </TouchableOpacity>
 
-            {loading ? (
-                <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
-            ) : error ? (
-                <Text style={styles.error}>{error}</Text>
-            ) : (
-                <View style={styles.examplesContainer}>
-                    <Text style={styles.sectionTitle}>Examples from API:</Text>
-                    <FlatList
-                        data={examples}
-                        keyExtractor={(item) => item.id.toString()}
-                        renderItem={({ item }) => (
-                            <View style={styles.exampleItem}>
-                                <Text style={styles.exampleName}>{item.name}</Text>
-                                {item.description && (
-                                    <Text style={styles.exampleDescription}>{item.description}</Text>
-                                )}
-                            </View>
-                        )}
-                        ListEmptyComponent={
-                            <Text style={styles.emptyMessage}>No examples found</Text>
-                        }
-                    />
-                </View>
-            )}
         </View>
     );
 }
