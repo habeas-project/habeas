@@ -12,16 +12,17 @@
         "generate-api": "curl -s http://localhost:8000/openapi.json -o openapi.json && npx @openapitools/openapi-generator-cli generate -i openapi.json -g typescript-axios -o src/api/generated"
     },
     "dependencies": {
+        "@expo/ngrok": "^4.1.0",
+        "@react-navigation/native": "^6.1.6",
+        "@react-navigation/native-stack": "^6.9.12",
+        "axios": "^1.4.0",
         "expo": "~48.0.18",
         "expo-status-bar": "~1.4.4",
-        "@expo/ngrok": "^4.1.0",
         "react": "18.2.0",
         "react-native": "0.71.8",
         "react-native-safe-area-context": "4.5.0",
         "react-native-screens": "~3.20.0",
-        "@react-navigation/native": "^6.1.6",
-        "@react-navigation/native-stack": "^6.9.12",
-        "axios": "^1.4.0"
+        "react-native-url-polyfill": "^2.0.0"
     },
     "devDependencies": {
         "@babel/core": "^7.20.0",
