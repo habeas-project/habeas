@@ -122,4 +122,4 @@ Add the following to your `.vscode/settings.json` file for automatic formatting 
     }
   }
 }
-``` 
+```

@@ -1,17 +1,17 @@
 # Habeas
 
-Habeas aims to be a cross-platform mobile application that allows those who are at risk of detention to contact immigration lawyers who are able to file an emergency petition for Habeas Corpus on their behalf and in the appropriate jurisdiction. 
+Habeas aims to be a cross-platform mobile application that allows those who are at risk of detention to contact immigration lawyers who are able to file an emergency petition for Habeas Corpus on their behalf and in the appropriate jurisdiction.
 
 ## Background
-The recent 5-4 SCOTUS decision allows the administration to continue to deport people under the auspices of the Alien Enemies act of 1798. However, it imposes limits by requiring notice and judicial review through habeas corpus petitions. 
+The recent 5-4 SCOTUS decision allows the administration to continue to deport people under the auspices of the Alien Enemies act of 1798. However, it imposes limits by requiring notice and judicial review through habeas corpus petitions.
 
 Per Justice Sotoymayor:
-> “[D]etainees scattered across the country must each obtain counsel and file habeas petitions on their own accord, all without knowing whether they will remain in detention where they were arrested or be secretly transferred to an alternative location." 
+> “[D]etainees scattered across the country must each obtain counsel and file habeas petitions on their own accord, all without knowing whether they will remain in detention where they were arrested or be secretly transferred to an alternative location."
 
-## Primary Problem: 
+## Primary Problem:
 ICE’s ability to render a detainee shortly following their apprehension to a place like El Salvador and thereby indefinitely deprive the detainee of due process. Due process here means the opportunity to force the government either to prove that the detention is lawful or, if the government can’t do this, to release the detainee.
 
-## Solution: 
+## Solution:
 Devise a system that will allow for a habeas petition to be filed in federal district court on the noncitizen’s behalf within an hour of their apprehension (before ICE can remove the detainee from their home jurisdiction). The filing of the petition in the jurisdiction where the detainee is located triggers the court’s jurisdiction over the matter and prevents ICE from forum-shopping.
 
 ## How it works:
@@ -32,6 +32,13 @@ When someone is in imminent threat of detention, they or their friends and famil
   - Tagalog
   - Arabic
 
-This project is still in the requirements gathering phase. Updates will follow. There's an amazing team of engineers and lawyers working to build this. Please contact me if you are interested in being involved: 
+## Documentation
+
+Project documentation is available in the `docs/` directory:
+- [Architecture](docs/architecture.md) - Application architecture and technology stack
+- [Technical](docs/technical.md) - Technical details, tools, and implementation guidelines
+
+
+This project is still in the development phase. There's an amazing team of engineers and lawyers working to build this. Please contact us if you are interested in being involved:
 
 habeas-project(at)proton.me

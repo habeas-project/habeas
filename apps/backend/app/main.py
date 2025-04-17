@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import Depends, FastAPI, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
@@ -5,7 +7,6 @@ from fastapi.openapi.utils import get_openapi
 from sqlalchemy import text  # Import the text function
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
-import logging
 
 # Import database session dependency
 from app.database import get_db
@@ -142,4 +143,4 @@ app.openapi = custom_openapi
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)  # nosec B104
