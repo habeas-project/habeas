@@ -1,36 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
 import api from '../api/client';
 
-// Define the Example type based on our API schema
-type Example = {
-    id: number;
-    name: string;
-    description?: string;
-};
 
-export default function HomeScreen() {
-    const [examples, setExamples] = useState<Example[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+export default function HomeScreen({ navigation }: any) {
 
-    useEffect(() => {
-        const fetchExamples = async () => {
-            try {
-                setLoading(true);
-                const data = await api.getExamples();
-                setExamples(data);
-                setError('');
-            } catch (err) {
-                console.error('Error fetching examples:', err);
-                setError('Failed to fetch examples. The API might not be running.');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchExamples();
-    }, []);
 
     return (
         <View style={styles.container}>
@@ -39,30 +13,13 @@ export default function HomeScreen() {
                 Connecting detained individuals with legal representatives
             </Text>
 
-            {loading ? (
-                <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
-            ) : error ? (
-                <Text style={styles.error}>{error}</Text>
-            ) : (
-                <View style={styles.examplesContainer}>
-                    <Text style={styles.sectionTitle}>Examples from API:</Text>
-                    <FlatList
-                        data={examples}
-                        keyExtractor={(item) => item.id.toString()}
-                        renderItem={({ item }) => (
-                            <View style={styles.exampleItem}>
-                                <Text style={styles.exampleName}>{item.name}</Text>
-                                {item.description && (
-                                    <Text style={styles.exampleDescription}>{item.description}</Text>
-                                )}
-                            </View>
-                        )}
-                        ListEmptyComponent={
-                            <Text style={styles.emptyMessage}>No examples found</Text>
-                        }
-                    />
-                </View>
-            )}
+            <TouchableOpacity
+                style={styles.signupButton}
+                onPress={() => navigation.navigate('AttorneySignup')}
+            >
+                <Text style={styles.signupButtonText}>Register as an Attorney</Text>
+            </TouchableOpacity>
+
         </View>
     );
 }
@@ -74,14 +31,23 @@ const styles = StyleSheet.create({
     },
     description: {
         color: '#555',
-        fontSize: 16,
+        marginBottom: 20,
+    },
+    signupButton: {
+        backgroundColor: '#4a90e2',
+        padding: 15,
+        borderRadius: 5,
+        alignItems: 'center',
         marginBottom: 30,
         textAlign: 'center',
     },
-    emptyMessage: {
-        color: '#666',
-        fontStyle: 'italic',
-        textAlign: 'center',
+    signupButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    loader: {
+        marginTop: 20,
     },
     error: {
         color: 'red',
