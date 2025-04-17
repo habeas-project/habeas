@@ -4,7 +4,7 @@ import axios from 'axios';
 
 // Create a configuration with the base path
 const configuration = new Configuration({
-  basePath: 'http://localhost:8000', // Replace with your actual API base URL
+  basePath: 'http://localhost:8000', // TODO: Replace with API base URL
 });
 
 // Create an axios instance (optional, you can customize further if needed)
