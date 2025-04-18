@@ -38,12 +38,32 @@ export default function PersonalInfoScreen({ navigation }: any) {
     phone: '',
     relationship: ''
   });
-  
-  const [isSaving, setIsSaving] = useState(false);
 
+  // Load personal info on initial mount
   useEffect(() => {
     loadPersonalInfo();
   }, []);
+  
+  // Save personal info whenever it changes
+  useEffect(() => {
+    const saveData = async () => {
+      try {
+        const jsonValue = JSON.stringify(personalInfo);
+        await AsyncStorage.setItem(STORAGE_KEY, jsonValue);
+      } catch (error) {
+        console.error('Error saving data:', error);
+      }
+    };
+    
+    // Don't save on initial load when the state is empty
+    if (personalInfo.firstName || 
+        personalInfo.lastName || 
+        personalInfo.countryOfBirth || 
+        personalInfo.alienNumber || 
+        personalInfo.emergencyContacts.length > 0) {
+      saveData();
+    }
+  }, [personalInfo]);
 
   const loadPersonalInfo = async () => {
     try {
@@ -54,20 +74,6 @@ export default function PersonalInfoScreen({ navigation }: any) {
     } catch (error) {
       Alert.alert('Error', 'Failed to load personal information');
       console.error(error);
-    }
-  };
-
-  const savePersonalInfo = async () => {
-    try {
-      setIsSaving(true);
-      const jsonValue = JSON.stringify(personalInfo);
-      await AsyncStorage.setItem(STORAGE_KEY, jsonValue);
-      Alert.alert('Success', 'Personal information saved successfully');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to save personal information');
-      console.error(error);
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -109,6 +115,7 @@ export default function PersonalInfoScreen({ navigation }: any) {
         <Text style={styles.title}>Personal Information</Text>
         <Text style={styles.description}>
           This information is stored locally on your device and is not sent to any server.
+          Changes are automatically saved as you type.
         </Text>
 
         <View style={styles.formGroup}>
@@ -223,14 +230,6 @@ export default function PersonalInfoScreen({ navigation }: any) {
             <Text style={styles.buttonText}>Add Contact</Text>
           </TouchableOpacity>
         </View>
-
-        <TouchableOpacity
-          style={styles.saveButton}
-          onPress={savePersonalInfo}
-          disabled={isSaving}
-        >
-          <Text style={styles.buttonText}>{isSaving ? 'Saving...' : 'Save Information'}</Text>
-        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
@@ -313,14 +312,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     alignItems: 'center',
     marginTop: 10,
-  },
-  saveButton: {
-    backgroundColor: '#28a745',
-    padding: 16,
-    borderRadius: 4,
-    alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 30,
+    marginBottom: 20,
   },
   buttonText: {
     color: '#fff',
