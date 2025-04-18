@@ -27,7 +27,7 @@ class EmergencyContactBase(BaseModel):
     @property
     def display_name(self) -> str:
         """Returns a display-friendly name with relationship"""
-        return f"{self.full_name} ({self.relationship_to_client})"
+        return f"{self.full_name} ({self.relationship})"
 
 
 class EmergencyContactCreate(EmergencyContactBase):
@@ -45,7 +45,7 @@ class EmergencyContactUpdate(EmergencyContactBase):
     """
 
     full_name: Optional[str] = None
-    relationship_to_client: Optional[str] = None
+    relationship: Optional[str] = None
     phone_number: Optional[PhoneNumber] = None
     email: Optional[EmailStr] = None
     address: Optional[str] = None

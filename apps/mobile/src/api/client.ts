@@ -80,7 +80,7 @@ const api = {
             client_id: clientId,
             full_name: contact.name,
             phone_number: contact.phone,
-            relationship_to_client: contact.relationship || '',
+            relationship: contact.relationship || '',
           };
 
           return emergencyContactsApi.createEmergencyContactEmergencyContactsPost(contactData);
