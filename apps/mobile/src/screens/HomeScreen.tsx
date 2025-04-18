@@ -7,12 +7,12 @@ import { EmergencyHandler } from '../utils/emergencyHandler';
 
 export default function HomeScreen({ navigation }: any) {
     const [emergencyActive, setEmergencyActive] = useState(false);
-    
+
     // Check if emergency is already active on component mount
     useEffect(() => {
         checkEmergencyStatus();
     }, []);
-    
+
     // Function to check current emergency status
     const checkEmergencyStatus = async () => {
         try {
@@ -22,7 +22,7 @@ export default function HomeScreen({ navigation }: any) {
             console.error('Failed to check emergency status:', error);
         }
     };
-    
+
     // Handle emergency activation
     const handleEmergencyActivated = async () => {
         try {
@@ -32,7 +32,7 @@ export default function HomeScreen({ navigation }: any) {
             console.error('Failed to handle emergency activation:', error);
         }
     };
-    
+
     // Handle emergency deactivation
     const handleDeactivateEmergency = async () => {
         try {
@@ -52,7 +52,7 @@ export default function HomeScreen({ navigation }: any) {
                     Connecting detained individuals with legal representatives
                 </Text>
             </View>
-            
+
             {/* Emergency Section - Fixed Height */}
             <View style={styles.emergencySection}>
                 {/* Emergency Status Banner - Always reserved space, only content changes */}
@@ -78,7 +78,7 @@ export default function HomeScreen({ navigation }: any) {
                         </Text>
                     )}
                 </View>
-                
+
                 {/* Emergency Slider */}
                 <EmergencySlider
                     onEmergencyActivated={handleEmergencyActivated}
@@ -89,7 +89,7 @@ export default function HomeScreen({ navigation }: any) {
             {/* Navigation Buttons Section */}
             <View style={styles.buttonsSection}>
                 <View style={styles.separator} />
-                
+
                 <TouchableOpacity
                     style={styles.signupButton}
                     onPress={() => navigation.navigate('AttorneySignup')}
@@ -132,8 +132,6 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     description: {
-        fontSize: 16,
-        textAlign: 'center',
         color: '#555',
     },
     // Emergency banner styles
@@ -187,6 +185,7 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         alignItems: 'center',
         marginBottom: 30,
+        textAlign: 'center',
     },
     signupButtonText: {
         color: '#fff',
@@ -210,35 +209,40 @@ const styles = StyleSheet.create({
     },
     error: {
         color: 'red',
-        textAlign: 'center',
         marginTop: 20,
+        textAlign: 'center',
+    },
+    exampleDescription: {
+        color: '#666',
+        fontSize: 14,
+        marginTop: 5,
+    },
+    exampleItem: {
+        backgroundColor: '#f5f5f5',
+        borderRadius: 5,
+        marginBottom: 10,
+        padding: 15,
+    },
+    exampleName: {
+        fontSize: 16,
+        fontWeight: 'bold',
     },
     examplesContainer: {
         flex: 1,
+    },
+    loader: {
+        marginTop: 20,
     },
     sectionTitle: {
         fontSize: 18,
         fontWeight: 'bold',
         marginBottom: 10,
     },
-    exampleItem: {
-        backgroundColor: '#f5f5f5',
-        padding: 15,
-        borderRadius: 5,
-        marginBottom: 10,
-    },
-    exampleName: {
-        fontSize: 16,
+    title: {
+        fontSize: 24,
         fontWeight: 'bold',
-    },
-    exampleDescription: {
-        fontSize: 14,
-        color: '#666',
-        marginTop: 5,
-    },
-    emptyMessage: {
+        marginBottom: 16,
+        marginTop: 40,
         textAlign: 'center',
-        color: '#666',
-        fontStyle: 'italic',
     },
-}); 
+});

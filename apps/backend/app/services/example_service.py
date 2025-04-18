@@ -22,21 +22,14 @@ class ExampleService:
     @staticmethod
     def create_example(db: Session, example: ExampleCreate) -> Example:
         """Create a new example in the database"""
-        db_example = Example(
-            name=example.name,
-            description=example.description
-        )
+        db_example = Example(name=example.name, description=example.description)
         db.add(db_example)
         db.commit()
         db.refresh(db_example)
         return db_example
 
     @staticmethod
-    def update_example(
-        db: Session,
-        example_id: int,
-        example_data: ExampleCreate
-    ) -> Optional[Example]:
+    def update_example(db: Session, example_id: int, example_data: ExampleCreate) -> Optional[Example]:
         """Update an existing example"""
         db_example = ExampleService.get_example(db, example_id)
         if db_example:
