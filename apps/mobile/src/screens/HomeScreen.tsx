@@ -20,6 +20,13 @@ export default function HomeScreen({ navigation }: any) {
                 <Text style={styles.signupButtonText}>Register as an Attorney</Text>
             </TouchableOpacity>
 
+            <TouchableOpacity
+                style={styles.personalInfoButton}
+                onPress={() => navigation.navigate('PersonalInfo')}
+            >
+                <Text style={styles.buttonText}>Personal Information</Text>
+            </TouchableOpacity>
+
         </View>
     );
 }
@@ -50,6 +57,18 @@ const styles = StyleSheet.create({
         marginBottom: 30,
     },
     signupButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    personalInfoButton: {
+        backgroundColor: '#28a745',
+        padding: 15,
+        borderRadius: 5,
+        alignItems: 'center',
+        marginBottom: 30,
+    },
+    buttonText: {
         color: '#fff',
         fontSize: 16,
         fontWeight: '600',
