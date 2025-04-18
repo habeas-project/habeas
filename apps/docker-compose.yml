@@ -5,8 +5,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/habeas
+    env_file:
+      - ../.env
     volumes:
       - ./backend/app:/app/app
       - ./backend/migrations:/app/migrations
@@ -15,11 +15,9 @@ services:
       - db
 
   db:
-    image: postgres:15
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=habeas
+    image: postgres:15.7
+    env_file:
+      - ../.env
     ports:
       - "5432:5432"
     volumes:
@@ -30,8 +28,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     command: uv run alembic upgrade head
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/habeas
+    env_file:
+      - ../.env
     volumes:
       - ./backend/app:/app/app
       - ./backend/migrations:/app/migrations
