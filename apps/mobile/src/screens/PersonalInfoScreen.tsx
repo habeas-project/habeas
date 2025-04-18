@@ -2,8 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Platform, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import CryptoJS from 'react-native-crypto-js';
 
 const STORAGE_KEY = '@personal_info';
+// IMPORTANT: In a real application, this key should be securely stored
+// and not hardcoded in the source code
+const ENCRYPTION_KEY = 'habeas-personal-data-encryption-key-2025';
+
+// Encryption/decryption utility functions
+const encryptData = (data: string): string => {
+  return CryptoJS.AES.encrypt(data, ENCRYPTION_KEY).toString();
+};
+
+const decryptData = (encryptedData: string): string => {
+  const bytes = CryptoJS.AES.decrypt(encryptedData, ENCRYPTION_KEY);
+  return bytes.toString(CryptoJS.enc.Utf8);
+};
 
 interface EmergencyContact {
   id: string;
@@ -44,12 +58,18 @@ export default function PersonalInfoScreen({ navigation }: any) {
     loadPersonalInfo();
   }, []);
   
-  // Save personal info whenever it changes
+  // Save personal info whenever it changes with encryption
   useEffect(() => {
     const saveData = async () => {
       try {
+        // Convert to JSON string first
         const jsonValue = JSON.stringify(personalInfo);
-        await AsyncStorage.setItem(STORAGE_KEY, jsonValue);
+        
+        // Encrypt the data before storing
+        const encryptedData = encryptData(jsonValue);
+        
+        // Save encrypted data to storage
+        await AsyncStorage.setItem(STORAGE_KEY, encryptedData);
       } catch (error) {
         console.error('Error saving data:', error);
       }
@@ -67,9 +87,19 @@ export default function PersonalInfoScreen({ navigation }: any) {
 
   const loadPersonalInfo = async () => {
     try {
-      const jsonValue = await AsyncStorage.getItem(STORAGE_KEY);
-      if (jsonValue != null) {
-        setPersonalInfo(JSON.parse(jsonValue));
+      const encryptedData = await AsyncStorage.getItem(STORAGE_KEY);
+      
+      if (encryptedData != null) {
+        try {
+          // Decrypt the data
+          const jsonValue = decryptData(encryptedData);
+          
+          // Parse the JSON and update state
+          setPersonalInfo(JSON.parse(jsonValue));
+        } catch (decryptError) {
+          console.error('Failed to decrypt data:', decryptError);
+          Alert.alert('Error', 'Failed to decrypt personal information');
+        }
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to load personal information');
@@ -114,8 +144,8 @@ export default function PersonalInfoScreen({ navigation }: any) {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.title}>Personal Information</Text>
         <Text style={styles.description}>
-          This information is stored locally on your device and is not sent to any server.
-          Changes are automatically saved as you type.
+          This information is stored locally on your device using AES-256 encryption and 
+          is not sent to any server. Changes are automatically saved as you type.
         </Text>
 
         <View style={styles.formGroup}>
