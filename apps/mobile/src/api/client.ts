@@ -1,5 +1,13 @@
 import 'react-native-url-polyfill/auto';
-import { AttorneysApi, AttorneyCreate, Configuration } from './generated';
+import {
+  AttorneysApi,
+  AttorneyCreate,
+  ClientsApi,
+  ClientCreate,
+  EmergencyContactsApi,
+  EmergencyContactCreate,
+  Configuration
+} from './generated';
 import axios from 'axios';
 
 // Create a configuration with the base path
@@ -12,6 +20,8 @@ const axiosInstance = axios.create();
 
 // Create API client instances
 const attorneysApi = new AttorneysApi(configuration, undefined, axiosInstance);
+const clientsApi = new ClientsApi(configuration, undefined, axiosInstance);
+const emergencyContactsApi = new EmergencyContactsApi(configuration, undefined, axiosInstance);
 
 // Main API client with methods that match the application's needs
 const api = {
@@ -33,6 +43,57 @@ const api = {
 
     // Call the generated API method
     return attorneysApi.createAttorneyAttorneysPost(attorneyData);
+  },
+
+  // Send emergency client information to the server
+  submitEmergencyClientInfo: async (clientInfo: {
+    firstName: string;
+    lastName: string;
+    countryOfBirth: string;
+    nationality?: string;
+    birthDate: string;
+    alienNumber?: string;
+    emergencyContacts?: Array<{
+      name: string;
+      phone: string;
+      relationship?: string;
+    }>;
+  }) => {
+    try {
+      // First create the client
+      const clientData: ClientCreate = {
+        first_name: clientInfo.firstName,
+        last_name: clientInfo.lastName,
+        country_of_birth: clientInfo.countryOfBirth,
+        nationality: clientInfo.nationality || clientInfo.countryOfBirth,
+        birth_date: clientInfo.birthDate,
+        alien_registration_number: clientInfo.alienNumber,
+      };
+
+      const clientResponse = await clientsApi.createClientClientsPost(clientData);
+      const clientId = clientResponse.data.id;
+
+      // If we have emergency contacts, submit them
+      if (clientInfo.emergencyContacts && clientInfo.emergencyContacts.length > 0) {
+        const contactPromises = clientInfo.emergencyContacts.map(contact => {
+          const contactData: EmergencyContactCreate = {
+            client_id: clientId,
+            full_name: contact.name,
+            phone_number: contact.phone,
+            relationship: contact.relationship || '',
+          };
+
+          return emergencyContactsApi.createEmergencyContactEmergencyContactsPost(contactData);
+        });
+
+        await Promise.all(contactPromises);
+      }
+
+      return { success: true, clientId };
+    } catch (error) {
+      console.error('Error submitting emergency client info:', error);
+      throw error;
+    }
   }
 };
 
