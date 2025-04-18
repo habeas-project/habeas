@@ -32,7 +32,7 @@ export default function PersonalInfoScreen({ navigation }: any) {
     alienNumber: '',
     emergencyContacts: []
   });
-  
+
   const [newContact, setNewContact] = useState({
     name: '',
     phone: '',
@@ -43,7 +43,7 @@ export default function PersonalInfoScreen({ navigation }: any) {
   useEffect(() => {
     loadPersonalInfo();
   }, []);
-  
+
   // Save personal info whenever it changes using SecureStorage
   useEffect(() => {
     const saveData = async () => {
@@ -53,13 +53,13 @@ export default function PersonalInfoScreen({ navigation }: any) {
         console.error('Error saving data:', error);
       }
     };
-    
+
     // Don't save on initial load when the state is empty
-    if (personalInfo.firstName || 
-        personalInfo.lastName || 
-        personalInfo.countryOfBirth || 
-        personalInfo.alienNumber || 
-        personalInfo.emergencyContacts.length > 0) {
+    if (personalInfo.firstName ||
+      personalInfo.lastName ||
+      personalInfo.countryOfBirth ||
+      personalInfo.alienNumber ||
+      personalInfo.emergencyContacts.length > 0) {
       saveData();
     }
   }, [personalInfo]);
@@ -81,7 +81,7 @@ export default function PersonalInfoScreen({ navigation }: any) {
       Alert.alert('Error', 'Name and phone are required for emergency contacts');
       return;
     }
-    
+
     const updatedInfo = {
       ...personalInfo,
       emergencyContacts: [
@@ -92,7 +92,7 @@ export default function PersonalInfoScreen({ navigation }: any) {
         }
       ]
     };
-    
+
     setPersonalInfo(updatedInfo);
     setNewContact({ name: '', phone: '', relationship: '' });
   };
@@ -101,7 +101,7 @@ export default function PersonalInfoScreen({ navigation }: any) {
     const updatedContacts = personalInfo.emergencyContacts.filter(
       contact => contact.id !== id
     );
-    
+
     setPersonalInfo({
       ...personalInfo,
       emergencyContacts: updatedContacts
@@ -113,8 +113,8 @@ export default function PersonalInfoScreen({ navigation }: any) {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.title}>Personal Information</Text>
         <Text style={styles.description}>
-          This information is stored locally on your device using AES-256 encryption and 
-          is not sent to any server. Changes are automatically saved as you type.
+          This information is stored locally on your device using AES-256 encryption and
+          is not sent to any other party unless you activate the emergency protocol.
         </Text>
 
         <View style={styles.formGroup}>
@@ -122,7 +122,7 @@ export default function PersonalInfoScreen({ navigation }: any) {
           <TextInput
             style={styles.input}
             value={personalInfo.firstName}
-            onChangeText={(text) => setPersonalInfo({...personalInfo, firstName: text})}
+            onChangeText={(text) => setPersonalInfo({ ...personalInfo, firstName: text })}
             placeholder="Enter your first name"
           />
         </View>
@@ -132,7 +132,7 @@ export default function PersonalInfoScreen({ navigation }: any) {
           <TextInput
             style={styles.input}
             value={personalInfo.lastName}
-            onChangeText={(text) => setPersonalInfo({...personalInfo, lastName: text})}
+            onChangeText={(text) => setPersonalInfo({ ...personalInfo, lastName: text })}
             placeholder="Enter your last name"
           />
         </View>
@@ -142,7 +142,7 @@ export default function PersonalInfoScreen({ navigation }: any) {
           <TextInput
             style={styles.input}
             value={personalInfo.countryOfBirth}
-            onChangeText={(text) => setPersonalInfo({...personalInfo, countryOfBirth: text})}
+            onChangeText={(text) => setPersonalInfo({ ...personalInfo, countryOfBirth: text })}
             placeholder="Enter your country of birth"
           />
         </View>
@@ -152,7 +152,7 @@ export default function PersonalInfoScreen({ navigation }: any) {
           <TextInput
             style={styles.input}
             value={personalInfo.nationality}
-            onChangeText={(text) => setPersonalInfo({...personalInfo, nationality: text})}
+            onChangeText={(text) => setPersonalInfo({ ...personalInfo, nationality: text })}
             placeholder="Enter your nationality if different"
           />
         </View>
@@ -162,7 +162,7 @@ export default function PersonalInfoScreen({ navigation }: any) {
           <TextInput
             style={styles.input}
             value={personalInfo.birthDate}
-            onChangeText={(text) => setPersonalInfo({...personalInfo, birthDate: text})}
+            onChangeText={(text) => setPersonalInfo({ ...personalInfo, birthDate: text })}
             placeholder="YYYY-MM-DD"
           />
         </View>
@@ -172,13 +172,13 @@ export default function PersonalInfoScreen({ navigation }: any) {
           <TextInput
             style={styles.input}
             value={personalInfo.alienNumber}
-            onChangeText={(text) => setPersonalInfo({...personalInfo, alienNumber: text})}
+            onChangeText={(text) => setPersonalInfo({ ...personalInfo, alienNumber: text })}
             placeholder="A-Number (if applicable)"
           />
         </View>
 
         <Text style={styles.sectionTitle}>Emergency Contacts</Text>
-        
+
         {personalInfo.emergencyContacts.map((contact) => (
           <View key={contact.id} style={styles.contactCard}>
             <Text style={styles.contactName}>{contact.name}</Text>
@@ -200,7 +200,7 @@ export default function PersonalInfoScreen({ navigation }: any) {
             <TextInput
               style={styles.input}
               value={newContact.name}
-              onChangeText={(text) => setNewContact({...newContact, name: text})}
+              onChangeText={(text) => setNewContact({ ...newContact, name: text })}
               placeholder="Contact name"
             />
           </View>
@@ -209,7 +209,7 @@ export default function PersonalInfoScreen({ navigation }: any) {
             <TextInput
               style={styles.input}
               value={newContact.phone}
-              onChangeText={(text) => setNewContact({...newContact, phone: text})}
+              onChangeText={(text) => setNewContact({ ...newContact, phone: text })}
               placeholder="Contact phone"
             />
           </View>
@@ -218,7 +218,7 @@ export default function PersonalInfoScreen({ navigation }: any) {
             <TextInput
               style={styles.input}
               value={newContact.relationship}
-              onChangeText={(text) => setNewContact({...newContact, relationship: text})}
+              onChangeText={(text) => setNewContact({ ...newContact, relationship: text })}
               placeholder="Relationship to you"
             />
           </View>
