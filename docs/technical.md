@@ -28,8 +28,10 @@
     - [Configured Hooks](#configured-hooks)
     - [Configuration Files](#configuration-files)
     - [Troubleshooting](#troubleshooting)
-<!-- /TOC -->
-
+    - [Local CI Testing (`act`)](#local-ci-testing-act)
+  - [Continuous Integration (CI)](#continuous-integration-ci)
+    - [Workflow Overview](#workflow-overview)
+    - [Key Steps](#key-steps)
 ## Development Requirements
 
 ### System Dependencies
@@ -234,3 +236,59 @@ If hooks fail unexpectedly:
 3.  Try updating hook repositories: `pre-commit autoupdate`.
 4.  Run hooks manually on all files to isolate issues: `pre-commit run --all-files`.
 Refer to the official pre-commit documentation for more details.
+
+### Local CI Testing (`act`)
+
+To run the GitHub Actions workflow locally for faster feedback, you can use [act](https://github.com/nektos/act).
+
+#### Prerequisites
+
+1.  **Docker:** Must be installed and running on your local machine.
+2.  **`act` Installation:** `act` needs to be installed separately. It is *not* managed via project dependencies.
+
+    *   **macOS / Linux (using Homebrew):**
+        ```bash
+        brew install act
+        ```
+    *   **Other Linux / macOS (using script):**
+        ```bash
+        curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash
+        ```
+    *   **See official documentation for all methods:** [nektosact.com/installation/](https://nektosact.com/installation/)
+
+#### Usage
+
+1.  **Secrets:** Create a `.secrets` file in the project root (this file is ignored by git) containing necessary secrets:
+    ```plaintext
+    # .secrets
+    DB_PASSWORD=your_local_dev_password
+    ```
+2.  **Run:** Execute the workflow using the yarn script:
+    ```bash
+    yarn test:ci:local
+    ```
+    This script runs `act -W .github/workflows/test.yml`.
+
+## Continuous Integration (CI)
+
+A GitHub Actions workflow (`.github/workflows/test.yml`) automates backend testing to ensure code quality and stability.
+
+### Workflow Overview
+
+- **Trigger:** Runs on pushes and pull requests to `main` targeting changes in the backend (`apps/backend/`, `apps/tests/`), Docker configuration (`apps/docker-compose.yml`), Python dependencies (`pyproject.toml`), or the workflow file itself.
+- **Environment:** Uses Docker Compose (`apps/docker-compose.yml`) to build and run services within an `ubuntu-latest` GitHub Actions runner.
+- **Secrets:** Requires the `DB_PASSWORD` secret to be configured in the GitHub repository settings.
+
+### Key Steps
+
+1.  **Checkout Code:** Retrieves the latest code from the repository.
+2.  **Set up Docker:** Initializes Docker Buildx.
+3.  **Set Environment Variables:** Exports `DATABASE_URL` and `DB_PASSWORD` (using the GitHub secret) for Docker Compose.
+4.  **Start Database:** Starts the PostgreSQL service (`db`) using `docker-compose up -d`.
+5.  **Wait for Database:** Checks if the database is ready before proceeding.
+6.  **Build Backend Image:** Explicitly builds the backend service image, passing `--build-arg INSTALL_DEV=true` to ensure development and testing dependencies are included in the image (`docker compose build --build-arg INSTALL_DEV=true backend`).
+7.  **Run Migrations:** Executes database migrations using the `migration` service (`docker-compose run --rm migration`).
+8.  **Run Tests:** Runs backend tests (`pytest`) using the pre-built `backend` service image (`docker compose run --rm backend uv run pytest tests`). The `--build` flag is not used here as the image was built in a prior step.
+9.  **Cleanup:** Stops and removes Docker Compose services and volumes (`docker-compose down -v --remove-orphans`).
+
+This ensures that migrations and tests are run against a clean, consistent environment on relevant code changes.

@@ -1,0 +1,93 @@
+name: Backend Tests
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'apps/backend/**'
+      - 'apps/tests/**'
+      - '.github/workflows/**'
+      - 'apps/docker-compose.yml'
+      - 'pyproject.toml' # Root pyproject might affect backend env
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04 # Pinned runner version
+    timeout-minutes: 20 # Added timeout
+    permissions:      # Added permissions block
+      contents: read  # Start with read-only
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4 # Updated to v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Create root .env file for Docker Compose
+        run: |
+          echo "Creating .env file in $(pwd)"
+          # Use default password if secret is not available
+          ACTUAL_DB_PASSWORD="${{ secrets.POSTGRES_PASSWORD || 'testpassword' }}"
+          echo "Using DB Password: ${ACTUAL_DB_PASSWORD:+******}" # Log that we have a password, but mask it
+
+          # Define all necessary variables for local/CI runs
+          echo "POSTGRES_USER=postgres" > .env
+          echo "POSTGRES_PASSWORD=${ACTUAL_DB_PASSWORD}" >> .env
+          echo "POSTGRES_DB=habeas" >> .env
+          echo "POSTGRES_HOST=db" >> .env
+          echo "POSTGRES_PORT=5432" >> .env
+          echo "DATABASE_URL=postgresql://postgres:${ACTUAL_DB_PASSWORD}@db:5432/habeas" >> .env
+          # Add other necessary variables (can use defaults or secrets)
+          echo "SECRET_KEY=ci_secret_key_replace_if_needed" >> .env
+          echo "ALGORITHM=HS256" >> .env
+          echo "ACCESS_TOKEN_EXPIRE_MINUTES=30" >> .env
+          echo "ALLOWED_ORIGINS=http://localhost:3000,http://localhost:19006" >> .env
+
+          echo ".env file contents (passwords masked):"
+          # Use awk for safer masking that handles potential special characters in password
+          awk -F'=' '/POSTGRES_PASSWORD/ {$2="******"} {print}' OFS='=' .env
+
+      - name: Start DB service
+        working-directory: ./apps
+        run: docker compose up -d db
+
+      - name: Wait for DB to be ready
+        run: |
+          echo "Waiting for PostgreSQL to start..."
+          # Use docker exec to run pg_isready inside the db container
+          # Loop until pg_isready returns success (exit code 0)
+          count=0
+          while ! docker compose -f ./apps/docker-compose.yml exec -T db pg_isready -U postgres -d habeas -h localhost -q; do
+            count=$((count+1))
+            if [ $count -ge 12 ]; then
+              echo "Database did not become ready after 60 seconds."
+              docker compose -f ./apps/docker-compose.yml logs db # Print DB logs for debugging
+              exit 1
+            fi
+            echo "Attempt $count: DB not ready, waiting 5 seconds..."
+            sleep 5
+          done
+          echo "Database is ready."
+
+      - name: Build Backend Service with Dev Dependencies
+        working-directory: ./apps
+        # Pass INSTALL_DEV=true as a build argument to ensure test dependencies are included
+        run: docker compose build --build-arg INSTALL_DEV=true backend
+
+      - name: Run Migrations
+        working-directory: ./apps
+        # Use run with --rm to ensure container is removed after execution
+        # Pass environment variables explicitly if needed, though docker-compose should handle it
+        run: docker compose run --rm migration
+
+      - name: Run Backend Tests
+        working-directory: ./apps
+        # Use run with --rm and --build to ensure latest image is used
+        # --build flag removed as image is explicitly built in the previous step
+        run: docker compose run --rm backend uv run pytest tests
+
+      - name: Cleanup Docker Compose services
+        if: always() # Ensure cleanup runs even if steps fail
+        working-directory: ./apps
+        run: docker compose down -v --remove-orphans # Added flags for thorough cleanup

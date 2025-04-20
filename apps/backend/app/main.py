@@ -1,18 +1,19 @@
 import logging
 
-from fastapi import Depends, FastAPI, Response, status
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
+from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
-from sqlalchemy import text  # Import the text function
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import Session
 
 # Import database session dependency
-from app.database import get_db
-
 # Import routers
-from app.routers import attorney_router, client_router, emergency_contact_router, example_router
+from app.routers import (
+    attorney_router,
+    client_router,
+    emergency_contact_router,
+    example_router,
+    health,  # Import the new health router
+)
 
 app = FastAPI(
     title="Habeas API",
@@ -41,26 +42,8 @@ def root():
     return {"message": "Welcome to the Habeas API"}
 
 
-@app.get("/health", status_code=status.HTTP_200_OK)
-def health_check(response: Response, db: Session = Depends(get_db)):
-    """Checks the health of the API, primarily database connectivity."""
-    response.headers["Cache-Control"] = "no-cache"
-    try:
-        # Perform a simple query to check DB connection
-        db.execute(text("SELECT 1"))  # Use text() for raw SQL
-        return {"status": "ok"}
-    except SQLAlchemyError as e:
-        logging.error(f"Database connection failed: {e}")
-        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
-        return {"status": "error", "detail": "Database connection failed"}
-    except Exception as e:
-        # Catch any other unexpected errors during the health check
-        logging.error(f"An unexpected error occurred: {e}")
-        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-        return {"status": "error", "detail": "An unexpected error occurred"}
-
-
 # Register routers
+app.include_router(health.router)  # Include the new health router
 app.include_router(example_router.router)
 app.include_router(attorney_router.router)
 app.include_router(client_router.router)
@@ -72,6 +55,7 @@ async def custom_swagger_ui_html():
     """
     Custom Swagger UI HTML with improved styling and usability
     """
+    assert app.openapi_url is not None  # Add assertion for type checker
     return get_swagger_ui_html(
         openapi_url=app.openapi_url,
         title=f"{app.title} - Swagger UI",
@@ -87,6 +71,7 @@ async def custom_redoc_html():
     """
     Custom ReDoc HTML with improved styling and usability
     """
+    assert app.openapi_url is not None  # Add assertion for type checker
     return get_redoc_html(
         openapi_url=app.openapi_url,
         title=f"{app.title} - ReDoc",
@@ -101,38 +86,33 @@ def custom_openapi():
     """
     if app.openapi_schema:
         return app.openapi_schema
-    
+
     openapi_schema = get_openapi(
         title=app.title,
         version=app.version,
         description=app.description,
         routes=app.routes,
     )
-    
+
     # Add custom schema components or metadata here if needed
-    openapi_schema["info"]["x-logo"] = {
-        "url": "https://fastapi.tiangolo.com/img/logo-margin/logo-teal.png"
-    }
-    
+    openapi_schema["info"]["x-logo"] = {"url": "https://fastapi.tiangolo.com/img/logo-margin/logo-teal.png"}
+
     # Add contact information
     openapi_schema["info"]["contact"] = {
         "name": "Habeas Project",
         "url": "https://github.com/habeas-project",
-        "email": "info@example.com"  # Change to actual contact email
+        "email": "info@example.com",  # Change to actual contact email
     }
-    
+
     # Add license information
-    openapi_schema["info"]["license"] = {
-        "name": "MIT",
-        "url": "https://opensource.org/licenses/MIT"
-    }
-    
+    openapi_schema["info"]["license"] = {"name": "MIT", "url": "https://opensource.org/licenses/MIT"}
+
     # Add external documentation
     openapi_schema["externalDocs"] = {
         "description": "Find more information here",
-        "url": "https://github.com/habeas-project"
+        "url": "https://github.com/habeas-project",
     }
-    
+
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
