@@ -180,57 +180,11 @@ export default function AttorneySignupScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginTop: 40,
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  description: {
-    fontSize: 16,
-    textAlign: 'center',
-    color: '#555',
-    marginBottom: 30,
-  },
-  formContainer: {
-    backgroundColor: '#f9f9f9',
-    borderRadius: 10,
-    padding: 20,
-    marginBottom: 20,
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 8,
-    color: '#333',
-  },
-  input: {
-    backgroundColor: '#fff',
-    height: 50,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    paddingHorizontal: 15,
-    fontSize: 16,
-  },
-  errorText: {
-    color: 'red',
-    fontSize: 14,
-    marginTop: 5,
-  },
   button: {
-    backgroundColor: '#4a90e2',
-    height: 50,
-    borderRadius: 5,
     alignItems: 'center',
+    backgroundColor: '#4a90e2',
+    borderRadius: 5,
+    height: 50,
     justifyContent: 'center',
     marginTop: 10,
   },
@@ -242,5 +196,51 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  container: {
+    flexGrow: 1,
+    padding: 20,
+  },
+  description: {
+    color: '#555',
+    fontSize: 16,
+    marginBottom: 30,
+    textAlign: 'center',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 14,
+    marginTop: 5,
+  },
+  formContainer: {
+    backgroundColor: '#f9f9f9',
+    borderRadius: 10,
+    marginBottom: 20,
+    padding: 20,
+  },
+  input: {
+    backgroundColor: '#fff',
+    borderColor: '#ddd',
+    borderRadius: 5,
+    borderWidth: 1,
+    fontSize: 16,
+    height: 50,
+    paddingHorizontal: 15,
+  },
+  inputGroup: {
+    marginBottom: 20,
+  },
+  label: {
+    color: '#333',
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 8,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    marginTop: 40,
+    textAlign: 'center',
   },
 });

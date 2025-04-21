@@ -47,7 +47,7 @@ export default function HomeScreen({ navigation }: any) {
         <View style={styles.container}>
             {/* Header Section */}
             <View style={styles.headerSection}>
-                <Text style={styles.title}>Welcome to Habeas</Text>
+                <Text style={styles.pageTitle}>Welcome to Habeas</Text>
                 <Text style={styles.description}>
                     Connecting detained individuals with legal representatives
                 </Text>
@@ -115,8 +115,8 @@ const styles = StyleSheet.create({
     },
     // Section containers for static layout
     headerSection: {
-        marginTop: 40,
         marginBottom: 20,
+        marginTop: 40,
     },
     emergencySection: {
         height: 205, // Fixed height to prevent layout shift
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
     buttonsSection: {
         marginTop: 20, // Additional margin on the button section itself
     },
-    title: {
+    pageTitle: {
         fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 16,
@@ -149,13 +149,13 @@ const styles = StyleSheet.create({
     },
     emergencyInactive: {
         backgroundColor: '#f8f8f8',
-        borderWidth: 1,
         borderColor: '#ddd',
+        borderWidth: 1,
     },
     emergencyText: {
         color: 'white',
-        fontWeight: 'bold',
         fontSize: 16,
+        fontWeight: 'bold',
     },
     emergencyInactiveText: {
         color: '#666',
@@ -165,26 +165,26 @@ const styles = StyleSheet.create({
     },
     deactivateButton: {
         backgroundColor: 'white',
+        borderRadius: 4,
         paddingHorizontal: 12,
         paddingVertical: 6,
-        borderRadius: 4,
     },
     deactivateText: {
         color: '#c00',
         fontWeight: 'bold',
     },
     separator: {
-        height: 1,
         backgroundColor: '#e0e0e0',
-        width: '100%',
+        height: 1,
         marginBottom: 25,
+        width: '100%',
     },
     signupButton: {
-        backgroundColor: '#4a90e2',
-        padding: 15,
-        borderRadius: 5,
         alignItems: 'center',
+        backgroundColor: '#4a90e2',
+        borderRadius: 5,
         marginBottom: 30,
+        padding: 15,
         textAlign: 'center',
     },
     signupButtonText: {
@@ -193,18 +193,18 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     personalInfoButton: {
-        backgroundColor: '#28a745',
-        padding: 15,
-        borderRadius: 5,
         alignItems: 'center',
+        backgroundColor: '#28a745',
+        borderRadius: 5,
         marginBottom: 30,
+        padding: 15,
     },
     buttonText: {
         color: '#fff',
         fontSize: 16,
         fontWeight: '600',
     },
-    loader: {
+    loaderStyle: {
         marginTop: 20,
     },
     error: {
@@ -230,15 +230,15 @@ const styles = StyleSheet.create({
     examplesContainer: {
         flex: 1,
     },
-    loader: {
+    loadingIndicator: {
         marginTop: 20,
     },
-    sectionTitle: {
+    sectionHeading: {
         fontSize: 18,
         fontWeight: 'bold',
         marginBottom: 10,
     },
-    title: {
+    mainTitle: {
         fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 16,

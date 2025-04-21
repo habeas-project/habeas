@@ -2,6 +2,7 @@ import { Alert, Vibration } from 'react-native';
 import { SecureStorage } from './secureStorage';
 import api from '../api/client';
 
+import type { PersonalInfo } from 'screens/PersonalInfoScreen';
 const EMERGENCY_STATE_KEY = '@emergency_state';
 
 interface EmergencyState {
@@ -39,12 +40,12 @@ export class EmergencyHandler {
   /**
    * Activate emergency mode
    */
-  public static async activateEmergency(emergencyType: string = 'general'): Promise<void> {
+  public static async activateEmergency(emergencyType: string = 'general') {
     try {
       // Get personal info from secure storage
       const personalInfoKey = '@personal_info';
-      const personalInfo = await SecureStorage.loadData<any>(personalInfoKey);
-      
+      const personalInfo = await SecureStorage.loadData<PersonalInfo>(personalInfoKey);
+
       // Update emergency state
       const newState: EmergencyState = {
         activated: true,
@@ -52,10 +53,10 @@ export class EmergencyHandler {
         emergencyType: emergencyType,
         sentNotifications: false
       };
-      
+
       // Save the emergency state
       await SecureStorage.saveData(EMERGENCY_STATE_KEY, newState);
-      
+
       // If we have personal info, send it to the server
       if (personalInfo) {
         try {
@@ -69,7 +70,7 @@ export class EmergencyHandler {
             alienNumber: personalInfo.alienNumber || '',
             emergencyContacts: personalInfo.emergencyContacts || []
           });
-          
+
           console.log('Successfully sent emergency information to server');
         } catch (apiError) {
           // If server submission fails, just log it - we'll still activate emergency mode locally

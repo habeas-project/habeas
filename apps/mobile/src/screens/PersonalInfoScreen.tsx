@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Platform, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SecureStorage } from '../utils/secureStorage';
 
@@ -12,7 +12,7 @@ interface EmergencyContact {
   relationship: string;
 }
 
-interface PersonalInfo {
+export interface PersonalInfo {
   firstName: string;
   lastName: string;
   countryOfBirth: string;
@@ -22,7 +22,7 @@ interface PersonalInfo {
   emergencyContacts: EmergencyContact[];
 }
 
-export default function PersonalInfoScreen({ navigation }: any) {
+export default function PersonalInfoScreen() {
   const [personalInfo, setPersonalInfo] = useState<PersonalInfo>({
     firstName: '',
     lastName: '',
@@ -235,100 +235,100 @@ export default function PersonalInfoScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8f8f8',
-  },
-  scrollContent: {
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  description: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  formGroup: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 16,
-    marginBottom: 6,
-    fontWeight: '500',
-  },
-  input: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
+  addButton: {
+    alignItems: 'center',
+    backgroundColor: '#4a90e2',
     borderRadius: 4,
+    marginBottom: 20,
+    marginTop: 10,
     padding: 12,
-    fontSize: 16,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginTop: 20,
-    marginBottom: 10,
-  },
-  subSectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 10,
-  },
-  contactCard: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  contactName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  contactInfo: {
-    fontSize: 14,
-    color: '#444',
-    marginTop: 4,
   },
   addContactSection: {
     backgroundColor: '#f0f0f0',
     borderRadius: 8,
+    marginBottom: 20,
+    marginTop: 10,
     padding: 16,
-    marginTop: 10,
-    marginBottom: 20,
-  },
-  addButton: {
-    backgroundColor: '#4a90e2',
-    padding: 12,
-    borderRadius: 4,
-    alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 20,
   },
   buttonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },
-  removeButton: {
-    backgroundColor: '#dc3545',
-    padding: 8,
+  contactCard: {
+    backgroundColor: '#fff',
+    borderColor: '#ddd',
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 10,
+    padding: 16,
+  },
+  contactInfo: {
+    color: '#444',
+    fontSize: 14,
+    marginTop: 4,
+  },
+  contactName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  container: {
+    backgroundColor: '#f8f8f8',
+    flex: 1,
+  },
+  description: {
+    color: '#666',
+    fontSize: 14,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  formGroup: {
+    marginBottom: 16,
+  },
+  input: {
+    backgroundColor: '#fff',
+    borderColor: '#ddd',
     borderRadius: 4,
+    borderWidth: 1,
+    fontSize: 16,
+    padding: 12,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 6,
+  },
+  removeButton: {
     alignItems: 'center',
-    marginTop: 10,
     alignSelf: 'flex-start',
+    backgroundColor: '#dc3545',
+    borderRadius: 4,
+    marginTop: 10,
+    padding: 8,
   },
   removeButtonText: {
     color: '#fff',
     fontSize: 12,
     fontWeight: '600',
+  },
+  scrollContent: {
+    padding: 20,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    marginTop: 20,
+  },
+  subSectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 10,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
   },
 });
