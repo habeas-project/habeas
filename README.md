@@ -17,6 +17,11 @@ Devise a system that will allow for a habeas petition to be filed in federal dis
 ## How it works:
 When someone is in imminent threat of detention, they or their friends and family can use the app to send a pre-loaded set of information about the detainee to the Habeas service, which will connect them with a lawyer who can file a petition on their behalf. Prior to making this connection, no information about the detainee is collected or sent to the service. We can't give your data to anyone else because we don't have it. Additional features like habeas templates, e-filing assistance, and legal information for potential detainees are also being considered.
 
+
+![info_stash_resized](https://github.com/user-attachments/assets/4832e302-8aa7-4ba7-b668-c5490ba24806) ![emergency_slider_resized](https://github.com/user-attachments/assets/efb4aed9-de78-4900-a337-f55372aeaab5)
+
+
+
 ## What we need right now:
 - Immigration Lawyers
   - Across a range of U.S. jurisdictions
