@@ -11,21 +11,23 @@ class EmergencyContactBase(BaseModel):
     """
 
     full_name: str = Field(..., min_length=1, max_length=255, description="Full name of the emergency contact")
-    relationship_to_client: str = Field(..., min_length=1, max_length=50, description="Relationship to the client")
-    phone_number: PhoneNumber = Field(..., description="Phone number of the emergency contact")
+    relationship: str = Field(..., min_length=1, max_length=50, description="Relationship to the client")
+    phone_number: str = Field(..., description="Phone number of the emergency contact")
     email: Optional[EmailStr] = Field(None, description="Email address of the emergency contact")
     address: Optional[str] = Field(None, max_length=255, description="Physical address of the emergency contact")
     notes: Optional[str] = Field(None, description="Additional notes about the emergency contact")
 
-    @computed_field
+    @computed_field(repr=False)
+    @property
     def formatted_phone(self) -> str:
         """Returns the phone number in E.164 format"""
         return str(self.phone_number)
 
-    @computed_field
+    @computed_field(repr=False)
+    @property
     def display_name(self) -> str:
         """Returns a display-friendly name with relationship"""
-        return f"{self.full_name} ({self.relationship_to_client})"
+        return f"{self.full_name} ({self.relationship})"
 
 
 class EmergencyContactCreate(EmergencyContactBase):
@@ -43,7 +45,7 @@ class EmergencyContactUpdate(EmergencyContactBase):
     """
 
     full_name: Optional[str] = None
-    relationship_to_client: Optional[str] = None
+    relationship: Optional[str] = None
     phone_number: Optional[PhoneNumber] = None
     email: Optional[EmailStr] = None
     address: Optional[str] = None

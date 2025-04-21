@@ -17,7 +17,7 @@ router = APIRouter(
 @router.post("/", response_model=EmergencyContactResponse, status_code=status.HTTP_201_CREATED)
 def create_emergency_contact(emergency_contact: EmergencyContactCreate, db: Session = Depends(get_db)):
     """Create a new emergency contact record"""
-    db_emergency_contact = EmergencyContact(**emergency_contact.dict())
+    db_emergency_contact = EmergencyContact(**emergency_contact.model_dump(exclude={"formatted_phone", "display_name"}))
     db.add(db_emergency_contact)
     db.commit()
     db.refresh(db_emergency_contact)
@@ -57,7 +57,7 @@ def update_emergency_contact(
         raise HTTPException(status_code=404, detail="Emergency contact not found")
 
     # Update only provided fields
-    update_data = emergency_contact.dict(exclude_unset=True)
+    update_data = emergency_contact.model_dump(exclude_unset=True, exclude={"formatted_phone", "display_name"})
     for key, value in update_data.items():
         setattr(db_emergency_contact, key, value)
 

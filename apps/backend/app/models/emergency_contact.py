@@ -16,7 +16,7 @@ class EmergencyContact(Base):
     id = Column(Integer, primary_key=True, index=True)
     client_id = Column(Integer, ForeignKey("clients.id", ondelete="CASCADE"), nullable=False)
     full_name = Column(String(255), nullable=False)
-    relationship_to_client = Column(String(50), nullable=False)
+    relationship = Column(String(50), nullable=False)
     phone_number = Column(String(20), nullable=False)
     email = Column(String(255), nullable=True)
     address = Column(String(255), nullable=True)
@@ -28,4 +28,4 @@ class EmergencyContact(Base):
     client = orm_relationship("Client", back_populates="emergency_contacts")
 
     def __repr__(self):
-        return f"<EmergencyContact(id={self.id}, full_name='{self.full_name}', relationship='{self.relationship_to_client}')>"
+        return f"<EmergencyContact(id={self.id}, full_name='{self.full_name}', relationship='{self.relationship}')>"

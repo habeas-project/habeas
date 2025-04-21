@@ -370,7 +370,7 @@ export interface EmergencyContactCreate {
      * @type {string}
      * @memberof EmergencyContactCreate
      */
-    'relationship_to_client': string;
+    'relationship': string;
     /**
      * Phone number of the emergency contact
      * @type {string}
@@ -419,7 +419,7 @@ export interface EmergencyContactResponse {
      * @type {string}
      * @memberof EmergencyContactResponse
      */
-    'relationship_to_client': string;
+    'relationship': string;
     /**
      * Phone number of the emergency contact
      * @type {string}
@@ -498,7 +498,7 @@ export interface EmergencyContactUpdate {
      * @type {string}
      * @memberof EmergencyContactUpdate
      */
-    'relationship_to_client'?: string | null;
+    'relationship'?: string | null;
     /**
      * 
      * @type {string}
