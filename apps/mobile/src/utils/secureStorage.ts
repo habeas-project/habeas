@@ -1,21 +1,62 @@
+import 'react-native-get-random-values';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CryptoJS from 'react-native-crypto-js';
+import * as SecureStore from 'expo-secure-store';
+import { v4 as uuidv4 } from 'uuid';
 
-// TODO: this key should be securely stored
-// and not hardcoded in the source code
-const ENCRYPTION_KEY = 'habeas-personal-data-encryption-key-2025';
+const ENCRYPTION_KEY_ID = 'habeas-personal-encryption-key-id';
 
 /**
  * Utility class for securely storing data with encryption
  */
 export class SecureStorage {
+
+  /**
+    * Generates a random encryption key
+    * @returns A random string to use as encryption key
+    */
+  private static generateEncryptionKey(): string {
+    // Generate a key based on UUID
+    return uuidv4().replace(/-/g, '') + uuidv4().replace(/-/g, '');
+  }
+
+  /**
+ * Gets the encryption key, generating and storing one if needed
+ * @returns The encryption key
+ */
+  private static getEncryptionKey(): string {
+    try {
+      // Try to retrieve existing key
+      const key = SecureStore.getItem(ENCRYPTION_KEY_ID);
+      if (key) {
+        return key;
+      } else {
+
+        const newKey = this.generateEncryptionKey();
+        // await RNSecureKeyStore.set(ENCRYPTION_KEY_ID, newKey, { accessible: ACCESSIBLE.ALWAYS_THIS_DEVICE_ONLY });
+        SecureStore.setItem(ENCRYPTION_KEY_ID, newKey);
+        return newKey;
+
+      }
+    } catch (error) {
+
+      // Key doesn't exist, generate and store a new one
+      const newKey = this.generateEncryptionKey();
+      // await RNSecureKeyStore.set(ENCRYPTION_KEY_ID, newKey, { accessible: ACCESSIBLE.ALWAYS_THIS_DEVICE_ONLY });
+      SecureStore.setItem(ENCRYPTION_KEY_ID, newKey);
+      return newKey;
+    }
+  }
+
   /**
    * Encrypts data using AES-256
    * @param data - String data to encrypt
    * @returns Encrypted string
    */
   private static encrypt(data: string): string {
-    return CryptoJS.AES.encrypt(data, ENCRYPTION_KEY).toString();
+    const key = this.getEncryptionKey();
+    const et = CryptoJS.AES.encrypt(data, key).toString();
+    return et;
   }
 
   /**
@@ -24,7 +65,8 @@ export class SecureStorage {
    * @returns Decrypted string
    */
   private static decrypt(encryptedData: string): string {
-    const bytes = CryptoJS.AES.decrypt(encryptedData, ENCRYPTION_KEY);
+    const key = this.getEncryptionKey();
+    const bytes = CryptoJS.AES.decrypt(encryptedData, key);
     return bytes.toString(CryptoJS.enc.Utf8);
   }
 
@@ -33,19 +75,18 @@ export class SecureStorage {
    * @param key - Storage key
    * @param data - Data to store (will be stringified)
    */
-  public static async saveData(key: string, data: any): Promise<void> {
+  public static async saveData<T>(key: string, data: T): Promise<void> {
     try {
       // Convert to JSON string first
       const jsonValue = JSON.stringify(data);
 
       // Encrypt the data
       const encryptedData = this.encrypt(jsonValue);
-
       // Save encrypted data to storage
-      await AsyncStorage.setItem(key, encryptedData);
+      return AsyncStorage.setItem(key, encryptedData);
     } catch (error) {
       console.error(`Error saving data for key ${key}:`, error);
-      throw error;
+      // throw error;
     }
   }
 
@@ -60,15 +101,17 @@ export class SecureStorage {
 
       if (encryptedData != null) {
         // Decrypt the data
-        const jsonValue = this.decrypt(encryptedData);
+        const jsonValue = await this.decrypt(encryptedData);
 
         // Parse the JSON and return
         return JSON.parse(jsonValue) as T;
+      } else {
+        return null;
       }
-      return null;
     } catch (error) {
       console.error(`Error loading data for key ${key}:`, error);
-      throw error;
+      return null;
+      // throw error;
     }
   }
 
@@ -81,7 +124,7 @@ export class SecureStorage {
       await AsyncStorage.removeItem(key);
     } catch (error) {
       console.error(`Error removing data for key ${key}:`, error);
-      throw error;
+      // throw error;
     }
   }
 
