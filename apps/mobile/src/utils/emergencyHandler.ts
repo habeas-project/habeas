@@ -74,6 +74,7 @@ export class EmergencyHandler {
           console.log('Successfully sent emergency information to server');
         } catch (apiError) {
           // If server submission fails, just log it - we'll still activate emergency mode locally
+          // TODO: Handle API error more gracefully - retry on an interval, etc.
           console.error('Failed to submit emergency info to server:', apiError);
         }
       } else {
