@@ -1,7 +1,9 @@
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, HttpUrl
+
+from .attorney import Attorney  # Import Attorney schema for relationship (will create a circular import)
 
 
 class CourtBase(BaseModel):
@@ -32,6 +34,12 @@ class Court(CourtBase):
     id: int
     created_at: datetime
     updated_at: datetime
+    # Add the relationship to attorneys - but need to handle circular import
+    # This will be populated by the API but defined as empty list in schema
+    admitted_attorneys: List["Attorney"] = []
 
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}  # Updated from older Config.orm_mode
+
+
+# Import here to avoid circular import issues
+# from .attorney import Attorney

@@ -1,27 +1,26 @@
 from typing import List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import Attorney
+from app.models.attorney_court_admission import attorney_court_admission_table
+from app.models.court import Court
 from app.schemas import Attorney as AttorneySchema
-from app.schemas import AttorneyCreate, AttorneyUpdate
-from pydantic_extra_types.phone_numbers import PhoneNumber
+from app.schemas import AttorneyCourtAdmission, AttorneyCourtAdmissionCreate, AttorneyCreate, AttorneyUpdate
 
 router = APIRouter(
     prefix="/attorneys",
     tags=["attorneys"],
-    responses={
-        404: {"description": "Not found"},
-        500: {"description": "Internal server error"}
-    },
+    responses={404: {"description": "Not found"}, 500: {"description": "Internal server error"}},
 )
 
 
 @router.post(
-    "/", 
-    response_model=AttorneySchema, 
+    "/",
+    response_model=AttorneySchema,
     status_code=status.HTTP_201_CREATED,
     summary="Create Attorney",
     description="Creates a new attorney record in the system",
@@ -31,38 +30,38 @@ router = APIRouter(
             "content": {
                 "application/json": {
                     "example": {
-                        "id": 1, 
-                        "name": "Jane Doe", 
+                        "id": 1,
+                        "name": "Jane Doe",
                         "phone_number": "+15551234567",
                         "email": "jane.doe@example.com",
                         "zip_code": "12345",
                         "state": "CA",
                         "created_at": "2023-01-01T00:00:00",
-                        "updated_at": "2023-01-01T00:00:00"
+                        "updated_at": "2023-01-01T00:00:00",
                     }
                 }
-            }
+            },
         },
-        422: {"description": "Validation Error"}
-    }
+        422: {"description": "Validation Error"},
+    },
 )
 def create_attorney(
     attorney: AttorneyCreate = Body(
-        ..., 
+        ...,
         description="Attorney information to create",
         example={
             "name": "Jane Doe",
             "phone_number": "+15551234567",
             "email": "jane.doe@example.com",
             "zip_code": "12345",
-            "state": "CA"
-        }
-    ), 
-    db: Session = Depends(get_db)
+            "state": "CA",
+        },
+    ),
+    db: Session = Depends(get_db),
 ):
     """
     Create a new attorney with the following information:
-    
+
     - **name**: Full name of the attorney
     - **phone_number**: Contact phone number (E.164 format)
     - **email**: Email address
@@ -83,7 +82,7 @@ def create_attorney(
 
 
 @router.get(
-    "/", 
+    "/",
     response_model=List[AttorneySchema],
     summary="List Attorneys",
     description="Retrieve a list of attorneys with optional filtering by state and zip code",
@@ -101,7 +100,7 @@ def create_attorney(
                             "zip_code": "12345",
                             "state": "CA",
                             "created_at": "2023-01-01T00:00:00",
-                            "updated_at": "2023-01-01T00:00:00"
+                            "updated_at": "2023-01-01T00:00:00",
                         },
                         {
                             "id": 2,
@@ -111,13 +110,13 @@ def create_attorney(
                             "zip_code": "54321",
                             "state": "NY",
                             "created_at": "2023-01-02T00:00:00",
-                            "updated_at": "2023-01-02T00:00:00"
-                        }
+                            "updated_at": "2023-01-02T00:00:00",
+                        },
                     ]
                 }
-            }
+            },
         }
-    }
+    },
 )
 def read_attorneys(
     skip: int = Query(0, description="Number of records to skip for pagination", ge=0),
@@ -128,13 +127,13 @@ def read_attorneys(
 ):
     """
     Retrieve a list of attorneys with optional filtering capabilities.
-    
+
     Parameters:
     - **skip**: Number of records to skip (for pagination)
     - **limit**: Maximum number of records to return
     - **state**: Optional filter by US state (two-letter code)
     - **zip_code**: Optional filter by ZIP code
-    
+
     Returns a paginated list of attorneys matching the criteria.
     """
     query = db.query(Attorney)
@@ -150,7 +149,7 @@ def read_attorneys(
 
 
 @router.get(
-    "/{attorney_id}", 
+    "/{attorney_id}",
     response_model=AttorneySchema,
     summary="Get Attorney",
     description="Retrieve detailed information about a specific attorney by ID",
@@ -167,31 +166,26 @@ def read_attorneys(
                         "zip_code": "12345",
                         "state": "CA",
                         "created_at": "2023-01-01T00:00:00",
-                        "updated_at": "2023-01-01T00:00:00"
+                        "updated_at": "2023-01-01T00:00:00",
                     }
                 }
-            }
+            },
         },
         404: {
             "description": "Attorney not found",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Attorney not found"}
-                }
-            }
-        }
-    }
+            "content": {"application/json": {"example": {"detail": "Attorney not found"}}},
+        },
+    },
 )
 def read_attorney(
-    attorney_id: int = Path(..., description="The ID of the attorney to retrieve", ge=1),
-    db: Session = Depends(get_db)
+    attorney_id: int = Path(..., description="The ID of the attorney to retrieve", ge=1), db: Session = Depends(get_db)
 ):
     """
     Retrieve detailed information about a specific attorney by their unique ID.
-    
+
     Parameters:
     - **attorney_id**: Unique identifier of the attorney
-    
+
     Returns the complete attorney record if found, or a 404 error if not found.
     """
     db_attorney = db.query(Attorney).filter(Attorney.id == attorney_id).first()
@@ -201,7 +195,7 @@ def read_attorney(
 
 
 @router.patch(
-    "/{attorney_id}", 
+    "/{attorney_id}",
     response_model=AttorneySchema,
     summary="Update Attorney",
     description="Update an attorney's information (partial update)",
@@ -218,48 +212,41 @@ def read_attorney(
                         "zip_code": "12345",
                         "state": "CA",
                         "created_at": "2023-01-01T00:00:00",
-                        "updated_at": "2023-01-02T00:00:00"
+                        "updated_at": "2023-01-02T00:00:00",
                     }
                 }
-            }
+            },
         },
         404: {
             "description": "Attorney not found",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Attorney not found"}
-                }
-            }
+            "content": {"application/json": {"example": {"detail": "Attorney not found"}}},
         },
-        422: {"description": "Validation Error"}
-    }
+        422: {"description": "Validation Error"},
+    },
 )
 def update_attorney(
     attorney_id: int = Path(..., description="The ID of the attorney to update", ge=1),
     attorney: AttorneyUpdate = Body(
-        ..., 
+        ...,
         description="Attorney information to update",
-        example={
-            "name": "Jane Smith",
-            "email": "jane.smith@example.com"
-        }
+        example={"name": "Jane Smith", "email": "jane.smith@example.com"},
     ),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Update an attorney's information (partial update).
-    
+
     Parameters:
     - **attorney_id**: Unique identifier of the attorney to update
     - **attorney**: JSON object with fields to update. All fields are optional.
-    
+
     Available fields to update:
     - **name**: Full name of the attorney
     - **phone_number**: Contact phone number (E.164 format)
     - **email**: Email address
     - **zip_code**: US postal code (5 digits or 5+4 format)
     - **state**: Two-letter US state code (uppercase)
-    
+
     Returns the updated attorney record.
     """
     db_attorney = db.query(Attorney).filter(Attorney.id == attorney_id).first()
@@ -277,7 +264,7 @@ def update_attorney(
 
 
 @router.delete(
-    "/{attorney_id}", 
+    "/{attorney_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete Attorney",
     description="Delete an attorney from the system",
@@ -285,24 +272,19 @@ def update_attorney(
         204: {"description": "Attorney successfully deleted"},
         404: {
             "description": "Attorney not found",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Attorney not found"}
-                }
-            }
-        }
-    }
+            "content": {"application/json": {"example": {"detail": "Attorney not found"}}},
+        },
+    },
 )
 def delete_attorney(
-    attorney_id: int = Path(..., description="The ID of the attorney to delete", ge=1),
-    db: Session = Depends(get_db)
+    attorney_id: int = Path(..., description="The ID of the attorney to delete", ge=1), db: Session = Depends(get_db)
 ):
     """
     Delete an attorney from the system.
-    
+
     Parameters:
     - **attorney_id**: Unique identifier of the attorney to delete
-    
+
     Returns no content (204) on successful deletion.
     Raises a 404 error if the attorney is not found.
     """
@@ -313,3 +295,137 @@ def delete_attorney(
     db.delete(db_attorney)
     db.commit()
     return None
+
+
+@router.post(
+    "/{attorney_id}/admissions",
+    response_model=AttorneyCourtAdmission,
+    status_code=status.HTTP_201_CREATED,
+    summary="Add Court Admission",
+    description="Add a court admission for an attorney",
+    responses={
+        201: {
+            "description": "Court admission added successfully",
+            "content": {"application/json": {"example": {"attorney_id": 1, "court_id": 2}}},
+        },
+        404: {
+            "description": "Attorney or Court not found",
+            "content": {"application/json": {"example": {"detail": "Attorney or Court not found"}}},
+        },
+        409: {
+            "description": "Court admission already exists",
+            "content": {"application/json": {"example": {"detail": "Attorney is already admitted to this court"}}},
+        },
+        422: {"description": "Validation Error"},
+    },
+)
+def add_court_admission(
+    attorney_id: int = Path(..., description="The ID of the attorney", ge=1),
+    admission: AttorneyCourtAdmissionCreate = Body(..., description="Court admission to add", example={"court_id": 2}),
+    db: Session = Depends(get_db),
+):
+    """
+    Add a court admission for an attorney.
+
+    Parameters:
+    - **attorney_id**: ID of the attorney
+    - **admission**: Court admission data containing court_id
+
+    Returns the created admission relationship.
+    """
+    # Check if attorney exists
+    db_attorney = db.query(Attorney).filter(Attorney.id == attorney_id).first()
+    if not db_attorney:
+        raise HTTPException(status_code=404, detail="Attorney not found")
+
+    # Check if court exists
+    db_court = db.query(Court).filter(Court.id == admission.court_id).first()
+    if not db_court:
+        raise HTTPException(status_code=404, detail="Court not found")
+
+    # Check if admission already exists
+    existing_admission = (
+        db.query(attorney_court_admission_table)
+        .filter(
+            attorney_court_admission_table.c.attorney_id == attorney_id,
+            attorney_court_admission_table.c.court_id == admission.court_id,
+        )
+        .first()
+    )
+
+    if existing_admission:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Attorney is already admitted to this court")
+
+    # Add the court to the attorney's admitted_courts
+    db_attorney.admitted_courts.append(db_court)
+
+    try:
+        db.commit()
+        # Create and return admission object
+        return AttorneyCourtAdmission(attorney_id=attorney_id, court_id=admission.court_id)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to add court admission")
+
+
+@router.delete(
+    "/{attorney_id}/admissions/{court_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Remove Court Admission",
+    description="Remove a court admission for an attorney",
+    responses={
+        204: {"description": "Court admission successfully removed"},
+        404: {
+            "description": "Attorney, Court, or Admission not found",
+            "content": {"application/json": {"example": {"detail": "Attorney court admission not found"}}},
+        },
+    },
+)
+def remove_court_admission(
+    attorney_id: int = Path(..., description="The ID of the attorney", ge=1),
+    court_id: int = Path(..., description="The ID of the court", ge=1),
+    db: Session = Depends(get_db),
+):
+    """
+    Remove a court admission for an attorney.
+
+    Parameters:
+    - **attorney_id**: ID of the attorney
+    - **court_id**: ID of the court
+
+    Returns no content on success.
+    """
+    # Check if attorney exists
+    db_attorney = db.query(Attorney).filter(Attorney.id == attorney_id).first()
+    if not db_attorney:
+        raise HTTPException(status_code=404, detail="Attorney not found")
+
+    # Check if court exists
+    db_court = db.query(Court).filter(Court.id == court_id).first()
+    if not db_court:
+        raise HTTPException(status_code=404, detail="Court not found")
+
+    # Check if admission exists
+    existing_admission = (
+        db.query(attorney_court_admission_table)
+        .filter(
+            attorney_court_admission_table.c.attorney_id == attorney_id,
+            attorney_court_admission_table.c.court_id == court_id,
+        )
+        .first()
+    )
+
+    if not existing_admission:
+        raise HTTPException(status_code=404, detail="Attorney court admission not found")
+
+    # Remove the court from the attorney's admitted_courts
+    db_attorney.admitted_courts.remove(db_court)
+
+    try:
+        db.commit()
+        return None
+    except Exception:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to remove court admission"
+        )
