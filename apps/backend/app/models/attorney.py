@@ -1,6 +1,6 @@
 from typing import List
 
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, relationship
 from sqlalchemy.sql import func
 from sqlalchemy.sql.sqltypes import TIMESTAMP
@@ -26,11 +26,15 @@ class Attorney(Base):
     state = Column(String(2), nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
 
     # Define the many-to-many relationship to Court using Mapped
     admitted_courts: Mapped[List["Court"]] = relationship(
         "Court", secondary=attorney_court_admission_table, back_populates="admitted_attorneys", lazy="selectin"
     )
+
+    # Add relationship
+    user = relationship("User", back_populates="attorney")
 
     def __repr__(self):
         return f"<Attorney(id={self.id}, name='{self.name}', email='{self.email}')>"

@@ -1,3 +1,5 @@
+from app.schemas.user import UserBase, UserCreate, UserDB, UserResponse, UserUpdate
+
 from .attorney import Attorney, AttorneyCreate, AttorneyUpdate
 from .attorney_court_admission import (
     AttorneyCourtAdmission,
