@@ -32,6 +32,9 @@
   - [Continuous Integration (CI)](#continuous-integration-ci)
     - [Workflow Overview](#workflow-overview)
     - [Key Steps](#key-steps)
+- [React Native/Expo Development](#react-native-expo-development)
+  - [Running the Mobile App](#running-the-mobile-app)
+
 ## Development Requirements
 
 ### System Dependencies
@@ -196,6 +199,41 @@ alembic downgrade -1
 
 **Cause:** The Python interpreter is running outside the project's virtual environment where dependencies are installed.
 **Solution:** Activate the virtual environment (`source apps/backend/.venv/bin/activate`) before running Python commands directly, or use the configured `yarn` scripts which handle activation.
+
+## React Native Expo Development
+
+### Running the Mobile App
+
+The mobile app uses React Native with Expo. Start development with:
+
+```bash
+# From the project root
+yarn dev:mobile
+
+# Or from the mobile directory
+cd apps/mobile
+yarn start
+```
+
+### WSL Development Considerations
+
+When developing in Windows Subsystem for Linux (WSL), there are networking challenges when connecting from physical devices to the Expo development server. To address these issues:
+
+1. **Start Docker Desktop**
+
+2. **Run Docker Compose**
+  ```bash
+  # From apps/ directory
+  docker-compose up -d
+  ```
+
+3. **Use tunnel mode (recommended):**
+   ```bash
+   # From the mobile directory
+   npx expo start --tunnel
+   ```
+   This creates a secure tunnel allowing your device to connect regardless of network configuration.
+
 
 ## Development Tools
 
