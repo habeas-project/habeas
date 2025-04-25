@@ -1,11 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
-import api from '../api/client';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import EmergencySlider from '../components/EmergencySlider';
 import { EmergencyHandler } from '../utils/emergencyHandler';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
+// Define a simple navigation parameter list
+type RootStackParamList = {
+    Home: undefined;
+    AttorneySignup: undefined;
+    PersonalInfo: undefined;
+};
 
-export default function HomeScreen({ navigation }: any) {
+type HomeScreenProps = {
+    navigation: NativeStackNavigationProp<RootStackParamList, 'Home'>;
+};
+
+export default function HomeScreen({ navigation }: HomeScreenProps) {
     const [emergencyActive, setEmergencyActive] = useState(false);
 
     // Check if emergency is already active on component mount
@@ -47,7 +57,7 @@ export default function HomeScreen({ navigation }: any) {
         <View style={styles.container}>
             {/* Header Section */}
             <View style={styles.headerSection}>
-                <Text style={styles.title}>Welcome to Habeas</Text>
+                <Text style={styles.headerTitle}>Welcome to Habeas</Text>
                 <Text style={styles.description}>
                     Connecting detained individuals with legal representatives
                 </Text>
@@ -109,53 +119,47 @@ export default function HomeScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
+    buttonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    buttonsSection: {
+        marginTop: 20,
+    },
     container: {
         flex: 1,
         padding: 20,
     },
-    // Section containers for static layout
-    headerSection: {
-        marginTop: 40,
-        marginBottom: 20,
+    deactivateButton: {
+        backgroundColor: 'white',
+        borderRadius: 4,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
     },
-    emergencySection: {
-        height: 205, // Fixed height to prevent layout shift
-        marginBottom: 30, // Increased space between emergency section and buttons
-    },
-    buttonsSection: {
-        marginTop: 20, // Additional margin on the button section itself
-    },
-    title: {
-        fontSize: 24,
+    deactivateText: {
+        color: '#c00',
         fontWeight: 'bold',
-        marginBottom: 16,
-        textAlign: 'center',
     },
     description: {
         color: '#555',
     },
-    // Emergency banner styles
-    emergencyBannerContainer: {
-        height: 60, // Fixed height
-        padding: 15,
-        borderRadius: 8,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 15,
-    },
     emergencyActive: {
         backgroundColor: '#c00',
     },
+    emergencyBannerContainer: {
+        alignItems: 'center',
+        borderRadius: 8,
+        flexDirection: 'row',
+        height: 60,
+        justifyContent: 'space-between',
+        marginBottom: 15,
+        padding: 15,
+    },
     emergencyInactive: {
         backgroundColor: '#f8f8f8',
-        borderWidth: 1,
         borderColor: '#ddd',
-    },
-    emergencyText: {
-        color: 'white',
-        fontWeight: 'bold',
-        fontSize: 16,
+        borderWidth: 1,
     },
     emergencyInactiveText: {
         color: '#666',
@@ -163,86 +167,49 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         width: '100%',
     },
-    deactivateButton: {
-        backgroundColor: 'white',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 4,
+    emergencySection: {
+        height: 205,
+        marginBottom: 30,
     },
-    deactivateText: {
-        color: '#c00',
+    emergencyText: {
+        color: 'white',
+        fontSize: 16,
         fontWeight: 'bold',
     },
+    headerSection: {
+        marginBottom: 20,
+        marginTop: 40,
+    },
+    headerTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 16,
+        textAlign: 'center',
+    },
+    personalInfoButton: {
+        alignItems: 'center',
+        backgroundColor: '#28a745',
+        borderRadius: 5,
+        marginBottom: 30,
+        padding: 15,
+    },
     separator: {
-        height: 1,
         backgroundColor: '#e0e0e0',
-        width: '100%',
+        height: 1,
         marginBottom: 25,
+        width: '100%',
     },
     signupButton: {
-        backgroundColor: '#4a90e2',
-        padding: 15,
-        borderRadius: 5,
         alignItems: 'center',
+        backgroundColor: '#4a90e2',
+        borderRadius: 5,
         marginBottom: 30,
+        padding: 15,
         textAlign: 'center',
     },
     signupButtonText: {
         color: '#fff',
         fontSize: 16,
         fontWeight: '600',
-    },
-    personalInfoButton: {
-        backgroundColor: '#28a745',
-        padding: 15,
-        borderRadius: 5,
-        alignItems: 'center',
-        marginBottom: 30,
-    },
-    buttonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    loader: {
-        marginTop: 20,
-    },
-    error: {
-        color: 'red',
-        marginTop: 20,
-        textAlign: 'center',
-    },
-    exampleDescription: {
-        color: '#666',
-        fontSize: 14,
-        marginTop: 5,
-    },
-    exampleItem: {
-        backgroundColor: '#f5f5f5',
-        borderRadius: 5,
-        marginBottom: 10,
-        padding: 15,
-    },
-    exampleName: {
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    examplesContainer: {
-        flex: 1,
-    },
-    loader: {
-        marginTop: 20,
-    },
-    sectionTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 10,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 16,
-        marginTop: 40,
-        textAlign: 'center',
     },
 });

@@ -30,49 +30,49 @@ import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError, operationServerM
  */
 export interface Attorney {
     /**
-     * 
+     *
      * @type {string}
      * @memberof Attorney
      */
     'name': string;
     /**
-     * 
+     *
      * @type {string}
      * @memberof Attorney
      */
     'phone_number': string;
     /**
-     * 
+     *
      * @type {string}
      * @memberof Attorney
      */
     'email': string;
     /**
-     * 
+     *
      * @type {string}
      * @memberof Attorney
      */
     'zip_code': string;
     /**
-     * 
+     *
      * @type {string}
      * @memberof Attorney
      */
     'state': string;
     /**
-     * 
+     *
      * @type {number}
      * @memberof Attorney
      */
     'id': number;
     /**
-     * 
+     *
      * @type {string}
      * @memberof Attorney
      */
     'created_at': string;
     /**
-     * 
+     *
      * @type {string}
      * @memberof Attorney
      */
@@ -85,31 +85,31 @@ export interface Attorney {
  */
 export interface AttorneyCreate {
     /**
-     * 
+     *
      * @type {string}
      * @memberof AttorneyCreate
      */
     'name': string;
     /**
-     * 
+     *
      * @type {string}
      * @memberof AttorneyCreate
      */
     'phone_number': string;
     /**
-     * 
+     *
      * @type {string}
      * @memberof AttorneyCreate
      */
     'email': string;
     /**
-     * 
+     *
      * @type {string}
      * @memberof AttorneyCreate
      */
     'zip_code': string;
     /**
-     * 
+     *
      * @type {string}
      * @memberof AttorneyCreate
      */
@@ -122,38 +122,38 @@ export interface AttorneyCreate {
  */
 export interface AttorneyUpdate {
     /**
-     * 
+     *
      * @type {string}
      * @memberof AttorneyUpdate
      */
     'name'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof AttorneyUpdate
      */
     'phone_number'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof AttorneyUpdate
      */
     'email'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof AttorneyUpdate
      */
     'zip_code'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof AttorneyUpdate
      */
     'state'?: string | null;
 }
 /**
- * 
+ *
  * @export
  * @interface ClientCreate
  */
@@ -177,7 +177,7 @@ export interface ClientCreate {
      */
     'country_of_birth': string;
     /**
-     * 
+     *
      * @type {string}
      * @memberof ClientCreate
      */
@@ -189,32 +189,32 @@ export interface ClientCreate {
      */
     'birth_date': string;
     /**
-     * 
+     *
      * @type {string}
      * @memberof ClientCreate
      */
     'alien_registration_number'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof ClientCreate
      */
     'passport_number'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof ClientCreate
      */
     'school_name'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof ClientCreate
      */
     'student_id_number'?: string | null;
 }
 /**
- * 
+ *
  * @export
  * @interface ClientResponse
  */
@@ -238,7 +238,7 @@ export interface ClientResponse {
      */
     'country_of_birth': string;
     /**
-     * 
+     *
      * @type {string}
      * @memberof ClientResponse
      */
@@ -250,25 +250,25 @@ export interface ClientResponse {
      */
     'birth_date': string;
     /**
-     * 
+     *
      * @type {string}
      * @memberof ClientResponse
      */
     'alien_registration_number'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof ClientResponse
      */
     'passport_number'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof ClientResponse
      */
     'school_name'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof ClientResponse
      */
@@ -293,61 +293,61 @@ export interface ClientResponse {
     'updated_at': string;
 }
 /**
- * 
+ *
  * @export
  * @interface ClientUpdate
  */
 export interface ClientUpdate {
     /**
-     * 
+     *
      * @type {string}
      * @memberof ClientUpdate
      */
     'first_name'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof ClientUpdate
      */
     'last_name'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof ClientUpdate
      */
     'country_of_birth'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof ClientUpdate
      */
     'nationality'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof ClientUpdate
      */
     'birth_date'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof ClientUpdate
      */
     'alien_registration_number'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof ClientUpdate
      */
     'passport_number'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof ClientUpdate
      */
     'school_name'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof ClientUpdate
      */
@@ -378,19 +378,19 @@ export interface EmergencyContactCreate {
      */
     'phone_number': string;
     /**
-     * 
+     *
      * @type {string}
      * @memberof EmergencyContactCreate
      */
     'email'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof EmergencyContactCreate
      */
     'address'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof EmergencyContactCreate
      */
@@ -427,19 +427,19 @@ export interface EmergencyContactResponse {
      */
     'phone_number': string;
     /**
-     * 
+     *
      * @type {string}
      * @memberof EmergencyContactResponse
      */
     'email'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof EmergencyContactResponse
      */
     'address'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof EmergencyContactResponse
      */
@@ -488,37 +488,37 @@ export interface EmergencyContactResponse {
  */
 export interface EmergencyContactUpdate {
     /**
-     * 
+     *
      * @type {string}
      * @memberof EmergencyContactUpdate
      */
     'full_name'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof EmergencyContactUpdate
      */
     'relationship'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof EmergencyContactUpdate
      */
     'phone_number'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof EmergencyContactUpdate
      */
     'email'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof EmergencyContactUpdate
      */
     'address'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof EmergencyContactUpdate
      */
@@ -531,19 +531,19 @@ export interface EmergencyContactUpdate {
  */
 export interface Example {
     /**
-     * 
+     *
      * @type {string}
      * @memberof Example
      */
     'name': string;
     /**
-     * 
+     *
      * @type {string}
      * @memberof Example
      */
     'description'?: string | null;
     /**
-     * 
+     *
      * @type {number}
      * @memberof Example
      */
@@ -556,58 +556,58 @@ export interface Example {
  */
 export interface ExampleCreate {
     /**
-     * 
+     *
      * @type {string}
      * @memberof ExampleCreate
      */
     'name': string;
     /**
-     * 
+     *
      * @type {string}
      * @memberof ExampleCreate
      */
     'description'?: string | null;
 }
 /**
- * 
+ *
  * @export
  * @interface HTTPValidationError
  */
 export interface HTTPValidationError {
     /**
-     * 
+     *
      * @type {Array<ValidationError>}
      * @memberof HTTPValidationError
      */
     'detail'?: Array<ValidationError>;
 }
 /**
- * 
+ *
  * @export
  * @interface ValidationError
  */
 export interface ValidationError {
     /**
-     * 
+     *
      * @type {Array<ValidationErrorLocInner>}
      * @memberof ValidationError
      */
     'loc': Array<ValidationErrorLocInner>;
     /**
-     * 
+     *
      * @type {string}
      * @memberof ValidationError
      */
     'msg': string;
     /**
-     * 
+     *
      * @type {string}
      * @memberof ValidationError
      */
     'type': string;
 }
 /**
- * 
+ *
  * @export
  * @interface ValidationErrorLocInner
  */
@@ -623,7 +623,7 @@ export const AttorneysApiAxiosParamCreator = function (configuration?: Configura
         /**
          * Creates a new attorney record in the system
          * @summary Create Attorney
-         * @param {AttorneyCreate} attorneyCreate 
+         * @param {AttorneyCreate} attorneyCreate
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -643,7 +643,7 @@ export const AttorneysApiAxiosParamCreator = function (configuration?: Configura
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -680,7 +680,7 @@ export const AttorneysApiAxiosParamCreator = function (configuration?: Configura
             const localVarQueryParameter = {} as any;
 
 
-    
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
@@ -714,7 +714,7 @@ export const AttorneysApiAxiosParamCreator = function (configuration?: Configura
             const localVarQueryParameter = {} as any;
 
 
-    
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
@@ -764,7 +764,7 @@ export const AttorneysApiAxiosParamCreator = function (configuration?: Configura
             }
 
 
-    
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
@@ -778,7 +778,7 @@ export const AttorneysApiAxiosParamCreator = function (configuration?: Configura
          * Update an attorney\'s information (partial update)
          * @summary Update Attorney
          * @param {number} attorneyId The ID of the attorney to update
-         * @param {AttorneyUpdate} attorneyUpdate 
+         * @param {AttorneyUpdate} attorneyUpdate
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -801,7 +801,7 @@ export const AttorneysApiAxiosParamCreator = function (configuration?: Configura
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -827,7 +827,7 @@ export const AttorneysApiFp = function(configuration?: Configuration) {
         /**
          * Creates a new attorney record in the system
          * @summary Create Attorney
-         * @param {AttorneyCreate} attorneyCreate 
+         * @param {AttorneyCreate} attorneyCreate
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -883,7 +883,7 @@ export const AttorneysApiFp = function(configuration?: Configuration) {
          * Update an attorney\'s information (partial update)
          * @summary Update Attorney
          * @param {number} attorneyId The ID of the attorney to update
-         * @param {AttorneyUpdate} attorneyUpdate 
+         * @param {AttorneyUpdate} attorneyUpdate
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -906,7 +906,7 @@ export const AttorneysApiFactory = function (configuration?: Configuration, base
         /**
          * Creates a new attorney record in the system
          * @summary Create Attorney
-         * @param {AttorneyCreate} attorneyCreate 
+         * @param {AttorneyCreate} attorneyCreate
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -950,7 +950,7 @@ export const AttorneysApiFactory = function (configuration?: Configuration, base
          * Update an attorney\'s information (partial update)
          * @summary Update Attorney
          * @param {number} attorneyId The ID of the attorney to update
-         * @param {AttorneyUpdate} attorneyUpdate 
+         * @param {AttorneyUpdate} attorneyUpdate
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -970,7 +970,7 @@ export class AttorneysApi extends BaseAPI {
     /**
      * Creates a new attorney record in the system
      * @summary Create Attorney
-     * @param {AttorneyCreate} attorneyCreate 
+     * @param {AttorneyCreate} attorneyCreate
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof AttorneysApi
@@ -1022,7 +1022,7 @@ export class AttorneysApi extends BaseAPI {
      * Update an attorney\'s information (partial update)
      * @summary Update Attorney
      * @param {number} attorneyId The ID of the attorney to update
-     * @param {AttorneyUpdate} attorneyUpdate 
+     * @param {AttorneyUpdate} attorneyUpdate
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof AttorneysApi
@@ -1043,7 +1043,7 @@ export const ClientsApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * Create a new client record
          * @summary Create Client
-         * @param {ClientCreate} clientCreate 
+         * @param {ClientCreate} clientCreate
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -1063,7 +1063,7 @@ export const ClientsApiAxiosParamCreator = function (configuration?: Configurati
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -1079,7 +1079,7 @@ export const ClientsApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * Delete a client
          * @summary Delete Client
-         * @param {number} clientId 
+         * @param {number} clientId
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -1100,7 +1100,7 @@ export const ClientsApiAxiosParamCreator = function (configuration?: Configurati
             const localVarQueryParameter = {} as any;
 
 
-    
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
@@ -1113,7 +1113,7 @@ export const ClientsApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * Retrieve a specific client by ID
          * @summary Read Client
-         * @param {number} clientId 
+         * @param {number} clientId
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -1134,7 +1134,7 @@ export const ClientsApiAxiosParamCreator = function (configuration?: Configurati
             const localVarQueryParameter = {} as any;
 
 
-    
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
@@ -1147,8 +1147,8 @@ export const ClientsApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * Retrieve clients with optional filtering and pagination
          * @summary Read Clients
-         * @param {number} [skip] 
-         * @param {number} [limit] 
+         * @param {number} [skip]
+         * @param {number} [limit]
          * @param {string | null} [countryOfBirth] Filter by country of birth
          * @param {string | null} [nationality] Filter by nationality
          * @param {*} [options] Override http request option.
@@ -1184,7 +1184,7 @@ export const ClientsApiAxiosParamCreator = function (configuration?: Configurati
             }
 
 
-    
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
@@ -1197,8 +1197,8 @@ export const ClientsApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * Update a client\'s information
          * @summary Update Client
-         * @param {number} clientId 
-         * @param {ClientUpdate} clientUpdate 
+         * @param {number} clientId
+         * @param {ClientUpdate} clientUpdate
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -1221,7 +1221,7 @@ export const ClientsApiAxiosParamCreator = function (configuration?: Configurati
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -1247,7 +1247,7 @@ export const ClientsApiFp = function(configuration?: Configuration) {
         /**
          * Create a new client record
          * @summary Create Client
-         * @param {ClientCreate} clientCreate 
+         * @param {ClientCreate} clientCreate
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -1260,7 +1260,7 @@ export const ClientsApiFp = function(configuration?: Configuration) {
         /**
          * Delete a client
          * @summary Delete Client
-         * @param {number} clientId 
+         * @param {number} clientId
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -1273,7 +1273,7 @@ export const ClientsApiFp = function(configuration?: Configuration) {
         /**
          * Retrieve a specific client by ID
          * @summary Read Client
-         * @param {number} clientId 
+         * @param {number} clientId
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -1286,8 +1286,8 @@ export const ClientsApiFp = function(configuration?: Configuration) {
         /**
          * Retrieve clients with optional filtering and pagination
          * @summary Read Clients
-         * @param {number} [skip] 
-         * @param {number} [limit] 
+         * @param {number} [skip]
+         * @param {number} [limit]
          * @param {string | null} [countryOfBirth] Filter by country of birth
          * @param {string | null} [nationality] Filter by nationality
          * @param {*} [options] Override http request option.
@@ -1302,8 +1302,8 @@ export const ClientsApiFp = function(configuration?: Configuration) {
         /**
          * Update a client\'s information
          * @summary Update Client
-         * @param {number} clientId 
-         * @param {ClientUpdate} clientUpdate 
+         * @param {number} clientId
+         * @param {ClientUpdate} clientUpdate
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -1326,7 +1326,7 @@ export const ClientsApiFactory = function (configuration?: Configuration, basePa
         /**
          * Create a new client record
          * @summary Create Client
-         * @param {ClientCreate} clientCreate 
+         * @param {ClientCreate} clientCreate
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -1336,7 +1336,7 @@ export const ClientsApiFactory = function (configuration?: Configuration, basePa
         /**
          * Delete a client
          * @summary Delete Client
-         * @param {number} clientId 
+         * @param {number} clientId
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -1346,7 +1346,7 @@ export const ClientsApiFactory = function (configuration?: Configuration, basePa
         /**
          * Retrieve a specific client by ID
          * @summary Read Client
-         * @param {number} clientId 
+         * @param {number} clientId
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -1356,8 +1356,8 @@ export const ClientsApiFactory = function (configuration?: Configuration, basePa
         /**
          * Retrieve clients with optional filtering and pagination
          * @summary Read Clients
-         * @param {number} [skip] 
-         * @param {number} [limit] 
+         * @param {number} [skip]
+         * @param {number} [limit]
          * @param {string | null} [countryOfBirth] Filter by country of birth
          * @param {string | null} [nationality] Filter by nationality
          * @param {*} [options] Override http request option.
@@ -1369,8 +1369,8 @@ export const ClientsApiFactory = function (configuration?: Configuration, basePa
         /**
          * Update a client\'s information
          * @summary Update Client
-         * @param {number} clientId 
-         * @param {ClientUpdate} clientUpdate 
+         * @param {number} clientId
+         * @param {ClientUpdate} clientUpdate
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -1390,7 +1390,7 @@ export class ClientsApi extends BaseAPI {
     /**
      * Create a new client record
      * @summary Create Client
-     * @param {ClientCreate} clientCreate 
+     * @param {ClientCreate} clientCreate
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ClientsApi
@@ -1402,7 +1402,7 @@ export class ClientsApi extends BaseAPI {
     /**
      * Delete a client
      * @summary Delete Client
-     * @param {number} clientId 
+     * @param {number} clientId
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ClientsApi
@@ -1414,7 +1414,7 @@ export class ClientsApi extends BaseAPI {
     /**
      * Retrieve a specific client by ID
      * @summary Read Client
-     * @param {number} clientId 
+     * @param {number} clientId
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ClientsApi
@@ -1426,8 +1426,8 @@ export class ClientsApi extends BaseAPI {
     /**
      * Retrieve clients with optional filtering and pagination
      * @summary Read Clients
-     * @param {number} [skip] 
-     * @param {number} [limit] 
+     * @param {number} [skip]
+     * @param {number} [limit]
      * @param {string | null} [countryOfBirth] Filter by country of birth
      * @param {string | null} [nationality] Filter by nationality
      * @param {*} [options] Override http request option.
@@ -1441,8 +1441,8 @@ export class ClientsApi extends BaseAPI {
     /**
      * Update a client\'s information
      * @summary Update Client
-     * @param {number} clientId 
-     * @param {ClientUpdate} clientUpdate 
+     * @param {number} clientId
+     * @param {ClientUpdate} clientUpdate
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ClientsApi
@@ -1480,7 +1480,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             const localVarQueryParameter = {} as any;
 
 
-    
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
@@ -1491,7 +1491,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             };
         },
         /**
-         * 
+         *
          * @summary Root
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -1510,7 +1510,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             const localVarQueryParameter = {} as any;
 
 
-    
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
@@ -1543,7 +1543,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * 
+         *
          * @summary Root
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -1574,7 +1574,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
             return localVarFp.healthCheckHealthGet(options).then((request) => request(axios, basePath));
         },
         /**
-         * 
+         *
          * @summary Root
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -1604,7 +1604,7 @@ export class DefaultApi extends BaseAPI {
     }
 
     /**
-     * 
+     *
      * @summary Root
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -1626,7 +1626,7 @@ export const EmergencyContactsApiAxiosParamCreator = function (configuration?: C
         /**
          * Create a new emergency contact record
          * @summary Create Emergency Contact
-         * @param {EmergencyContactCreate} emergencyContactCreate 
+         * @param {EmergencyContactCreate} emergencyContactCreate
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -1646,7 +1646,7 @@ export const EmergencyContactsApiAxiosParamCreator = function (configuration?: C
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -1662,7 +1662,7 @@ export const EmergencyContactsApiAxiosParamCreator = function (configuration?: C
         /**
          * Delete an emergency contact
          * @summary Delete Emergency Contact
-         * @param {number} emergencyContactId 
+         * @param {number} emergencyContactId
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -1683,7 +1683,7 @@ export const EmergencyContactsApiAxiosParamCreator = function (configuration?: C
             const localVarQueryParameter = {} as any;
 
 
-    
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
@@ -1696,7 +1696,7 @@ export const EmergencyContactsApiAxiosParamCreator = function (configuration?: C
         /**
          * Retrieve a specific emergency contact by ID
          * @summary Read Emergency Contact
-         * @param {number} emergencyContactId 
+         * @param {number} emergencyContactId
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -1717,7 +1717,7 @@ export const EmergencyContactsApiAxiosParamCreator = function (configuration?: C
             const localVarQueryParameter = {} as any;
 
 
-    
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
@@ -1731,8 +1731,8 @@ export const EmergencyContactsApiAxiosParamCreator = function (configuration?: C
          * Retrieve emergency contacts for a client with pagination
          * @summary Read Emergency Contacts
          * @param {number} clientId ID of the client
-         * @param {number} [skip] 
-         * @param {number} [limit] 
+         * @param {number} [skip]
+         * @param {number} [limit]
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -1764,7 +1764,7 @@ export const EmergencyContactsApiAxiosParamCreator = function (configuration?: C
             }
 
 
-    
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
@@ -1777,8 +1777,8 @@ export const EmergencyContactsApiAxiosParamCreator = function (configuration?: C
         /**
          * Update an emergency contact\'s information
          * @summary Update Emergency Contact
-         * @param {number} emergencyContactId 
-         * @param {EmergencyContactUpdate} emergencyContactUpdate 
+         * @param {number} emergencyContactId
+         * @param {EmergencyContactUpdate} emergencyContactUpdate
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -1801,7 +1801,7 @@ export const EmergencyContactsApiAxiosParamCreator = function (configuration?: C
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -1827,7 +1827,7 @@ export const EmergencyContactsApiFp = function(configuration?: Configuration) {
         /**
          * Create a new emergency contact record
          * @summary Create Emergency Contact
-         * @param {EmergencyContactCreate} emergencyContactCreate 
+         * @param {EmergencyContactCreate} emergencyContactCreate
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -1840,7 +1840,7 @@ export const EmergencyContactsApiFp = function(configuration?: Configuration) {
         /**
          * Delete an emergency contact
          * @summary Delete Emergency Contact
-         * @param {number} emergencyContactId 
+         * @param {number} emergencyContactId
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -1853,7 +1853,7 @@ export const EmergencyContactsApiFp = function(configuration?: Configuration) {
         /**
          * Retrieve a specific emergency contact by ID
          * @summary Read Emergency Contact
-         * @param {number} emergencyContactId 
+         * @param {number} emergencyContactId
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -1867,8 +1867,8 @@ export const EmergencyContactsApiFp = function(configuration?: Configuration) {
          * Retrieve emergency contacts for a client with pagination
          * @summary Read Emergency Contacts
          * @param {number} clientId ID of the client
-         * @param {number} [skip] 
-         * @param {number} [limit] 
+         * @param {number} [skip]
+         * @param {number} [limit]
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -1881,8 +1881,8 @@ export const EmergencyContactsApiFp = function(configuration?: Configuration) {
         /**
          * Update an emergency contact\'s information
          * @summary Update Emergency Contact
-         * @param {number} emergencyContactId 
-         * @param {EmergencyContactUpdate} emergencyContactUpdate 
+         * @param {number} emergencyContactId
+         * @param {EmergencyContactUpdate} emergencyContactUpdate
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -1905,7 +1905,7 @@ export const EmergencyContactsApiFactory = function (configuration?: Configurati
         /**
          * Create a new emergency contact record
          * @summary Create Emergency Contact
-         * @param {EmergencyContactCreate} emergencyContactCreate 
+         * @param {EmergencyContactCreate} emergencyContactCreate
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -1915,7 +1915,7 @@ export const EmergencyContactsApiFactory = function (configuration?: Configurati
         /**
          * Delete an emergency contact
          * @summary Delete Emergency Contact
-         * @param {number} emergencyContactId 
+         * @param {number} emergencyContactId
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -1925,7 +1925,7 @@ export const EmergencyContactsApiFactory = function (configuration?: Configurati
         /**
          * Retrieve a specific emergency contact by ID
          * @summary Read Emergency Contact
-         * @param {number} emergencyContactId 
+         * @param {number} emergencyContactId
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -1936,8 +1936,8 @@ export const EmergencyContactsApiFactory = function (configuration?: Configurati
          * Retrieve emergency contacts for a client with pagination
          * @summary Read Emergency Contacts
          * @param {number} clientId ID of the client
-         * @param {number} [skip] 
-         * @param {number} [limit] 
+         * @param {number} [skip]
+         * @param {number} [limit]
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -1947,8 +1947,8 @@ export const EmergencyContactsApiFactory = function (configuration?: Configurati
         /**
          * Update an emergency contact\'s information
          * @summary Update Emergency Contact
-         * @param {number} emergencyContactId 
-         * @param {EmergencyContactUpdate} emergencyContactUpdate 
+         * @param {number} emergencyContactId
+         * @param {EmergencyContactUpdate} emergencyContactUpdate
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -1968,7 +1968,7 @@ export class EmergencyContactsApi extends BaseAPI {
     /**
      * Create a new emergency contact record
      * @summary Create Emergency Contact
-     * @param {EmergencyContactCreate} emergencyContactCreate 
+     * @param {EmergencyContactCreate} emergencyContactCreate
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof EmergencyContactsApi
@@ -1980,7 +1980,7 @@ export class EmergencyContactsApi extends BaseAPI {
     /**
      * Delete an emergency contact
      * @summary Delete Emergency Contact
-     * @param {number} emergencyContactId 
+     * @param {number} emergencyContactId
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof EmergencyContactsApi
@@ -1992,7 +1992,7 @@ export class EmergencyContactsApi extends BaseAPI {
     /**
      * Retrieve a specific emergency contact by ID
      * @summary Read Emergency Contact
-     * @param {number} emergencyContactId 
+     * @param {number} emergencyContactId
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof EmergencyContactsApi
@@ -2005,8 +2005,8 @@ export class EmergencyContactsApi extends BaseAPI {
      * Retrieve emergency contacts for a client with pagination
      * @summary Read Emergency Contacts
      * @param {number} clientId ID of the client
-     * @param {number} [skip] 
-     * @param {number} [limit] 
+     * @param {number} [skip]
+     * @param {number} [limit]
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof EmergencyContactsApi
@@ -2018,8 +2018,8 @@ export class EmergencyContactsApi extends BaseAPI {
     /**
      * Update an emergency contact\'s information
      * @summary Update Emergency Contact
-     * @param {number} emergencyContactId 
-     * @param {EmergencyContactUpdate} emergencyContactUpdate 
+     * @param {number} emergencyContactId
+     * @param {EmergencyContactUpdate} emergencyContactUpdate
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof EmergencyContactsApi
@@ -2040,7 +2040,7 @@ export const ExamplesApiAxiosParamCreator = function (configuration?: Configurat
         /**
          * Create a new example.
          * @summary Create Example
-         * @param {ExampleCreate} exampleCreate 
+         * @param {ExampleCreate} exampleCreate
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -2060,7 +2060,7 @@ export const ExamplesApiAxiosParamCreator = function (configuration?: Configurat
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -2076,7 +2076,7 @@ export const ExamplesApiAxiosParamCreator = function (configuration?: Configurat
         /**
          * Retrieve a specific example by ID.
          * @summary Get Example
-         * @param {number} exampleId 
+         * @param {number} exampleId
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -2097,7 +2097,7 @@ export const ExamplesApiAxiosParamCreator = function (configuration?: Configurat
             const localVarQueryParameter = {} as any;
 
 
-    
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
@@ -2127,7 +2127,7 @@ export const ExamplesApiAxiosParamCreator = function (configuration?: Configurat
             const localVarQueryParameter = {} as any;
 
 
-    
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
@@ -2150,7 +2150,7 @@ export const ExamplesApiFp = function(configuration?: Configuration) {
         /**
          * Create a new example.
          * @summary Create Example
-         * @param {ExampleCreate} exampleCreate 
+         * @param {ExampleCreate} exampleCreate
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -2163,7 +2163,7 @@ export const ExamplesApiFp = function(configuration?: Configuration) {
         /**
          * Retrieve a specific example by ID.
          * @summary Get Example
-         * @param {number} exampleId 
+         * @param {number} exampleId
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -2198,7 +2198,7 @@ export const ExamplesApiFactory = function (configuration?: Configuration, baseP
         /**
          * Create a new example.
          * @summary Create Example
-         * @param {ExampleCreate} exampleCreate 
+         * @param {ExampleCreate} exampleCreate
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -2208,7 +2208,7 @@ export const ExamplesApiFactory = function (configuration?: Configuration, baseP
         /**
          * Retrieve a specific example by ID.
          * @summary Get Example
-         * @param {number} exampleId 
+         * @param {number} exampleId
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -2237,7 +2237,7 @@ export class ExamplesApi extends BaseAPI {
     /**
      * Create a new example.
      * @summary Create Example
-     * @param {ExampleCreate} exampleCreate 
+     * @param {ExampleCreate} exampleCreate
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ExamplesApi
@@ -2249,7 +2249,7 @@ export class ExamplesApi extends BaseAPI {
     /**
      * Retrieve a specific example by ID.
      * @summary Get Example
-     * @param {number} exampleId 
+     * @param {number} exampleId
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ExamplesApi
@@ -2269,6 +2269,3 @@ export class ExamplesApi extends BaseAPI {
         return ExamplesApiFp(this.configuration).getExamplesExamplesGet(options).then((request) => request(this.axios, this.basePath));
     }
 }
-
-
-

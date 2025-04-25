@@ -1,4 +1,4 @@
-import { Alert, Vibration } from 'react-native';
+import { Vibration } from 'react-native';
 import { SecureStorage } from './secureStorage';
 import api from '../api/client';
 import { PersonalInfo } from 'screens/PersonalInfoScreen';
