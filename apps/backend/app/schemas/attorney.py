@@ -1,12 +1,10 @@
 import re
 
 from datetime import datetime
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from pydantic_extra_types.phone_numbers import PhoneNumber
-
-from .court import Court  # Import Court schema for relationship
 
 # Configure PhoneNumber format globally
 PhoneNumber.phone_format = "E164"  #'INTERNATIONAL', 'NATIONAL'
@@ -100,7 +98,7 @@ class Attorney(AttorneyBase):
     id: int
     created_at: datetime
     updated_at: datetime
-    # Add the relationship to courts
-    admitted_courts: List[Court] = []
+    # Use string type annotation for the relationship to avoid circular import
+    admitted_courts: List[Any] = []
 
     model_config = {"from_attributes": True}
