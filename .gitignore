@@ -220,3 +220,7 @@ yarn-debug.log*
 yarn-error.log*
 package-lock.json # Use yarn.lock instead for consistency
 
+# Expo specific
+# ======================
+.expo/
+.expo-shared/

@@ -1,14 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  StyleSheet, 
-  TouchableOpacity, 
-  ScrollView, 
-  ActivityIndicator 
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator
 } from 'react-native';
 import api from '../api/client';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+type RootStackParamList = {
+  Home: undefined;
+  PersonalInfo: undefined;
+  AttorneySignup: undefined;
+};
+
+type AttorneySignupScreenProps = {
+  navigation: NativeStackNavigationProp<RootStackParamList, 'AttorneySignup'>;
+};
 
 type SignupFormData = {
   name: string;
@@ -18,7 +29,7 @@ type SignupFormData = {
   jurisdiction: string;
 };
 
-export default function AttorneySignupScreen({ navigation }: any) {
+export default function AttorneySignupScreen({ navigation }: AttorneySignupScreenProps) {
   const [formData, setFormData] = useState<SignupFormData>({
     name: '',
     phoneNumber: '',
@@ -26,12 +37,12 @@ export default function AttorneySignupScreen({ navigation }: any) {
     zipCode: '',
     jurisdiction: '',
   });
-  
+
   const [errors, setErrors] = useState<Partial<SignupFormData>>({});
   const [loading, setLoading] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
-  
+
   // Validate form whenever input changes
   useEffect(() => {
     validateForm();
@@ -39,27 +50,27 @@ export default function AttorneySignupScreen({ navigation }: any) {
 
   const validateForm = (): boolean => {
     const newErrors: Partial<SignupFormData> = {};
-    
+
     if (!formData.name.trim()) newErrors.name = 'Name is required';
-    
+
     // E.164 format: + followed by 1-15 digits
     const phoneRegex = /^\+[1-9]\d{1,14}$/;
     if (!formData.phoneNumber.trim() || !phoneRegex.test(formData.phoneNumber)) {
       newErrors.phoneNumber = 'Phone number must be in E.164 format (e.g., +12025551234)';
     }
-    
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email.trim() || !emailRegex.test(formData.email)) {
       newErrors.email = 'Valid email is required';
     }
-    
+
     const zipRegex = /^\d{5}(?:[-\s]\d{4})?$/;
     if (!formData.zipCode.trim() || !zipRegex.test(formData.zipCode)) {
       newErrors.zipCode = 'Valid ZIP code is required';
     }
-    
+
     if (!formData.jurisdiction.trim()) newErrors.jurisdiction = 'Jurisdiction is required';
-    
+
     setErrors(newErrors);
     const valid = Object.keys(newErrors).length === 0;
     setIsFormValid(valid);
@@ -73,13 +84,13 @@ export default function AttorneySignupScreen({ navigation }: any) {
       return acc;
     }, {} as Record<string, boolean>);
     setTouchedFields(allTouched);
-    
+
     if (!validateForm()) return;
-    
+
     try {
       setLoading(true);
       await api.registerAttorney(formData);
-      
+
       alert('Signup successful! We will review your information.');
       // Navigate back or to a confirmation screen
       navigation.navigate('Home');
@@ -163,8 +174,8 @@ export default function AttorneySignupScreen({ navigation }: any) {
           {touchedFields.jurisdiction && errors.jurisdiction && <Text style={styles.errorText}>{errors.jurisdiction}</Text>}
         </View>
 
-        <TouchableOpacity 
-          style={[styles.button, (!isFormValid || loading) && styles.buttonDisabled]} 
+        <TouchableOpacity
+          style={[styles.button, (!isFormValid || loading) && styles.buttonDisabled]}
           onPress={handleSignup}
           disabled={!isFormValid || loading}
         >
@@ -180,57 +191,11 @@ export default function AttorneySignupScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginTop: 40,
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  description: {
-    fontSize: 16,
-    textAlign: 'center',
-    color: '#555',
-    marginBottom: 30,
-  },
-  formContainer: {
-    backgroundColor: '#f9f9f9',
-    borderRadius: 10,
-    padding: 20,
-    marginBottom: 20,
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 8,
-    color: '#333',
-  },
-  input: {
-    backgroundColor: '#fff',
-    height: 50,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    paddingHorizontal: 15,
-    fontSize: 16,
-  },
-  errorText: {
-    color: 'red',
-    fontSize: 14,
-    marginTop: 5,
-  },
   button: {
-    backgroundColor: '#4a90e2',
-    height: 50,
-    borderRadius: 5,
     alignItems: 'center',
+    backgroundColor: '#4a90e2',
+    borderRadius: 5,
+    height: 50,
     justifyContent: 'center',
     marginTop: 10,
   },
@@ -242,5 +207,51 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  container: {
+    flexGrow: 1,
+    padding: 20,
+  },
+  description: {
+    color: '#555',
+    fontSize: 16,
+    marginBottom: 30,
+    textAlign: 'center',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 14,
+    marginTop: 5,
+  },
+  formContainer: {
+    backgroundColor: '#f9f9f9',
+    borderRadius: 10,
+    marginBottom: 20,
+    padding: 20,
+  },
+  input: {
+    backgroundColor: '#fff',
+    borderColor: '#ddd',
+    borderRadius: 5,
+    borderWidth: 1,
+    fontSize: 16,
+    height: 50,
+    paddingHorizontal: 15,
+  },
+  inputGroup: {
+    marginBottom: 20,
+  },
+  label: {
+    color: '#333',
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 8,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    marginTop: 40,
+    textAlign: 'center',
   },
 });

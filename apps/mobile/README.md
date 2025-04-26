@@ -41,7 +41,7 @@ The mobile app uses a TypeScript client generated from the backend's OpenAPI spe
    ```bash
    # Using npm
    npm run generate-api
-   
+
    # Or using yarn
    yarn generate-api
    ```

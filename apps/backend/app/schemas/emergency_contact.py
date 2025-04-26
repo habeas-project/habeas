@@ -17,13 +17,13 @@ class EmergencyContactBase(BaseModel):
     address: Optional[str] = Field(None, max_length=255, description="Physical address of the emergency contact")
     notes: Optional[str] = Field(None, description="Additional notes about the emergency contact")
 
-    @computed_field(repr=False)
+    @computed_field(repr=False)  # type: ignore[misc]
     @property
     def formatted_phone(self) -> str:
         """Returns the phone number in E.164 format"""
         return str(self.phone_number)
 
-    @computed_field(repr=False)
+    @computed_field(repr=False)  # type: ignore[misc]
     @property
     def display_name(self) -> str:
         """Returns a display-friendly name with relationship"""

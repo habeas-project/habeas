@@ -38,15 +38,17 @@ repos:
       - id: eslint
         files: \.(js|ts|tsx)$
         types: [file]
+        language_version: "20.8.0"
         additional_dependencies:
-          - eslint@8.56.0
+          - eslint@8.57.0
           - eslint-config-prettier@9.1.0
-          - typescript@5.3.3
-          - "@typescript-eslint/eslint-plugin@^7.0.0"
-          - "@typescript-eslint/parser@^7.0.0"
+          - typescript@5.8.3
+          - "@typescript-eslint/eslint-plugin@^8.31.0"
+          - "@typescript-eslint/parser@^8.31.0"
           - "eslint-plugin-react@^7.33.0"
           - "eslint-plugin-react-native@^4.1.0"
         args: [--fix]
+        language: node
 
   # Security checks
   - repo: https://github.com/gitleaks/gitleaks

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Any, List, Optional
 
 from pydantic import BaseModel, HttpUrl
 
@@ -32,6 +32,7 @@ class Court(CourtBase):
     id: int
     created_at: datetime
     updated_at: datetime
+    # Use Any for relationship to avoid circular import
+    admitted_attorneys: List[Any] = []
 
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}  # Updated from older Config.orm_mode

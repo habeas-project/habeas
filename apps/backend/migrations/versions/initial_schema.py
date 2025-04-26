@@ -2,9 +2,11 @@
 
 Revision ID: initial_schema
 Revises:
-Create Date: 2025-04-14 00:00:00.000000
+Create Date: 2025-04-25 00:00:00.000000
 
 """
+
+from typing import Sequence, Union
 
 import sqlalchemy as sa
 
@@ -12,13 +14,13 @@ from alembic import op
 from sqlalchemy.sql import func
 
 # revision identifiers, used by Alembic.
-revision = "initial_schema"
-down_revision = None
-branch_labels = None
-depends_on = None
+revision: str = "initial_schema"
+down_revision: Union[str, None] = None
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
 
 
-def upgrade():
+def upgrade() -> None:
     # Create attorneys table
     op.create_table(
         "attorneys",
@@ -105,8 +107,37 @@ def upgrade():
     op.create_index(op.f("ix_courts_name"), "courts", ["name"], unique=False)
     op.create_index(op.f("ix_courts_abbreviation"), "courts", ["abbreviation"], unique=True)
 
+    # Create attorney_court_admissions table
+    op.create_table(
+        "attorney_court_admissions",
+        sa.Column("attorney_id", sa.Integer(), nullable=False),
+        sa.Column("court_id", sa.Integer(), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["attorney_id"],
+            ["attorneys.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["court_id"],
+            ["courts.id"],
+        ),
+        sa.PrimaryKeyConstraint("attorney_id", "court_id"),
+    )
+    op.create_index(
+        op.f("ix_attorney_court_admissions_attorney_id"), "attorney_court_admissions", ["attorney_id"], unique=False
+    )
+    op.create_index(
+        op.f("ix_attorney_court_admissions_court_id"), "attorney_court_admissions", ["court_id"], unique=False
+    )
 
-def downgrade():
+
+def downgrade() -> None:
+    # Drop all tables in reverse order of creation to respect foreign key constraints
+
+    # Drop attorney_court_admissions table and indexes
+    op.drop_index(op.f("ix_attorney_court_admissions_court_id"), table_name="attorney_court_admissions")
+    op.drop_index(op.f("ix_attorney_court_admissions_attorney_id"), table_name="attorney_court_admissions")
+    op.drop_table("attorney_court_admissions")
+
     # Drop courts table and indexes
     op.drop_index(op.f("ix_courts_abbreviation"), table_name="courts")
     op.drop_index(op.f("ix_courts_name"), table_name="courts")

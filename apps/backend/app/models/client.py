@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Date, Integer, String
+from sqlalchemy import Column, Date, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from sqlalchemy.sql.sqltypes import TIMESTAMP
@@ -25,9 +25,11 @@ class Client(Base):
     student_id_number = Column(String(50), nullable=True, unique=True)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
 
     # Relationship with emergency contacts
     emergency_contacts = relationship("EmergencyContact", back_populates="client", cascade="all, delete-orphan")
+    user = relationship("User", back_populates="client")
 
     def __repr__(self):
         return f"<Client(id={self.id}, first_name='{self.first_name}', last_name='{self.last_name}')>"
