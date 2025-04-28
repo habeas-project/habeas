@@ -1,4 +1,4 @@
-from typing import List
+from typing import TYPE_CHECKING, List
 
 from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, relationship
@@ -6,9 +6,10 @@ from sqlalchemy.sql import func
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 
 from app.database import Base
+from app.models.attorney_court_admission import attorney_court_admission_table
 
-from .attorney_court_admission import attorney_court_admission_table
-from .court import Court
+if TYPE_CHECKING:
+    from app.models.court import Court
 
 
 class Attorney(Base):
