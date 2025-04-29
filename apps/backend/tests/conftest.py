@@ -46,6 +46,44 @@ def client(db_session):
     app.dependency_overrides.clear()
 
 
+# --- Factory Fixtures ---
+
+
+@pytest.fixture
+def SessionScopedFactory(db_session):
+    """Fixture to provide factories scoped to the test db session."""
+    from .factories import BaseFactory  # type: ignore
+
+    class SessionFactory(BaseFactory):
+        class Meta:
+            sqlalchemy_session = db_session
+            sqlalchemy_session_persistence = "flush"
+
+    return SessionFactory
+
+
+@pytest.fixture
+def AttorneyTestFactory(SessionScopedFactory):
+    """Factory fixture for creating Attorney instances."""
+    from .factories import AttorneyFactory
+
+    class TestAttorneyFactory(AttorneyFactory, SessionScopedFactory):
+        pass
+
+    return TestAttorneyFactory
+
+
+@pytest.fixture
+def CourtTestFactory(SessionScopedFactory):
+    """Factory fixture for creating Court instances."""
+    from .factories import CourtFactory
+
+    class TestCourtFactory(CourtFactory, SessionScopedFactory):
+        pass
+
+    return TestCourtFactory
+
+
 # Test markers setup
 def pytest_configure(config):
     """Configure pytest with custom markers."""

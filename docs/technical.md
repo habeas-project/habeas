@@ -149,12 +149,107 @@ This structure promotes code reuse and clear data contracts.
 
 ### Testing Strategy
 
-API tests are located in [`apps/backend/tests/`](../../apps/backend/tests/). We use `pytest` and FastAPI's `TestClient` for synchronous integration testing against the API endpoints.
+Tests are located in [`apps/backend/tests/`](../../apps/backend/tests/) and organized into a structured hierarchy. We use `pytest` as our testing framework with additional dependencies such as `factory-boy` for generating test data and FastAPI's `TestClient` for integration testing.
 
-Key practices:
--   Use the `client: TestClient` fixture provided by FastAPI/Starlette.
--   Make requests to endpoint paths (e.g., `client.post("/models/", json=...)`).
--   Assert status codes (`response.status_code`) and response data (`response.json()`).
+#### Test Directory Structure
+
+```
+tests/
+├── conftest.py                 # Shared pytest fixtures
+├── factories.py                # Factory Boy model factories
+├── unit/                       # Unit tests
+│   ├── models/                 # Tests for SQLAlchemy models
+│   ├── schemas/                # Tests for Pydantic schemas
+│   └── services/               # Tests for service layer functions
+├── integration/                # Integration tests
+│   ├── routers/                # Tests for API endpoints
+│   └── services/               # Tests for services with DB interactions
+└── __init__.py
+```
+
+#### Types of Tests
+
+1. **Unit Tests**:
+   - **Model Tests**: Verify model relationships, constraints, and properties
+   - **Schema Tests**: Validate Pydantic schema validation rules
+   - **Service Tests**: Test service layer functions in isolation
+
+2. **Integration Tests**:
+   - **Router Tests**: Test API endpoints using FastAPI's TestClient
+   - **Service Integration Tests**: Test service interactions with the database
+
+#### Key Testing Components
+
+- **Test Database**: Tests use an in-memory SQLite database to avoid affecting production data
+- **TestClient**: FastAPI's `TestClient` provides an interface for making HTTP requests to API endpoints
+- **Factory Boy**: Generates test data for models with realistic values
+- **Fixtures**: Common test fixtures in `conftest.py` provide database sessions and factories
+
+#### Key Fixtures
+
+```python
+# Database session fixture
+@pytest.fixture(scope="function")
+def db_session(db_engine):
+    """Create a new database session for a test."""
+    SessionLocal = sessionmaker(bind=db_engine)
+    session = SessionLocal()
+    try:
+        yield session
+    finally:
+        session.rollback()
+        session.close()
+
+# FastAPI TestClient with DB session override
+@pytest.fixture
+def client(db_session):
+    """Create a test client using the test database session."""
+    def override_get_db():
+        try:
+            yield db_session
+        finally:
+            pass
+    app.dependency_overrides[get_db] = override_get_db
+    with TestClient(app) as test_client:
+        yield test_client
+    app.dependency_overrides.clear()
+
+# Factory fixtures
+@pytest.fixture
+def AttorneyTestFactory(SessionScopedFactory):
+    """Factory fixture for creating Attorney instances."""
+    class TestAttorneyFactory(AttorneyFactory, SessionScopedFactory):
+        pass
+    return TestAttorneyFactory
+```
+
+#### Running Tests
+
+Execute tests using pytest:
+
+```bash
+# Run all tests
+pytest
+
+# Run specific test categories
+pytest tests/unit/
+pytest tests/integration/
+
+# Run tests with specific markers
+pytest -m unit
+pytest -m integration
+
+# Generate test coverage report
+pytest --cov=app
+```
+
+#### Testing Practices
+
+- **Mock only when necessary**: Prefer testing against the test database for more realistic tests
+- **Use markers**: Apply `@pytest.mark.unit` and `@pytest.mark.integration` to categorize tests
+- **Test exceptions**: Validate that appropriate exceptions are raised using `pytest.raises`
+- **Isolate tests**: Each test should be independent and not rely on state from other tests
+- **Test validation**: Ensure schema validation works by testing both valid and invalid inputs
 
 ## Database Migrations
 
