@@ -6,6 +6,7 @@ from faker import Faker
 
 from app.models.attorney import Attorney
 from app.models.court import Court
+from app.models.user import User
 
 # Initialize Faker
 fake = Faker()
@@ -45,20 +46,22 @@ class CourtFactory(BaseFactory):
     name = factory.LazyFunction(
         lambda: f"{fake.city()} {fake.random_element(['District', 'Circuit', 'Supreme'])} Court"
     )
-    jurisdiction = factory.Faker("random_element", elements=["Federal", "State", "County", "Municipal"])
-    location = factory.Faker("state_abbr")
+    abbreviation = factory.LazyFunction(
+        lambda: f"{fake.random_letter().upper()}{fake.random_letter().upper()}{fake.random_letter().upper()}"
+    )
+    url = factory.Faker("url")
 
 
-# Example UserFactory - uncomment and adjust if User model exists and is needed
-# class UserFactory(BaseFactory):
-#     """Factory for the User model."""
-#     class Meta:
-#         model = User
-#
-#     id = factory.Sequence(lambda n: n+1)
-#     email = factory.Faker("email")
-#     # Add other necessary fields for User model
-#     # Handle relationships carefully to avoid loops (e.g., attorney=None above)
+class UserFactory(BaseFactory):
+    """Factory for the User model."""
+
+    class Meta:
+        model = User
+
+    id = factory.Sequence(lambda n: n + 1)
+    cognito_id = factory.Sequence(lambda n: f"mock_user_{n}@example.com")
+    user_type = factory.Faker("random_element", elements=["attorney", "client", "admin"])
+    is_active = True
 
 
 # Example of a factory creating relationships (if Attorney <-> Court exists)

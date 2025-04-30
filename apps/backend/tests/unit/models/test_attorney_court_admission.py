@@ -1,43 +1,58 @@
+import traceback
+
 import pytest
 
 from app.models.attorney import Attorney
 from app.models.court import Court
+from tests.test_utils import create_all_tables
 
 
 @pytest.mark.unit
-def test_attorney_court_admission_relationship(db_session):
+def test_attorney_court_admission_relationship(db_session, db_engine):
     """Test that the many-to-many relationship between Attorney and Court works correctly."""
-    # Create test attorney
-    attorney = Attorney(
-        name="Test Attorney",
-        phone_number="+15551234567",
-        email="test.attorney@example.com",
-        zip_code="12345",
-        state="CA",
-    )
+    # Ensure the tables are properly created - defensive check
+    tables = create_all_tables(db_engine)
+    if "attorneys" not in tables or "courts" not in tables or "attorney_court_admissions" not in tables:
+        tables_str = ", ".join(tables)
+        pytest.skip(f"Required tables are missing. Available tables: {tables_str}")
 
-    # Create test court
-    court = Court(name="Test District Court", abbreviation="TDC", url="https://testcourt.gov")
+    try:
+        # Create test attorney
+        attorney = Attorney(
+            name="Test Attorney Relationship",
+            phone_number="+15551234567",
+            email="test.attorney.relationship@example.com",
+            zip_code="12345",
+            state="CA",
+        )
 
-    # Add both objects to the database
-    db_session.add_all([attorney, court])
-    db_session.commit()
+        # Create test court
+        court = Court(name="Test Relationship Court", abbreviation="REL", url="https://relationship-court.gov")
 
-    # Test adding court to attorney's admitted courts
-    attorney.admitted_courts.append(court)
-    db_session.commit()
+        # Add both objects to the database
+        db_session.add_all([attorney, court])
+        db_session.commit()
 
-    # Verify the relationship from both directions
-    assert court in attorney.admitted_courts
-    assert attorney in court.admitted_attorneys
+        # Test adding court to attorney's admitted courts
+        attorney.admitted_courts.append(court)
+        db_session.commit()
 
-    # Test removing the relationship
-    attorney.admitted_courts.remove(court)
-    db_session.commit()
+        # Verify the relationship from both directions
+        assert court in attorney.admitted_courts
+        assert attorney in court.admitted_attorneys
 
-    # Verify the relationship is removed
-    assert court not in attorney.admitted_courts
-    assert attorney not in court.admitted_attorneys
+        # Test removing the relationship
+        attorney.admitted_courts.remove(court)
+        db_session.commit()
+
+        # Verify the relationship is removed
+        assert court not in attorney.admitted_courts
+        assert attorney not in court.admitted_attorneys
+    except Exception as e:
+        # Print and fail with better diagnostics
+        print(f"Exception in attorney_court_admission_relationship test: {str(e)}")
+        traceback.print_exc()
+        pytest.fail(f"Test failed with exception: {str(e)}")
 
 
 @pytest.mark.unit

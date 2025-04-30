@@ -26,7 +26,9 @@ class TestAttorneyCourtAdmissionCreate:
         # Verify the error message
         errors = excinfo.value.errors()
         assert any("court_id" in error["loc"] for error in errors)
-        assert any("type_error" in error["type"] for error in errors)
+
+        # In Pydantic v2, the error type is 'int_parsing' instead of 'type_error'
+        assert any("int_parsing" in error["type"] or "type_error" in error["type"] for error in errors)
 
     def test_non_positive_court_id(self):
         """Test that non-positive court_id values are rejected."""

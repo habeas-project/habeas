@@ -4,7 +4,11 @@ from pydantic import BaseModel, Field
 class AttorneyCourtAdmissionBase(BaseModel):
     """Base schema for attorney-court admission relationship"""
 
-    court_id: int = Field(..., description="ID of the court the attorney is admitted to")
+    court_id: int = Field(
+        ...,
+        description="ID of the court the attorney is admitted to",
+        gt=0,  # court_id must be greater than 0
+    )
 
 
 class AttorneyCourtAdmissionCreate(AttorneyCourtAdmissionBase):

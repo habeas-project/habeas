@@ -18,13 +18,17 @@ class TestAddAdmission:
         """Test that adding a valid admission works correctly."""
         # Create test attorney and court
         attorney = Attorney(
-            name="Test Attorney",
+            name="Test Attorney Success",
             phone_number="+15551234567",
-            email="test.attorney@example.com",
+            email="test.attorney.add.success@example.com",  # Using a unique email
             zip_code="12345",
             state="CA",
         )
-        court = Court(name="Test District Court", jurisdiction="Federal", location="CA")
+        court = Court(
+            name="Test District Court",
+            abbreviation="TAS",  # Using a unique abbreviation
+            url="https://testdistrictcourt.gov",
+        )
         db_session.add_all([attorney, court])
         db_session.commit()
 
@@ -42,11 +46,15 @@ class TestAddAdmission:
         attorney = Attorney(
             name="Test Attorney",
             phone_number="+15551234567",
-            email="test.attorney@example.com",
+            email="test.attorney.dup@example.com",  # Use a different email to avoid unique constraint
             zip_code="12345",
             state="CA",
         )
-        court = Court(name="Test District Court", jurisdiction="Federal", location="CA")
+        court = Court(
+            name="Test District Court",
+            abbreviation="TDD",  # Different abbreviation to avoid unique constraint
+            url="https://testdistrictcourt.gov",
+        )
         db_session.add_all([attorney, court])
         db_session.commit()
 
@@ -62,7 +70,11 @@ class TestAddAdmission:
     def test_add_admission_attorney_not_found(self, db_session):
         """Test that attempting to add an admission for a non-existent attorney raises AttorneyNotFoundError."""
         # Create only a court
-        court = Court(name="Test District Court", jurisdiction="Federal", location="CA")
+        court = Court(
+            name="Test District Court",
+            abbreviation="TDF",  # Different abbreviation to avoid unique constraint
+            url="https://testdistrictcourt.gov",
+        )
         db_session.add(court)
         db_session.commit()
 
@@ -79,7 +91,7 @@ class TestAddAdmission:
         attorney = Attorney(
             name="Test Attorney",
             phone_number="+15551234567",
-            email="test.attorney@example.com",
+            email="test.attorney.cnf@example.com",  # Different email to avoid unique constraint
             zip_code="12345",
             state="CA",
         )
@@ -102,13 +114,17 @@ class TestRemoveAdmission:
         """Test that removing a valid admission works correctly."""
         # Create test attorney and court
         attorney = Attorney(
-            name="Test Attorney",
+            name="Test Attorney Remove",
             phone_number="+15551234567",
-            email="test.attorney@example.com",
+            email="test.attorney.remove@example.com",  # Different email to avoid unique constraint
             zip_code="12345",
             state="CA",
         )
-        court = Court(name="Test District Court", jurisdiction="Federal", location="CA")
+        court = Court(
+            name="Test District Court Remove",
+            abbreviation="TDR",  # Different abbreviation to avoid unique constraint
+            url="https://testdistrictcourt-remove.gov",
+        )
         db_session.add_all([attorney, court])
         db_session.commit()
 
@@ -126,8 +142,12 @@ class TestRemoveAdmission:
 
     def test_remove_admission_attorney_not_found(self, db_session):
         """Test that attempting to remove an admission for a non-existent attorney raises AttorneyNotFoundError."""
-        # Create only a court
-        court = Court(name="Test District Court", jurisdiction="Federal", location="CA")
+        # Create only a court with a unique abbreviation
+        court = Court(
+            name="Test District Court RANF",
+            abbreviation="RNX",  # Changed to a different abbreviation to avoid unique constraint
+            url="https://testdistrictcourt-ranf.gov",
+        )
         db_session.add(court)
         db_session.commit()
 
@@ -142,9 +162,9 @@ class TestRemoveAdmission:
         """Test that attempting to remove an admission for a non-existent court raises CourtNotFoundError."""
         # Create only an attorney
         attorney = Attorney(
-            name="Test Attorney",
+            name="Test Attorney CNF",
             phone_number="+15551234567",
-            email="test.attorney@example.com",
+            email="test.attorney.cnf.remove@example.com",  # Different email to avoid unique constraint
             zip_code="12345",
             state="CA",
         )
@@ -162,13 +182,17 @@ class TestRemoveAdmission:
         """Test that attempting to remove a non-existent admission raises AdmissionNotFoundError."""
         # Create test attorney and court (but no admission between them)
         attorney = Attorney(
-            name="Test Attorney",
+            name="Test Attorney NF",
             phone_number="+15551234567",
-            email="test.attorney@example.com",
+            email="test.attorney.nf@example.com",  # Different email to avoid unique constraint
             zip_code="12345",
             state="CA",
         )
-        court = Court(name="Test District Court", jurisdiction="Federal", location="CA")
+        court = Court(
+            name="Test District Court NF",
+            abbreviation="TNF",  # Different abbreviation to avoid unique constraint
+            url="https://testdistrictcourt-nf.gov",
+        )
         db_session.add_all([attorney, court])
         db_session.commit()
 

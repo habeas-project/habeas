@@ -43,6 +43,8 @@ jobs:
           echo "ALGORITHM=HS256" >> .env
           echo "ACCESS_TOKEN_EXPIRE_MINUTES=30" >> .env
           echo "ALLOWED_ORIGINS=http://localhost:3000,http://localhost:19006" >> .env
+          # Enable mock authentication for testing
+          echo "ENABLE_MOCK_AUTH=true" >> .env
 
           echo ".env file contents (passwords masked):"
           # Use awk for safer masking that handles potential special characters in password

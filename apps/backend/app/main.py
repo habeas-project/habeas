@@ -1,4 +1,5 @@
 import logging
+import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,6 +16,13 @@ from app.routers import (
     health,  # Import the new health router
     user_router,
 )
+
+# Conditionally import mock auth router
+# WARNING: ENABLE_MOCK_AUTH should NEVER be set to true in production environments
+# This is intended ONLY for development and testing purposes
+ENABLE_MOCK_AUTH = os.getenv("ENABLE_MOCK_AUTH", "false").lower() == "true"
+if ENABLE_MOCK_AUTH:
+    from app.routers import mock_auth_router
 
 app = FastAPI(
     title="Habeas API",
@@ -50,6 +58,10 @@ app.include_router(attorney_router.router)
 app.include_router(client_router.router)
 app.include_router(emergency_contact_router.router)
 app.include_router(user_router.router)
+
+# Conditionally register mock auth router
+if ENABLE_MOCK_AUTH:
+    app.include_router(mock_auth_router.router)
 
 
 @app.get("/custom-docs", include_in_schema=False)

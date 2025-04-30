@@ -1,3 +1,5 @@
+import os
+
 import pytest
 
 from fastapi.testclient import TestClient
@@ -7,20 +9,55 @@ from sqlalchemy.orm import sessionmaker
 from app.database import Base, get_db
 from app.main import app
 
+# Import our test utility functions
+from tests.test_utils import create_all_tables
+
+
+# Enable mock authentication for all tests
+@pytest.fixture(scope="session", autouse=True)
+def enable_mock_auth():
+    """
+    Enable mock authentication for all tests by setting the ENABLE_MOCK_AUTH
+    environment variable. This is automatically applied to all tests.
+
+    Using autouse=True ensures this runs for all tests without explicit inclusion.
+    """
+    # Store original value if it exists
+    original_value = os.environ.get("ENABLE_MOCK_AUTH")
+
+    # Set to true for tests
+    os.environ["ENABLE_MOCK_AUTH"] = "true"
+
+    yield
+
+    # Restore original value or remove if it wasn't set
+    if original_value is not None:
+        os.environ["ENABLE_MOCK_AUTH"] = original_value
+    else:
+        os.environ.pop("ENABLE_MOCK_AUTH", None)
+
 
 # Test database setup
 @pytest.fixture(scope="session")
 def db_engine():
     """Create a SQLAlchemy engine for the test database."""
-    engine = create_engine("sqlite:///:memory:")
-    Base.metadata.create_all(engine)
+    # Use in-memory SQLite for tests
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},  # Allow SQLite to be used in multiple threads
+    )
+
+    # Create all tables using our utility function
+    create_all_tables(engine)
+
     yield engine
-    Base.metadata.drop_all(engine)
+    Base.metadata.drop_all(bind=engine)
 
 
 @pytest.fixture(scope="function")
 def db_session(db_engine):
     """Create a new database session for a test."""
+    # Create a new session for each test
     SessionLocal = sessionmaker(bind=db_engine)
     session = SessionLocal()
     try:
@@ -34,6 +71,7 @@ def db_session(db_engine):
 def client(db_session):
     """Create a test client using the test database session."""
 
+    # Override the dependency to use our test session
     def override_get_db():
         try:
             yield db_session
@@ -82,6 +120,17 @@ def CourtTestFactory(SessionScopedFactory):
         pass
 
     return TestCourtFactory
+
+
+@pytest.fixture
+def UserTestFactory(SessionScopedFactory):
+    """Factory fixture for creating User instances."""
+    from .factories import UserFactory
+
+    class TestUserFactory(UserFactory, SessionScopedFactory):
+        pass
+
+    return TestUserFactory
 
 
 # Test markers setup
