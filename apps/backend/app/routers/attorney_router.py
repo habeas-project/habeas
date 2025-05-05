@@ -1,3 +1,5 @@
+import logging
+
 from typing import List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, status
@@ -13,6 +15,10 @@ from app.exceptions import (
 from app.models.attorney import Attorney
 from app.schemas import Attorney as AttorneySchema
 from app.schemas import AttorneyCourtAdmissionCreate, AttorneyCreate, AttorneyUpdate
+from app.schemas.attorney_court_admission import AttorneyCourtAdmissionResponse
+
+# Add logger
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/attorneys",
@@ -302,7 +308,7 @@ def delete_attorney(
 
 @router.post(
     "/{attorney_id}/admissions",
-    # response_model=AttorneyCourtAdmission, # Response model might need adjustment
+    response_model=AttorneyCourtAdmissionResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Add Court Admission",
     description="Add a court admission for an attorney",
@@ -331,8 +337,7 @@ def add_court_admission(
     try:
         created = services.admission_service.add_admission(db=db, attorney_id=attorney_id, court_id=admission.court_id)
         if created:
-            # Return a simple dict as AttorneyCourtAdmission model doesn't exist
-            # Consider changing response_model if this is the final form
+            # Return dict matching the response schema fields
             return {"attorney_id": attorney_id, "court_id": admission.court_id}
         else:
             # Admission already exists
@@ -344,10 +349,11 @@ def add_court_admission(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except CourtNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    except Exception:
-        # Catch unexpected errors
-        # TODO: Add logging for the exception `e`
-        # logger.error(f"Unexpected error adding admission: {e}")
+    except Exception as e:  # Capture the exception instance
+        # Add logging for the exception
+        logger.exception(
+            f"Unexpected error adding admission for attorney {attorney_id}, court {admission.court_id}: {e}"
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error occurred while adding the admission.",
@@ -386,10 +392,9 @@ def remove_court_admission(
         return None
     except (AttorneyNotFoundError, CourtNotFoundError, AdmissionNotFoundError) as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    except Exception:
-        # Catch unexpected errors
-        # TODO: Add logging for the exception
-        # logger.error(f"Unexpected error removing admission: {e}")
+    except Exception as e:  # Capture the exception instance
+        # Add logging for the exception
+        logger.exception(f"Unexpected error removing admission for attorney {attorney_id}, court {court_id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error occurred while removing the admission.",

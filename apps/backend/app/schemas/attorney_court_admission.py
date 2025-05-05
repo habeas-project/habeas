@@ -11,10 +11,19 @@ class AttorneyCourtAdmissionBase(BaseModel):
     )
 
 
-class AttorneyCourtAdmissionCreate(AttorneyCourtAdmissionBase):
-    """Schema for creating a new attorney-court admission"""
+class AttorneyCourtAdmissionCreate(BaseModel):
+    court_id: int = Field(..., ge=1, description="The ID of the court to link.")
 
-    pass
+
+class AttorneyCourtAdmissionResponse(BaseModel):
+    """Response schema for creating an attorney court admission."""
+
+    attorney_id: int
+    court_id: int
+
+    class Config:
+        # orm_mode=True for Pydantic v1
+        from_attributes = True
 
 
 class AttorneyCourtAdmission(AttorneyCourtAdmissionBase):
