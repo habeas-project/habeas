@@ -31,6 +31,13 @@
     "newArchEnabled": true,
     "plugins": [
       "expo-secure-store"
-    ]
+    ],
+    "extra": {
+      "EXPO_PUBLIC_API_BASE_URL": "http://localhost:8000",
+      "EXPO_PUBLIC_AUTH_MODE": "cognito",
+      "eas": {
+        "projectId": "YOUR_EAS_PROJECT_ID"
+      }
+    }
   }
 }

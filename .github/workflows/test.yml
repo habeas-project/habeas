@@ -31,6 +31,10 @@ jobs:
           ACTUAL_DB_PASSWORD="${{ secrets.POSTGRES_PASSWORD || 'testpassword' }}"
           echo "Using DB Password: ${ACTUAL_DB_PASSWORD:+******}" # Log that we have a password, but mask it
 
+          # Use default secure key if secret is not available
+          ACTUAL_SECRET_KEY="${{ secrets.SECRET_KEY || 'ci_temp_secret_key_123456789_abcdefghi' }}"
+          echo "Using Secret Key: ${ACTUAL_SECRET_KEY:+******}" # Log that we have a secret key, but mask it
+
           # Define all necessary variables for local/CI runs
           echo "POSTGRES_USER=postgres" > .env
           echo "POSTGRES_PASSWORD=${ACTUAL_DB_PASSWORD}" >> .env
@@ -39,7 +43,7 @@ jobs:
           echo "POSTGRES_PORT=5432" >> .env
           echo "DATABASE_URL=postgresql://postgres:${ACTUAL_DB_PASSWORD}@db:5432/habeas" >> .env
           # Add other necessary variables (can use defaults or secrets)
-          echo "SECRET_KEY=ci_secret_key_replace_if_needed" >> .env
+          echo "SECRET_KEY=${ACTUAL_SECRET_KEY}" >> .env
           echo "ALGORITHM=HS256" >> .env
           echo "ACCESS_TOKEN_EXPIRE_MINUTES=30" >> .env
           echo "ALLOWED_ORIGINS=http://localhost:3000,http://localhost:19006" >> .env
@@ -48,7 +52,7 @@ jobs:
 
           echo ".env file contents (passwords masked):"
           # Use awk for safer masking that handles potential special characters in password
-          awk -F'=' '/POSTGRES_PASSWORD/ {$2="******"} {print}' OFS='=' .env
+          awk -F'=' '/POSTGRES_PASSWORD|SECRET_KEY/ {$2="******"} {print}' OFS='=' .env
 
       - name: Start DB service
         working-directory: ./apps

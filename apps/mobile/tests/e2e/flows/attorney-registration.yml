@@ -1,0 +1,91 @@
+# tests/mobile/e2e/flows/attorney-registration.yml
+# E2E Test for Attorney Registration using Mock Auth
+
+# IMPORTANT: Verify this appId matches your actual application ID.
+# Check app.json (android.package/ios.bundleIdentifier) or use `maestro hierarchy`.
+appId: com.habeas.app
+
+# Ensure backend is running with EXPO_PUBLIC_AUTH_MODE=mock
+# and mobile app is running connected to the correct backend URL.
+---
+# Setup (Optional - Can add API calls via scripts if needed later)
+# - runScript: ../utils/reset-test-data.sh
+
+# 1. Launch App & Navigate to Registration
+- launchApp
+# --- VERIFY SELECTOR --- Ensure this matches the actual button/link text or testID
+- tapOn: "Register as Attorney"
+
+# 2. Fill Registration Form (Using mock registration fields: email, password)
+#    Note: The mock registration only requires email/password.
+
+# --- VERIFY SELECTOR --- Tap needed? Use actual testID for name input
+- tapOn:
+    id: "name-input"
+- inputText: "Test AttorneyE2E"
+
+# --- VERIFY SELECTOR --- Tap needed? Use actual testID for email input
+- tapOn:
+    id: "email-input"
+- inputText: "attorney.e2e@example.com" # Use a unique email for test runs
+
+# --- VERIFY SELECTOR --- Tap needed? Use actual testID for phone input
+- tapOn:
+    id: "phoneNumber-input"
+- inputText: "+15559876543"
+
+# --- VERIFY SELECTOR --- Tap needed? Use actual testID for password input
+- tapOn:
+    id: "password-input"
+- inputText: "MockP@ssw0rd!"
+
+# --- VERIFY SELECTOR --- Tap needed? Use actual testID for confirm password input
+- tapOn:
+    id: "confirmPassword-input"
+- inputText: "MockP@ssw0rd!"
+
+# --- VERIFY SELECTOR --- Add steps for other fields if present (e.g., zip code)
+# Add taps for other fields like zip code, jurisdiction if they exist on the screen
+
+# 3. Submit Registration (Targets /mock/register via api/client.ts)
+# --- VERIFY SELECTOR --- Use actual testID or text for submit button
+- tapOn: "Submit Registration"
+
+# 4. Verify Registration Success / Navigation to Login
+#    (Adjust based on actual app flow after mock registration)
+# --- VERIFY SELECTOR --- Use actual text or testID for success message/element
+- assertVisible: "Registration Successful"
+- takeScreenshot: registration-success # Optional screenshot
+
+# 5. Navigate to Login (if not automatic)
+# --- VERIFY SELECTOR --- Uncomment and verify if manual navigation is needed
+# - tapOn: "Login"
+
+# 6. Perform Login (Targets /mock/login via api/client.ts)
+# --- VERIFY SELECTOR --- Tap needed? Use actual testID for login email input
+- tapOn:
+    id: "email-input"
+- inputText: "attorney.e2e@example.com"
+
+# --- VERIFY SELECTOR --- Tap needed? Use actual testID for login password input
+- tapOn:
+    id: "password-input"
+- inputText: "MockP@ssw0rd!"
+
+# --- VERIFY SELECTOR --- Use actual testID or text for login button
+- tapOn: "Log In"
+
+# 7. Verify Login Success / Dashboard
+#    (Adjust assertions based on what appears after successful mock login)
+- waitForAnimationToEnd # Optional: wait for UI to settle
+# --- VERIFY SELECTOR --- Use actual testID or text for a dashboard element
+- assertVisible: "Dashboard"
+# --- VERIFY SELECTOR --- Use actual testID or text for welcome message/element
+- assertVisible: "Welcome Test AttorneyE2E"
+- takeScreenshot: login-success # Optional screenshot
+
+# --- Add further steps for profile completion if needed ---
+# Example:
+# - tapOn: "Complete Your Profile"
+# - tapOn: "Add Court Admission"
+# ... etc ...

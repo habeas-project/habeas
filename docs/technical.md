@@ -34,6 +34,12 @@
     - [Key Steps](#key-steps)
 - [React Native/Expo Development](#react-native-expo-development)
   - [Running the Mobile App](#running-the-mobile-app)
+- [Testing](#testing)
+  - [Mobile End-to-End (E2E) Testing Setup](#mobile-end-to-end-e2e-testing-setup)
+    - [E2E Docker Environment](#e2e-docker-environment)
+    - [Prerequisites](#prerequisites)
+    - [Running E2E Tests](#running-e2e-tests)
+    - [Troubleshooting](#troubleshooting)
 
 ## Development Requirements
 
@@ -250,6 +256,54 @@ pytest --cov=app
 - **Test exceptions**: Validate that appropriate exceptions are raised using `pytest.raises`
 - **Isolate tests**: Each test should be independent and not rely on state from other tests
 - **Test validation**: Ensure schema validation works by testing both valid and invalid inputs
+- **Mock Authentication**: Utilize the mock authentication system for relevant development and testing scenarios (see below).
+
+## Mock Authentication (Development/Testing)
+
+### Overview
+
+The mock authentication system provides simplified authentication endpoints for development and testing purposes. These endpoints simulate AWS Cognito authentication without requiring a real Cognito instance to be configured.
+
+### Important Security Warning
+
+**⚠️ NEVER ENABLE MOCK AUTHENTICATION IN PRODUCTION ENVIRONMENTS ⚠️**
+
+The mock authentication system bypasses normal security measures and is intended **only** for:
+- Local development
+- Automated testing (including E2E tests)
+- CI/CD pipeline testing
+
+### How It Works
+
+The mock auth router (`app.routers.mock_auth`) provides two main endpoints when enabled:
+- `/mock/register` - Register a new user with only email/password.
+- `/mock/login` - Login with email/password to get a standard JWT token.
+
+These endpoints allow easy creation of test users and acquisition of valid tokens for testing protected API routes.
+
+### Enabling Mock Authentication
+
+The system is controlled by the `ENABLE_MOCK_AUTH` environment variable:
+
+```
+ENABLE_MOCK_AUTH=true  # Enable mock auth endpoints
+ENABLE_MOCK_AUTH=false # Disable mock auth endpoints (default)
+```
+
+### Where to Set ENABLE_MOCK_AUTH
+
+This variable should **only** be set in non-production contexts:
+
+1.  **Local Development:** In your root `.env` file (which is gitignored) or exported directly in your shell (`export ENABLE_MOCK_AUTH=true`).
+2.  **Automated Tests:**
+    *   **Backend:** Set globally via fixture in `apps/backend/tests/conftest.py` or locally using `monkeypatch.setenv("ENABLE_MOCK_AUTH", "true")`.
+    *   **E2E:** The `docker-compose.e2e.yml` file sets `ENABLE_MOCK_AUTH=true` for the `backend_e2e` service.
+3.  **CI/CD Pipeline:** Set as an environment variable in specific test jobs/steps within the workflow file (e.g., `.github/workflows/test.yml`).
+
+### Testing with Mock Authentication
+
+-   **Direct Unit Tests:** For testing the mock router itself, include it directly in a test FastAPI app instance.
+-   **Integration/E2E Tests:** Ensure the environment variable is set as described above when testing the main application. The `TestClient` or mobile app will then be able to hit the `/mock/register` and `/mock/login` endpoints.
 
 ## Database Migrations
 
@@ -425,3 +479,65 @@ A GitHub Actions workflow (`.github/workflows/test.yml`) automates backend testi
 9.  **Cleanup:** Stops and removes Docker Compose services and volumes (`docker-compose down -v --remove-orphans`).
 
 This ensures that migrations and tests are run against a clean, consistent environment on relevant code changes.
+
+## Testing
+
+### Mobile End-to-End (E2E) Testing Setup
+
+Mobile E2E tests use [Maestro](https://maestro.mobile.dev/) to interact with the UI of the mobile application. For a consistent environment, especially across different machines or in CI, the E2E tests utilize a Docker-based setup for the backend services.
+
+#### E2E Docker Environment
+
+The backend environment is defined in [`docker-compose.e2e.yml`](../../docker-compose.e2e.yml) and includes:
+
+*   `db_e2e`: A PostgreSQL database container for test data (`habeas_test`).
+*   `backend_e2e`: The backend service built from its Dockerfile, configured to use the test DB and with mock authentication enabled (`ENABLE_MOCK_AUTH=true`).
+
+**Note:** The Android emulator itself is expected to run **outside** of this Docker Compose setup (e.g., started via Android Studio or a physical device connected via ADB). The test runner script (`scripts/testing/run_tests.sh`) verifies that a device/emulator is available via `adb devices` before proceeding.
+
+#### Prerequisites
+
+1.  **Docker and Docker Compose:** Must be installed and running to manage the backend services.
+2.  **Android SDK Platform-Tools:** The `adb` command is required on the host machine to communicate with the target emulator or device. Ensure it's installed and in your system PATH.
+    *   Install via Android Studio (`Settings` > `Appearance & Behavior` > `System Settings` > `Android SDK` > `SDK Tools` tab > Select `Android SDK Platform-Tools`).
+    *   Or, download command-line tools from the [Android Developers website](https://developer.android.com/tools/releases/platform-tools) and add the `platform-tools` directory to your PATH.
+    *   Verify by running `adb --version` in your terminal.
+3.  **Maestro CLI:** Required to execute the Maestro test flows (`.yml` files).
+    *   Install via: `curl -Ls https://get.maestro.mobile.dev | bash`
+    *   Verify by running `maestro --version`.
+4.  **Running Emulator/Device:** An Android emulator (e.g., from Android Studio) must be running, or a physical device connected and authorized for debugging (`adb devices` should list the target).
+5.  **Mobile App Installation:** The mobile application **must be manually built and installed** onto the target emulator/device *before* running the Maestro tests. The test runner script does **not** handle app installation.
+
+#### Running E2E Tests (Semi-Automated)
+
+The test runner script automates the backend environment setup and triggers Maestro, but requires manual preparation:
+
+1.  **Ensure Prerequisites:** Verify Docker is running, `adb` and `maestro` are in your PATH.
+2.  **Start Emulator/Connect Device:** Launch your target Android emulator or connect your physical device. Ensure it's listed by `adb devices`.
+3.  **Build & Install App:** Manually build the mobile app (e.g., `yarn build:android:dev`) and install the resulting `.apk` onto the target emulator/device (e.g., `adb install <path_to_apk>`). Ensure the app launches correctly.
+4.  **Execute the Script:** Run the following command from the project root:
+    ```bash
+    ./scripts/testing/run_tests.sh --type mobile --e2e
+    ```
+5.  **Script Actions:**
+    *   Starts backend services (`db_e2e`, `backend_e2e`) using `docker-compose.e2e.yml`.
+    *   Waits for the `backend_e2e` service to become healthy.
+    *   Verifies a device/emulator is connected via `adb`.
+    *   Delegates to `scripts/testing/run_tests.py`, which executes `maestro test flows/` (or a specific flow if provided).
+    *   Automatically stops the Docker backend services upon completion or interruption.
+
+**Current Status:** The Maestro flow file (`apps/mobile/tests/e2e/flows/attorney-registration.yml`) exists but requires verification of UI selectors and is not yet fully validated or integrated into a fully automated CI process. Testing currently involves the manual steps outlined above.
+
+#### Troubleshooting
+
+*   **Emulator/Device Connection Issues:**
+    *   Ensure only one target device/emulator is active or understand Maestro will target the first listed by `adb devices`.
+    *   Verify the device is fully booted, unlocked, and authorized.
+    *   Check for ADB conflicts (e.g., stop other instances, run `adb kill-server && adb start-server`).
+*   **Backend Service Issues:**
+    *   Check Docker container logs: `docker compose -f docker-compose.e2e.yml logs backend_e2e db_e2e`.
+    *   Ensure ports (e.g., 8000 for backend, 5432 for db) are not already in use on the host if networking issues arise.
+*   **Maestro Fails:**
+    *   Check Maestro output in the test log file (`temp/logs/test_run_*.log`).
+    *   Verify UI selectors in the `.yml` flow file match the current app UI (`maestro hierarchy` can help).
+    *   Ensure the mobile app was correctly installed and can communicate with the backend service (check API URLs).
