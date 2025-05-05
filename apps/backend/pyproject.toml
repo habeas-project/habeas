@@ -34,6 +34,7 @@ dev = [
     "pre-commit>=3.5.0",
     "bandit[toml]>=1.7.6",
     "types-requests>=2.31.0",
+    "sqlalchemy-stubs>=0.4",
 ]
 data-import = [
     "pandas>=2.0.0",
@@ -120,6 +121,7 @@ warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
+plugins = ["mypy.plugins.sqlalchemy.plugin"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["app"]

@@ -64,19 +64,13 @@ def register_user(user_data: MockUserRegister, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_user)
 
-    # Get the user's ID value directly with scalar()
-    user_id = db.query(User.id).filter(User.id == db_user.id).scalar()
-    # Get string values directly
-    cognito_id = db.query(User.cognito_id).filter(User.id == db_user.id).scalar()
-    user_type = db.query(User.user_type).filter(User.id == db_user.id).scalar()
-
-    # Return mock auth response with scalar values
+    # Return mock auth response using direct attributes (should work now)
     return MockAuthResponse(
-        access_token=f"mock_token_{user_id}",
-        token_type=TOKEN_TYPE,  # Using constant instead of hardcoded string
-        user_id=user_id,
-        cognito_id=cognito_id,
-        user_type=user_type,
+        access_token=f"mock_token_{db_user.id}",
+        token_type=TOKEN_TYPE,
+        user_id=db_user.id,
+        cognito_id=db_user.cognito_id,
+        user_type=db_user.user_type,
     )
 
 
@@ -91,17 +85,11 @@ def login_user(credentials: MockUserLogin, db: Session = Depends(get_db)):
     if not db_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
-    # Get the user's ID value directly with scalar()
-    user_id = db.query(User.id).filter(User.id == db_user.id).scalar()
-    # Get string values directly
-    cognito_id = db.query(User.cognito_id).filter(User.id == db_user.id).scalar()
-    user_type = db.query(User.user_type).filter(User.id == db_user.id).scalar()
-
-    # Return mock auth response with scalar values
+    # Return mock auth response using direct attributes (should work now)
     return MockAuthResponse(
-        access_token=f"mock_token_{user_id}",
-        token_type=TOKEN_TYPE,  # Using constant instead of hardcoded string
-        user_id=user_id,
-        cognito_id=cognito_id,
-        user_type=user_type,
+        access_token=f"mock_token_{db_user.id}",
+        token_type=TOKEN_TYPE,
+        user_id=db_user.id,
+        cognito_id=db_user.cognito_id,
+        user_type=db_user.user_type,
     )
