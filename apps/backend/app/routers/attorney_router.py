@@ -1,15 +1,24 @@
+import logging
+
 from typing import List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, status
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app import services
 from app.database import get_db
-from app.models import Attorney
-from app.models.attorney_court_admission import attorney_court_admission_table
-from app.models.court import Court
+from app.exceptions import (
+    AdmissionNotFoundError,
+    AttorneyNotFoundError,
+    CourtNotFoundError,
+)
+from app.models.attorney import Attorney
 from app.schemas import Attorney as AttorneySchema
-from app.schemas import AttorneyCourtAdmission, AttorneyCourtAdmissionCreate, AttorneyCreate, AttorneyUpdate
+from app.schemas import AttorneyCourtAdmissionCreate, AttorneyCreate, AttorneyUpdate
+from app.schemas.attorney_court_admission import AttorneyCourtAdmissionResponse
+
+# Add logger
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/attorneys",
@@ -299,7 +308,7 @@ def delete_attorney(
 
 @router.post(
     "/{attorney_id}/admissions",
-    response_model=AttorneyCourtAdmission,
+    response_model=AttorneyCourtAdmissionResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Add Court Admission",
     description="Add a court admission for an attorney",
@@ -324,48 +333,31 @@ def add_court_admission(
     admission: AttorneyCourtAdmissionCreate = Body(..., description="Court admission to add", example={"court_id": 2}),
     db: Session = Depends(get_db),
 ):
-    """
-    Add a court admission for an attorney.
-
-    Parameters:
-    - **attorney_id**: ID of the attorney
-    - **admission**: Court admission data containing court_id
-
-    Returns the created admission relationship.
-    """
-    # Check if attorney exists
-    db_attorney = db.query(Attorney).filter(Attorney.id == attorney_id).first()
-    if not db_attorney:
-        raise HTTPException(status_code=404, detail="Attorney not found")
-
-    # Check if court exists
-    db_court = db.query(Court).filter(Court.id == admission.court_id).first()
-    if not db_court:
-        raise HTTPException(status_code=404, detail="Court not found")
-
-    # Check if admission already exists
-    existing_admission = (
-        db.query(attorney_court_admission_table)
-        .filter(
-            attorney_court_admission_table.c.attorney_id == attorney_id,
-            attorney_court_admission_table.c.court_id == admission.court_id,
-        )
-        .first()
-    )
-
-    if existing_admission:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Attorney is already admitted to this court")
-
-    # Add the court to the attorney's admitted_courts
-    db_attorney.admitted_courts.append(db_court)
-
+    """Add a court admission link for an attorney by calling the service layer."""
     try:
-        db.commit()
-        # Create and return admission object
-        return AttorneyCourtAdmission(attorney_id=attorney_id, court_id=admission.court_id)
-    except IntegrityError:
-        db.rollback()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to add court admission")
+        created = services.admission_service.add_admission(db=db, attorney_id=attorney_id, court_id=admission.court_id)
+        if created:
+            # Return dict matching the response schema fields
+            return {"attorney_id": attorney_id, "court_id": admission.court_id}
+        else:
+            # Admission already exists
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Attorney is already admitted to this court",
+            )
+    except AttorneyNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except CourtNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except Exception as e:  # Capture the exception instance
+        # Add logging for the exception
+        logger.exception(
+            f"Unexpected error adding admission for attorney {attorney_id}, court {admission.court_id}: {e}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred while adding the admission.",
+        )
 
 
 @router.delete(
@@ -395,37 +387,15 @@ def remove_court_admission(
 
     Returns no content on success.
     """
-    # Check if attorney exists
-    db_attorney = db.query(Attorney).filter(Attorney.id == attorney_id).first()
-    if not db_attorney:
-        raise HTTPException(status_code=404, detail="Attorney not found")
-
-    # Check if court exists
-    db_court = db.query(Court).filter(Court.id == court_id).first()
-    if not db_court:
-        raise HTTPException(status_code=404, detail="Court not found")
-
-    # Check if admission exists
-    existing_admission = (
-        db.query(attorney_court_admission_table)
-        .filter(
-            attorney_court_admission_table.c.attorney_id == attorney_id,
-            attorney_court_admission_table.c.court_id == court_id,
-        )
-        .first()
-    )
-
-    if not existing_admission:
-        raise HTTPException(status_code=404, detail="Attorney court admission not found")
-
-    # Remove the court from the attorney's admitted_courts
-    db_attorney.admitted_courts.remove(db_court)
-
     try:
-        db.commit()
+        services.admission_service.remove_admission(db=db, attorney_id=attorney_id, court_id=court_id)
         return None
-    except Exception:
-        db.rollback()
+    except (AttorneyNotFoundError, CourtNotFoundError, AdmissionNotFoundError) as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except Exception as e:  # Capture the exception instance
+        # Add logging for the exception
+        logger.exception(f"Unexpected error removing admission for attorney {attorney_id}, court {court_id}: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to remove court admission"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred while removing the admission.",
         )

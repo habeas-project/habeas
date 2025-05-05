@@ -42,6 +42,6 @@ def create_example(example: ExampleCreate):
     Create a new example.
     """
     # This is just a stub - in a real application, you would save to a database
-    new_example = {"id": len(fake_examples_db) + 1, **example.dict()}
+    new_example = {"id": len(fake_examples_db) + 1, **example.model_dump()}
     fake_examples_db.append(new_example)
     return new_example

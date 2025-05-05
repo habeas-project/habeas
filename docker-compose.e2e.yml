@@ -1,0 +1,52 @@
+services:
+  db_e2e:
+    image: postgres:16-alpine
+    container_name: habeas-e2e-db
+    environment:
+      POSTGRES_USER: habeas
+      POSTGRES_PASSWORD: habeas_password # Consider using secrets or env vars
+      POSTGRES_DB: habeas_test
+    ports:
+      - "5433:5432" # Expose on 5433 to avoid conflict with potential dev db on 5432
+    volumes:
+      - habeas_e2e_db_data:/var/lib/postgresql/data
+    networks:
+      - habeas-e2e-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U habeas -d habeas_test" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend_e2e:
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile
+    container_name: habeas-e2e-backend
+    depends_on:
+      db_e2e:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      # --- Database Configuration ---
+      DATABASE_URL: postgresql+psycopg2://habeas:habeas_password@db_e2e:5432/habeas_test
+
+      # --- Authentication Configuration ---
+      ENABLE_MOCK_AUTH: "true"
+    networks:
+      - habeas-e2e-network
+    healthcheck:
+      test: [ "CMD", "curl", "--fail", "http://localhost:8000/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+networks:
+  habeas-e2e-network:
+    driver: bridge
+
+volumes:
+  habeas_e2e_db_data:
+    driver: local

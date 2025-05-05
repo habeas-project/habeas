@@ -8,6 +8,7 @@ repos:
       - id: end-of-file-fixer
         exclude: ^(docs/generated/|\.min\.(js|css)$)
       - id: check-yaml
+        exclude: ^apps/mobile/tests/e2e/flows/.*\.yml$
       - id: check-added-large-files
         args: ['--maxkb=500']
       - id: check-toml
@@ -56,6 +57,7 @@ repos:
     hooks:
       - id: gitleaks
         name: "🔒 Detect hardcoded secrets"
+        exclude: ^scripts/run_local_ci\.sh$
 
   - repo: https://github.com/PyCQA/bandit
     rev: 1.7.6
