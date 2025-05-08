@@ -1,43 +1,42 @@
-import datetime
+"""Pydantic schemas for DistrictCourtContact."""
 
+from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel, EmailStr
 
 
-# Base schema for DistrictCourtContact - common fields
 class DistrictCourtContactBase(BaseModel):
+    """Base schema for district court contact information."""
+
     location_name: Optional[str] = None
     address: Optional[str] = None
     phone: Optional[str] = None
     email: Optional[EmailStr] = None
     hours: Optional[str] = None
+
+
+class DistrictCourtContactCreate(DistrictCourtContactBase):
+    """Schema for creating a new district court contact."""
+
     court_id: int
 
 
-# Schema for creating a DistrictCourtContact - inherits from Base
-# All fields are required for creation unless they have a default or are auto-generated
-class DistrictCourtContactCreate(DistrictCourtContactBase):
-    pass  # For now, all fields from base are needed for creation, or are optional in base
+class DistrictCourtContactUpdate(DistrictCourtContactBase):
+    """Schema for updating an existing district court contact. All fields are optional."""
+
+    court_id: Optional[int] = None
 
 
-# Schema for updating a DistrictCourtContact - inherits from Base, all fields optional
-class DistrictCourtContactUpdate(BaseModel):
-    location_name: Optional[str] = None
-    address: Optional[str] = None
-    phone: Optional[str] = None
-    email: Optional[EmailStr] = None
-    hours: Optional[str] = None
-    court_id: Optional[int] = None  # Allow updating court_id if necessary, though usually stable
-
-
-# Schema for reading/returning a DistrictCourtContact - includes fields from DB model
 class DistrictCourtContactResponse(DistrictCourtContactBase):
+    """Schema for returning district court contact information in API responses."""
+
     id: int
-    created_at: datetime.datetime
-    updated_at: datetime.datetime
+    court_id: int
+    created_at: datetime
+    updated_at: datetime
 
     class Config:
-        orm_mode = True  # For Pydantic V1, use from_attributes = True for V2
-        # For Pydantic V2, replace orm_mode with from_attributes = True
-        # Remove this comment after checking Pydantic version in pyproject.toml if needed.
+        """Pydantic configuration."""
+
+        orm_mode = True

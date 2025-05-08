@@ -11,6 +11,7 @@ sys.path.append(str(Path(__file__).resolve().parent.parent.parent / "apps" / "ba
 from app.database import SessionLocal
 from app.models.court import Court
 from app.models.court_county import CourtCounty
+from app.models.district_court_contact import DistrictCourtContact  # Add this import
 
 # Configure logging
 logging.basicConfig(
@@ -135,28 +136,69 @@ def import_court_data(
         logger.info(
             f"Read {len(contact_df)} contact entries from {court_contact_csv_path}"
         )
-        logger.info(
-            "Processing court contact information. (Note: DistrictCourtContact model not yet implemented, logging data for now)"
-        )
+        imported_contacts_count = 0
         for _, row in contact_df.iterrows():
             try:
                 court = get_court_by_abbreviation(db, row["court_abbreviation"])
                 if court:
-                    # Placeholder for creating DistrictCourtContact object
-                    logger.info(
-                        f"Would create DistrictCourtContact for court '{court.abbreviation}': "
-                        f"Location: {row.get('location_name', 'N/A')}, Address: {row.get('address', 'N/A')}, "
-                        f"Phone: {row.get('phone', 'N/A')}, Email: {row.get('email', 'N/A')}, Hours: {row.get('hours', 'N/A')}"
+                    # Check if a contact with the same location name already exists for this court to avoid duplicates
+                    # This is a simple check; more sophisticated duplicate detection might be needed
+                    existing_contact = (
+                        db.query(DistrictCourtContact)
+                        .filter(
+                            DistrictCourtContact.court_id == court.id,
+                            DistrictCourtContact.location_name
+                            == row.get("location_name"),
+                        )
+                        .first()
                     )
+
+                    if existing_contact:
+                        # Update existing contact if necessary
+                        update_needed = False
+                        if existing_contact.address != row.get("address"):
+                            existing_contact.address = row.get("address")
+                            update_needed = True
+                        if existing_contact.phone != row.get("phone"):
+                            existing_contact.phone = row.get("phone")
+                            update_needed = True
+                        if existing_contact.email != row.get("email"):
+                            existing_contact.email = row.get("email")
+                            update_needed = True
+                        if existing_contact.hours != row.get("hours"):
+                            existing_contact.hours = row.get("hours")
+                            update_needed = True
+
+                        if update_needed:
+                            logger.info(
+                                f"Updated contact for court '{court.abbreviation}' at location '{row.get('location_name')}'"
+                            )
+                    else:
+                        contact = DistrictCourtContact(
+                            court_id=court.id,
+                            location_name=row.get("location_name"),
+                            address=row.get("address"),
+                            phone=row.get("phone"),
+                            email=row.get("email"),
+                            hours=row.get("hours"),
+                        )
+                        db.add(contact)
+                        imported_contacts_count += 1
+                        logger.info(
+                            f"Added contact for court '{court.abbreviation}': Location '{row.get('location_name', 'N/A')}'"
+                        )
                 else:
                     logger.warning(
                         f"Court with abbreviation '{row['court_abbreviation']}' not found. Skipping contact: {row.get('location_name', 'N/A')}"
                     )
             except Exception as e:
                 logger.error(
-                    f"Error processing contact for court {row.get('court_abbreviation', 'Unknown')}: {str(e)}"
+                    f"Error processing contact for court {row.get('court_abbreviation', 'Unknown')} (Location: {row.get('location_name', 'N/A')}): {str(e)}"
                 )
-        # No db.commit() here as we are not saving contact data yet
+        db.commit()
+        logger.info(
+            f"Successfully imported/updated {imported_contacts_count} new court contacts."
+        )
     except FileNotFoundError:
         logger.error(
             f"File not found: {court_contact_csv_path}. Skipping contact processing."
