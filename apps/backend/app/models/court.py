@@ -12,6 +12,8 @@ from app.models.attorney_court_admission import attorney_court_admission_table
 
 if TYPE_CHECKING:
     from .attorney import Attorney
+    from .court_county import CourtCounty
+    from .district_court_contact import DistrictCourtContact
 
 
 class Court(Base):
@@ -32,6 +34,22 @@ class Court(Base):
         secondary=attorney_court_admission_table,
         back_populates="admitted_courts",
         lazy="selectin",  # Use selectin loading for efficiency
+    )
+
+    # Define the one-to-many relationship to CourtCounty
+    court_counties: Mapped[List["CourtCounty"]] = relationship(
+        "CourtCounty",
+        back_populates="court",
+        cascade="all, delete-orphan",  # If a court is deleted, its associated counties are also deleted.
+        lazy="selectin",
+    )
+
+    # Define the one-to-many relationship to DistrictCourtContact
+    contact_details: Mapped[List["DistrictCourtContact"]] = relationship(
+        "DistrictCourtContact",
+        back_populates="court",
+        cascade="all, delete-orphan",
+        lazy="selectin",
     )
 
     def __repr__(self):

@@ -21,6 +21,19 @@ if config.config_file_name is not None:
 # Import models and database connection from the app
 from app.database import Base  # noqa: E402
 
+# Explicitly import all model *classes* to ensure they are registered with Base.metadata
+# before target_metadata is defined for Alembic autogenerate.
+from app.models.attorney import Attorney  # noqa: F401, E402
+from app.models.attorney_court_admission import attorney_court_admission_table  # noqa: F401, E402
+from app.models.client import Client  # noqa: F401, E402
+from app.models.court import Court  # noqa: F401, E402
+from app.models.court_county import CourtCounty  # noqa: F401, E402
+from app.models.district_court_contact import DistrictCourtContact  # noqa: F401, E402
+from app.models.emergency_contact import EmergencyContact  # noqa: F401, E402
+from app.models.example_model import Example  # noqa: F401, E402
+from app.models.ice_detention_facility import IceDetentionFacility  # noqa: F401, E402
+from app.models.user import User  # noqa: F401, E402
+
 # Get the database URL from environment variables
 database_url = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@db:5432/habeas")
 config.set_main_option("sqlalchemy.url", database_url)
