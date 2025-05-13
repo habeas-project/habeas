@@ -1,7 +1,7 @@
 """Create normalized_addresses and update ice_detention_facilities tables
 
 Revision ID: d3a7f8c9b2e1
-Revises: c2a8e3f9b1d0
+Revises: 06caa82208d2
 Create Date: 2025-05-07 11:00:00.000000
 
 """
@@ -16,7 +16,7 @@ from sqlalchemy.sql import func
 
 # revision identifiers, used by Alembic.
 revision: str = "d3a7f8c9b2e1"
-down_revision: Union[str, None] = "c2a8e3f9b1d0"
+down_revision: Union[str, None] = "06caa82208d2"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

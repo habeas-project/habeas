@@ -27,14 +27,35 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    command: uv run alembic upgrade head
+    command: python /app/run_migrations.py
     env_file:
       - ../.env
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
     volumes:
       - ./backend/app:/app/app
       - ./backend/migrations:/app/migrations
+      - ./backend/run_migrations.py:/app/run_migrations.py
+      - ./backend/alembic.ini:/app/alembic.ini
     depends_on:
       - db
+
+  data-ingestion:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: >
+      bash -c "echo 'DEBUG: Listing data directories...' &&  ls -la /app/data/pipeline &&  ls -la /app/data/pipeline/2_staging_data &&  ls -la /app/data/static_assets &&  echo 'Running ingestion with dummy POSITIONSTACK_KEY' &&  python /app/data/pipeline/run_data_ingestion.py"
+    env_file:
+      - ../.env
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+      - POSITIONSTACK_KEY=dummy_key_for_testing
+    volumes:
+      - ./backend/app:/app/app
+      - ../data:/app/data
+    depends_on:
+      - migration
 
 volumes:
   postgres_data:

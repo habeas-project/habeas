@@ -18,6 +18,7 @@ class IceDetentionFacilityBase(BaseModel):
     facility_type_detailed: Optional[str] = None
     gender_capacity: Optional[str] = None
     court_id: Optional[int] = None  # Add court_id
+    normalized_address_id: Optional[int] = None  # ADD this field
 
 
 # Schema for creating an IceDetentionFacility
@@ -36,6 +37,7 @@ class IceDetentionFacilityUpdate(BaseModel):
     facility_type_detailed: Optional[str] = None
     gender_capacity: Optional[str] = None
     court_id: Optional[int] = None  # Add court_id
+    normalized_address_id: Optional[int] = None  # ADD this field
 
 
 # Schema for reading/returning an IceDetentionFacility - includes ID and timestamps

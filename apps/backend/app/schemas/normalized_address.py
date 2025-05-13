@@ -24,7 +24,7 @@ class NormalizedAddressBase(BaseModel):
 class NormalizedAddressCreate(NormalizedAddressBase):
     """Schema for creating a new normalized address."""
 
-    ice_detention_facility_id: int
+    pass  # No longer needs ice_detention_facility_id at creation
 
 
 class NormalizedAddressUpdate(NormalizedAddressBase):
@@ -40,7 +40,6 @@ class NormalizedAddressResponse(NormalizedAddressBase):
     """Schema for returning normalized address information in API responses."""
 
     id: int
-    ice_detention_facility_id: int
     created_at: datetime
     updated_at: datetime
 

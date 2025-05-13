@@ -2,8 +2,8 @@
 # Use TYPE_CHECKING to avoid circular imports at runtime
 from typing import TYPE_CHECKING, List
 
-from sqlalchemy import Column, DateTime, Integer, String, func
-from sqlalchemy.orm import Mapped, relationship
+from sqlalchemy import DateTime, Integer, String, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
@@ -21,12 +21,14 @@ class Court(Base):
 
     __tablename__ = "courts"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(255), nullable=False, index=True)
-    abbreviation = Column(String(10), nullable=False, unique=True, index=True)
-    url = Column(String(255), nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    abbreviation: Mapped[str] = mapped_column(String(10), nullable=False, unique=True, index=True)
+    url: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[DateTime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
 
     # Define the many-to-many relationship to Attorney using Mapped
     admitted_attorneys: Mapped[List["Attorney"]] = relationship(

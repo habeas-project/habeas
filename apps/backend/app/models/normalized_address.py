@@ -5,13 +5,13 @@ from typing import TYPE_CHECKING
 import sqlalchemy as sa
 
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
 from app.database import Base
 
 if TYPE_CHECKING:
-    from .ice_detention_facility import IceDetentionFacility  # noqa: F401
+    pass  # IceDetentionFacility import no longer needed here directly for relationship
 
 
 class NormalizedAddress(Base):
@@ -20,9 +20,6 @@ class NormalizedAddress(Base):
     __tablename__ = "normalized_addresses"
 
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True, index=True)
-    ice_detention_facility_id: Mapped[int] = mapped_column(
-        sa.Integer, sa.ForeignKey("ice_detention_facilities.id"), unique=True, nullable=False, index=True
-    )
     api_source: Mapped[str] = mapped_column(
         sa.String(100), nullable=False, comment="Source of the geocoding API used (e.g., Positionstack)"
     )
@@ -49,11 +46,5 @@ class NormalizedAddress(Base):
         sa.DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
     )
 
-    # Define the one-to-one relationship to IceDetentionFacility
-    # The back_populates string must match the relationship name in IceDetentionFacility
-    ice_facility: Mapped["IceDetentionFacility"] = relationship(
-        "IceDetentionFacility", back_populates="normalized_address_info"
-    )
-
     def __repr__(self) -> str:
-        return f"<NormalizedAddress id={self.id} facility_id={self.ice_detention_facility_id} county='{self.county}'>"
+        return f"<NormalizedAddress id={self.id} county='{self.county}'>"

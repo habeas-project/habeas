@@ -1,4 +1,5 @@
 import logging
+import os
 import sys
 from pathlib import Path
 from typing import Any, Dict
@@ -10,7 +11,9 @@ from sqlalchemy.orm import Session
 # Add the backend directory to the Python path for module resolution
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent / "apps" / "backend"))
 
-from app.config import settings  # For POSITIONSTACK_KEY
+# Instead of importing from app.config, get the API key directly from environment
+POSITIONSTACK_KEY = os.environ.get("POSITIONSTACK_KEY")
+
 from app.database import SessionLocal  # noqa: E402
 from app.models.court import Court  # noqa: E402
 from app.models.court_county import CourtCounty  # noqa: E402
@@ -182,101 +185,95 @@ def import_ice_facilities(
                 imported_facilities_count += 1
                 logger.info(f"Added new facility: {facility_name}")
 
-            db.flush()  # Ensure facility.id is available for NormalizedAddress
+            db.flush()  # Ensure facility.id is available
 
             # Phase 2: Geocode, Populate NormalizedAddress, and Map to Courts
-            # Only geocode if we don't have normalized info or if key address parts changed (optional)
-            if (
-                not facility.normalized_address_info
-                and original_address
-                and city
-                and state
-            ):
+            current_normalized_address = None
+            if facility.normalized_address_id:
+                current_normalized_address = (
+                    db.query(NormalizedAddress)
+                    .filter(NormalizedAddress.id == facility.normalized_address_id)
+                    .first()
+                )
+                if not current_normalized_address:
+                    logger.warning(
+                        f"Facility {facility.name} has normalized_address_id {facility.normalized_address_id}, "
+                        "but no matching NormalizedAddress found. Will attempt to geocode."
+                    )
+                    facility.normalized_address_id = None  # Clear the invalid ID
+
+            # Only geocode if we don't have a valid existing normalized address
+            # and key address parts are present
+            if not current_normalized_address and original_address and city and state:
                 geocoded_data = geocode_address_positionstack(
                     original_address, city, state, positionstack_api_key
                 )
 
                 if geocoded_data and geocoded_data.get("county"):
-                    normalized_address = NormalizedAddress(
-                        ice_detention_facility_id=facility.id,
+                    new_normalized_address = NormalizedAddress(
+                        # ice_detention_facility_id=facility.id, # REMOVED: No longer directly linking here
                         api_source="Positionstack",
                         original_address_query=f"{original_address}, {city}, {state}",
-                        normalized_street_address=geocoded_data.get(
-                            "street"
-                        ),  # Positionstack uses 'street' for street address
+                        normalized_street_address=geocoded_data.get("street"),
                         normalized_city=geocoded_data.get(
                             "locality", geocoded_data.get("administrative_area")
-                        ),  # Or other relevant fields
-                        normalized_state=geocoded_data.get(
-                            "region_code"
-                        ),  # Positionstack uses 'region_code' for state
+                        ),
+                        normalized_state=geocoded_data.get("region_code"),
                         normalized_zip_code=geocoded_data.get("postal_code"),
                         county=geocoded_data["county"],
                         latitude=geocoded_data.get("latitude"),
                         longitude=geocoded_data.get("longitude"),
                         api_response_json=geocoded_data,
                     )
-                    db.add(normalized_address)
-                    facility.normalized_address_info = (
-                        normalized_address  # Establish relationship
-                    )
-                    geocoded_facilities_count += 1
-                    logger.info(
-                        f"Geocoded and created NormalizedAddress for: {facility_name} (County: {geocoded_data['county']}) "
+                    db.add(new_normalized_address)
+                    db.flush()  # Ensure new_normalized_address.id is available
+
+                    facility.normalized_address_id = (
+                        new_normalized_address.id
+                    )  # Link facility to new NormalizedAddress
+                    current_normalized_address = (
+                        new_normalized_address  # Use this for court mapping
                     )
 
-                    # Map to Court using county and state from normalized address
-                    if (
-                        facility.normalized_address_info.county
-                        and facility.normalized_address_info.normalized_state
-                        and not facility.court_id
-                    ):
-                        court_to_link = get_court_by_county_and_state(
-                            db,
-                            facility.normalized_address_info.county,
-                            facility.normalized_address_info.normalized_state,
-                        )
-                        if court_to_link:
-                            facility.court_id = court_to_link.id
-                            court_mappings_count += 1
-                            logger.info(
-                                f"Mapped facility '{facility_name}' to court '{court_to_link.name}' via county '{facility.normalized_address_info.county}'"
-                            )
-                        else:
-                            logger.warning(
-                                f"Could not find court for facility '{facility_name}' based on county '{facility.normalized_address_info.county}' and state '{facility.normalized_address_info.normalized_state}'"
-                            )
+                    geocoded_facilities_count += 1
+                    logger.info(
+                        f"Geocoded and created NormalizedAddress (ID: {new_normalized_address.id}) for: {facility.name} (County: {geocoded_data['county']}) "
+                    )
                 elif geocoded_data:
                     logger.warning(
-                        f"Geocoding for '{facility_name}' succeeded but county information was missing. API Response: {geocoded_data}"
+                        f"Geocoding for '{facility.name}' succeeded but county information was missing. API Response: {geocoded_data}"
                     )
                 else:
                     logger.warning(
-                        f"Geocoding failed or returned no data for facility: {facility_name} at {original_address}, {city}, {state}"
+                        f"Geocoding failed or returned no data for facility: {facility.name} at {original_address}, {city}, {state}"
                     )
-            elif (
-                facility.normalized_address_info and not facility.court_id
-            ):  # Already geocoded, try to map if not already mapped
-                if (
-                    facility.normalized_address_info.county
-                    and facility.normalized_address_info.normalized_state
-                ):
-                    court_to_link = get_court_by_county_and_state(
-                        db,
-                        facility.normalized_address_info.county,
-                        facility.normalized_address_info.normalized_state,
-                    )
-                    if court_to_link:
-                        facility.court_id = court_to_link.id
-                        court_mappings_count += 1
-                        logger.info(
-                            f"Mapped existing facility '{facility_name}' to court '{court_to_link.name}' via county '{facility.normalized_address_info.county}'"
-                        )
-                    else:
-                        logger.warning(
-                            f"Could not find court for existing facility '{facility_name}' based on county '{facility.normalized_address_info.county}' and state '{facility.normalized_address_info.normalized_state}'"
-                        )
+            elif current_normalized_address:
+                logger.info(
+                    f"Facility {facility.name} already has NormalizedAddress ID: {facility.normalized_address_id}. Skipping geocoding."
+                )
 
+            # Phase 3: Map to Court using county and state from normalized address
+            if (
+                current_normalized_address  # Check if we have a normalized address (either existing or newly created)
+                and current_normalized_address.county
+                and current_normalized_address.normalized_state
+                and not facility.court_id  # Only map if not already mapped
+            ):
+                court_to_link = get_court_by_county_and_state(
+                    db,
+                    current_normalized_address.county,
+                    current_normalized_address.normalized_state,
+                )
+                if court_to_link:
+                    facility.court_id = court_to_link.id
+                    court_mappings_count += 1
+                    logger.info(
+                        f"Mapped facility '{facility.name}' to court '{court_to_link.name}' via county '{current_normalized_address.county}'"
+                    )
+                else:
+                    logger.warning(
+                        f"Could not find court for facility '{facility.name}' based on county '{current_normalized_address.county}' and state '{current_normalized_address.normalized_state}'"
+                    )
         except Exception as e:
             logger.error(
                 f"Error processing facility row (Name: {row.get('Facility Name', 'Unknown')}): {str(e)}",
@@ -302,7 +299,6 @@ if __name__ == "__main__":
     # Excel file is in data/static_assets/
     excel_file = (
         Path(__file__).resolve().parent.parent.parent
-        / "data"
         / "static_assets"
         / "2025_ice_detention_facilities.xlsx"
     )
@@ -311,7 +307,7 @@ if __name__ == "__main__":
         logger.error(f"ICE detention facilities Excel file not found: {excel_file}")
         sys.exit(1)
 
-    if not settings.POSITIONSTACK_KEY:
+    if not POSITIONSTACK_KEY:
         logger.error(
             "POSITIONSTACK_KEY environment variable not set. This is required for geocoding."
         )
@@ -321,7 +317,7 @@ if __name__ == "__main__":
     db_session = SessionLocal()
     try:
         logger.info("Starting ICE detention facility import process...")
-        import_ice_facilities(db_session, excel_file, settings.POSITIONSTACK_KEY)
+        import_ice_facilities(db_session, excel_file, POSITIONSTACK_KEY)
     except Exception as e:
         logger.error(
             f"Unhandled error during ICE facility import process: {str(e)}",

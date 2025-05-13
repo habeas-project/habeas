@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, func
-from sqlalchemy.orm import Mapped, relationship
+from sqlalchemy import DateTime, ForeignKey, Integer, String, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
@@ -14,14 +14,16 @@ class CourtCounty(Base):
 
     __tablename__ = "court_counties"
 
-    id = Column(Integer, primary_key=True, index=True)
-    county_name = Column(String(255), nullable=False, index=True)
-    state = Column(String(100), nullable=False, index=True)  # Assuming state names/abbreviations
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    county_name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    state: Mapped[str] = mapped_column(String(100), nullable=False, index=True)  # Assuming state names/abbreviations
 
-    court_id = Column(Integer, ForeignKey("courts.id"), nullable=False, index=True)
+    court_id: Mapped[int] = mapped_column(Integer, ForeignKey("courts.id"), nullable=False, index=True)
 
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[DateTime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
 
     # Define the many-to-one relationship to Court
     # The Mapped type hint helps with type checking and editor support.

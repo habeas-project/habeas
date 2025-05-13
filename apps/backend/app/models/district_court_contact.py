@@ -2,8 +2,8 @@
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, func
-from sqlalchemy.orm import Mapped, relationship
+from sqlalchemy import DateTime, ForeignKey, Integer, String, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
@@ -16,16 +16,16 @@ class DistrictCourtContact(Base):
 
     __tablename__ = "district_court_contacts"
 
-    id: Mapped[int] = Column(Integer, primary_key=True, index=True)
-    court_id: Mapped[int] = Column(Integer, ForeignKey("courts.id"), nullable=False, index=True)
-    location_name: Mapped[str | None] = Column(String(255), nullable=True)
-    address: Mapped[str | None] = Column(String, nullable=True)
-    phone: Mapped[str | None] = Column(String(50), nullable=True)
-    email: Mapped[str | None] = Column(String(255), nullable=True)
-    hours: Mapped[str | None] = Column(String(255), nullable=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    court_id: Mapped[int] = mapped_column(Integer, ForeignKey("courts.id"), nullable=False, index=True)
+    location_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    address: Mapped[str | None] = mapped_column(String, nullable=True)
+    phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    hours: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
-    created_at: Mapped[DateTime] = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at: Mapped[DateTime] = Column(
+    created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[DateTime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         onupdate=func.now(),
