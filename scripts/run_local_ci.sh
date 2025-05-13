@@ -34,7 +34,7 @@ POSTGRES_DB=habeas
 POSTGRES_HOST=db
 POSTGRES_PORT=5432
 DATABASE_URL=postgresql://postgres:testpassword@db:5432/habeas
-SECRET_KEY=ci_secret_key_replace_if_needed
+SECRET_KEY=ci_temp_secret_key_123456789_abcdefghi #gitleaks:allow
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 ALLOWED_ORIGINS=http://localhost:3000,http://localhost:19006
@@ -55,6 +55,9 @@ echo "Output will be logged to: $LOG_FILE"
 yarn test:ci:local &> "$LOG_FILE"
 
 EXIT_CODE=$?
+
+# Indicate that the main command has finished running
+echo "Script finished. Checking results..."
 
 # Restore the original .env file if it existed
 if [ -f ".env.bak" ]; then

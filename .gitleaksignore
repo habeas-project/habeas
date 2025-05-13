@@ -1,0 +1,7 @@
+# .gitleaksignore
+# This file contains patterns to ignore during gitleaks scans.
+# See https://github.com/gitleaks/gitleaks?tab=readme-ov-file#allowlisting
+
+# Add finding fingerprints to this file to ignore specific leaks.
+# Each fingerprint should be on its own line.
+scripts/run_local_ci.sh:generic-api-key:37

@@ -77,6 +77,64 @@ The React Native mobile app will communicate with the FastAPI backend through RE
 
 The API will handle authentication, data retrieval/storage, and any other server-side operations required by the application.
 
+## Testing Architecture
+
+The project implements a comprehensive testing strategy focused on backend code quality and reliability.
+
+### Backend Testing Structure
+
+The backend testing infrastructure follows a hierarchical organization:
+
+```
+/apps/backend/tests/           <-- Test root directory
+├── conftest.py                # Global test fixtures
+├── factories.py               # Factory Boy model factories
+├── unit/                      # Unit tests for isolated components
+│   ├── models/                # Tests for database models and relationships
+│   ├── schemas/               # Tests for Pydantic schema validation
+│   └── services/              # Tests for service layer business logic
+├── integration/               # Integration tests
+│   ├── routers/               # API endpoint tests using TestClient
+│   └── services/              # Service integration with database
+└── __init__.py
+```
+
+### Testing Tools & Dependencies
+
+- **Primary Framework**: pytest
+- **Test Database**: In-memory SQLite for isolation and speed
+- **Test Data Generation**: Factory Boy for creating test model instances
+- **API Testing**: FastAPI's TestClient for simulating HTTP requests
+- **Additional Tools**: pytest-cov for coverage reporting, faker for generating realistic test data
+
+### Testing Approach
+
+1. **Unit Testing**:
+   - Isolated component testing
+   - Model relationship verification
+   - Schema validation testing
+   - Service layer logic testing with appropriate exceptions
+
+2. **Integration Testing**:
+   - API endpoint behavior verification
+   - Database interaction testing
+   - End-to-end flow testing
+
+3. **Test Markers**:
+   - `@pytest.mark.unit`: Unit tests
+   - `@pytest.mark.integration`: Integration tests
+   - `@pytest.mark.slow`: Tests that might take longer to execute
+
+### Testing Fixtures
+
+Testing fixtures in `conftest.py` provide reusable components for tests:
+
+- Database session fixtures with transaction isolation
+- TestClient fixture with database session override
+- Factory Boy factory fixtures with session injection
+
+This approach enables efficient test execution while maintaining test isolation and reproducibility.
+
 ## Development Workflow
 
 ### Frontend Development

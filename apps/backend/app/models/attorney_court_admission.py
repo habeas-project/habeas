@@ -1,6 +1,6 @@
 from sqlalchemy import Column, ForeignKey, Integer, Table
 
-from app.database import Base  # Assuming Base is importable from app.database
+from app.database import Base
 
 # Define the association table directly using SQLAlchemy Table construct
 # This is simpler if the table only contains foreign keys

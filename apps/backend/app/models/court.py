@@ -3,16 +3,15 @@
 from typing import TYPE_CHECKING, List
 
 from sqlalchemy import Column, DateTime, Integer, String, func
-from sqlalchemy.orm import DeclarativeBase, Mapped, relationship
+from sqlalchemy.orm import Mapped, relationship
+
+from app.database import Base
+
+# Import the association table
+from app.models.attorney_court_admission import attorney_court_admission_table
 
 if TYPE_CHECKING:
     from .attorney import Attorney
-# Import the association table
-from .attorney_court_admission import attorney_court_admission_table
-
-
-class Base(DeclarativeBase):
-    pass
 
 
 class Court(Base):
