@@ -1,5 +1,5 @@
-from sqlalchemy import Column, Integer, String, Text
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy import Integer, String, Text
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column  # Import Mapped and mapped_column
 
 
 class Base(DeclarativeBase):
@@ -11,6 +11,6 @@ class Example(Base):
 
     __tablename__ = "examples"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
-    description = Column(Text, nullable=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)

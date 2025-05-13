@@ -2,8 +2,8 @@
 # Use TYPE_CHECKING to avoid circular imports at runtime
 from typing import TYPE_CHECKING, List
 
-from sqlalchemy import Column, DateTime, Integer, String, func
-from sqlalchemy.orm import Mapped, relationship
+from sqlalchemy import DateTime, Integer, String, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
@@ -12,6 +12,8 @@ from app.models.attorney_court_admission import attorney_court_admission_table
 
 if TYPE_CHECKING:
     from .attorney import Attorney
+    from .court_county import CourtCounty
+    from .district_court_contact import DistrictCourtContact
 
 
 class Court(Base):
@@ -19,12 +21,14 @@ class Court(Base):
 
     __tablename__ = "courts"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(255), nullable=False, index=True)
-    abbreviation = Column(String(10), nullable=False, unique=True, index=True)
-    url = Column(String(255), nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    abbreviation: Mapped[str] = mapped_column(String(10), nullable=False, unique=True, index=True)
+    url: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[DateTime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
 
     # Define the many-to-many relationship to Attorney using Mapped
     admitted_attorneys: Mapped[List["Attorney"]] = relationship(
@@ -32,6 +36,22 @@ class Court(Base):
         secondary=attorney_court_admission_table,
         back_populates="admitted_courts",
         lazy="selectin",  # Use selectin loading for efficiency
+    )
+
+    # Define the one-to-many relationship to CourtCounty
+    court_counties: Mapped[List["CourtCounty"]] = relationship(
+        "CourtCounty",
+        back_populates="court",
+        cascade="all, delete-orphan",  # If a court is deleted, its associated counties are also deleted.
+        lazy="selectin",
+    )
+
+    # Define the one-to-many relationship to DistrictCourtContact
+    contact_details: Mapped[List["DistrictCourtContact"]] = relationship(
+        "DistrictCourtContact",
+        back_populates="court",
+        cascade="all, delete-orphan",
+        lazy="selectin",
     )
 
     def __repr__(self):
