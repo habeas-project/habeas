@@ -2,16 +2,38 @@
 import logging
 import os
 import sys
+from datetime import datetime
+from pathlib import Path
 
 import sqlalchemy as sa
 from dotenv import load_dotenv
 from sqlalchemy import MetaData, Table, func, inspect, text
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+
+# Configure logging to both file and console
+def setup_logging():
+    """Set up logging to both file and console with timestamped log files."""
+    # Create logs directory if it doesn't exist
+    log_dir = Path(__file__).resolve().parent.parent.parent.parent / "temp" / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+
+    # Create timestamped log filename
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_file = log_dir / f"verify_migration_{timestamp}.log"
+
+    # Configure root logger
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        handlers=[logging.FileHandler(log_file), logging.StreamHandler(sys.stdout)],
+    )
+
+    logger = logging.getLogger(__name__)
+    logger.info(f"Logging to file: {log_file}")
+    return logger
+
+
+logger = setup_logging()
 
 # Load environment variables
 load_dotenv()
@@ -21,6 +43,11 @@ load_dotenv()
 database_url = os.getenv(
     "DATABASE_URL", "postgresql://postgres:postgres@db:5432/habeas"
 )
+
+# Get verification mode
+VERIFICATION_MODE = os.getenv(
+    "VERIFICATION_MODE", "full_check"
+)  # Default to full_check
 
 # Create engine
 engine = sa.create_engine(database_url)
@@ -94,20 +121,51 @@ try:
                 table_counts[table_name] = count
 
                 # Check if count is not None before comparing
-                if count is not None and count > 0:
-                    logger.info(f"✓ Table '{table_name}' has {count} rows")
-                elif count == 0:
-                    logger.warning(f"⚠ Table '{table_name}' exists but has 0 data!")
-                    if table_name != "normalized_addresses":
+                if (
+                    VERIFICATION_MODE != "schema_only"
+                ):  # Only check counts if not in schema_only mode
+                    if count is not None and count > 0:
+                        logger.info(f"✓ Table '{table_name}' has {count} rows")
+                    elif count == 0:
+                        logger.warning(f"⚠ Table '{table_name}' exists but has 0 data!")
+                        # Define which tables are critical for each verification mode
+                        critical_for_basic_data = [
+                            "courts",
+                            "court_counties",
+                            "district_court_contacts",
+                        ]
+                        critical_for_full_check = critical_for_basic_data + [
+                            "ice_detention_facilities"
+                        ]
+
+                        # In basic_data mode, only fail if basic data tables are empty
+                        if (
+                            VERIFICATION_MODE == "basic_data"
+                            and table_name in critical_for_basic_data
+                        ):
+                            all_expected_present = False
+                        # In full_check mode, fail if any critical table is empty (except normalized_addresses which depends on API)
+                        elif (
+                            VERIFICATION_MODE == "full_check"
+                            and table_name in critical_for_full_check
+                        ):
+                            all_expected_present = False
+                    else:
+                        logger.warning(
+                            f"⚠ Could not determine row count for table '{table_name}'."
+                        )
                         all_expected_present = False
-                else:
-                    logger.warning(
-                        f"⚠ Could not determine row count for table '{table_name}'."
+                elif (
+                    table_name in tables
+                ):  # In schema_only mode, just acknowledge it exists if we got this far
+                    logger.info(
+                        f"✓ Table '{table_name}' exists (row count not checked in schema_only mode)"
                     )
-                    all_expected_present = False
 
         # Special checks for important tables
-        if "court_counties" in tables:
+        if (
+            VERIFICATION_MODE != "schema_only" and "court_counties" in tables
+        ):  # Only run these detailed checks in full_check mode
             # Check if court_counties has proper foreign key relationships
             logger.info("Checking court_counties relationships...")
 

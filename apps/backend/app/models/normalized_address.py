@@ -30,8 +30,8 @@ class NormalizedAddress(Base):
     normalized_city: Mapped[str | None] = mapped_column(sa.String(100), nullable=True)
     normalized_state: Mapped[str | None] = mapped_column(sa.String(50), nullable=True)
     normalized_zip_code: Mapped[str | None] = mapped_column(sa.String(20), nullable=True)
-    county: Mapped[str] = mapped_column(
-        sa.String(100), nullable=False, comment="County name returned by the geocoding API"
+    county: Mapped[str | None] = mapped_column(
+        sa.String(100), nullable=True, comment="County name returned by the geocoding API"
     )
     latitude: Mapped[float | None] = mapped_column(sa.Float, nullable=True)
     longitude: Mapped[float | None] = mapped_column(sa.Float, nullable=True)

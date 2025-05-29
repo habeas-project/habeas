@@ -20,7 +20,7 @@ class DistrictCourtContact(Base):
     court_id: Mapped[int] = mapped_column(Integer, ForeignKey("courts.id"), nullable=False, index=True)
     location_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     address: Mapped[str | None] = mapped_column(String, nullable=True)
-    phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    phone: Mapped[str | None] = mapped_column(String(255), nullable=True)
     email: Mapped[str | None] = mapped_column(String(255), nullable=True)
     hours: Mapped[str | None] = mapped_column(String(255), nullable=True)
 

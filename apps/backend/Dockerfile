@@ -17,11 +17,15 @@ COPY pyproject.toml README.md* alembic.ini ./
 # Create and activate virtual environment
 RUN uv venv
 
-# Install dependencies from pyproject.toml
-RUN uv pip install -e "."
+# Setup virtual environment
+ENV VIRTUAL_ENV=/app/.venv
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Install dependencies from pyproject.toml including data-import extras
+RUN uv pip install -e ".[data-import]"
 
 # Explicitly install required packages for migrations and data ingestion
-RUN pip install python-dotenv pandas sqlalchemy psycopg2-binary requests beautifulsoup4 lxml alembic
+# RUN pip install python-dotenv pandas sqlalchemy psycopg2-binary requests beautifulsoup4 lxml alembic
 
 # Install development dependencies if ARG INSTALL_DEV=true
 ARG INSTALL_DEV=false

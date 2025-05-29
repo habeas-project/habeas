@@ -1,5 +1,6 @@
 import logging
 import sys
+from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
@@ -13,11 +14,31 @@ from app.models.court import Court
 from app.models.court_county import CourtCounty
 from app.models.district_court_contact import DistrictCourtContact  # Add this import
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+
+# Configure logging to both file and console
+def setup_logging():
+    """Set up logging to both file and console with timestamped log files."""
+    # Create logs directory if it doesn't exist
+    log_dir = Path(__file__).resolve().parent.parent.parent.parent / "temp" / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+
+    # Create timestamped log filename
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_file = log_dir / f"import_court_data_{timestamp}.log"
+
+    # Configure root logger
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        handlers=[logging.FileHandler(log_file), logging.StreamHandler(sys.stdout)],
+    )
+
+    logger = logging.getLogger(__name__)
+    logger.info(f"Logging to file: {log_file}")
+    return logger
+
+
+logger = setup_logging()
 
 
 def get_court_by_abbreviation(db: Session, abbreviation: str) -> Court | None:
@@ -139,57 +160,126 @@ def import_court_data(
         imported_contacts_count = 0
         for _, row in contact_df.iterrows():
             try:
-                court = get_court_by_abbreviation(db, row["court_abbreviation"])
+                court_abbreviation_csv = row["court_abbreviation"]
+                location_name_csv = row.get("location_name")
+
+                logger.info(
+                    f"Processing contact: Court Abbr='{court_abbreviation_csv}', Location='{location_name_csv}'"
+                )
+
+                court = get_court_by_abbreviation(db, court_abbreviation_csv)
                 if court:
-                    # Check if a contact with the same location name already exists for this court to avoid duplicates
-                    # This is a simple check; more sophisticated duplicate detection might be needed
-                    existing_contact = (
-                        db.query(DistrictCourtContact)
-                        .filter(
-                            DistrictCourtContact.court_id == court.id,
-                            DistrictCourtContact.location_name
-                            == row.get("location_name"),
-                        )
-                        .first()
+                    logger.info(
+                        f"Found court: ID={court.id}, Abbr='{court.abbreviation}' for CSV location '{location_name_csv}'"
                     )
 
+                    # Ensure location_name_csv is a string for comparison, or handle None if that's valid
+                    processed_location_name = (
+                        str(location_name_csv) if pd.notna(location_name_csv) else None
+                    )
+
+                    existing_contact = None
+                    if (
+                        processed_location_name is not None
+                    ):  # Only query if location_name is not None
+                        existing_contact = (
+                            db.query(DistrictCourtContact)
+                            .filter(
+                                DistrictCourtContact.court_id == court.id,
+                                DistrictCourtContact.location_name
+                                == processed_location_name,
+                            )
+                            .first()
+                        )
+
                     if existing_contact:
+                        logger.info(
+                            f"Found existing contact for Court ID {court.id} and Location '{processed_location_name}'. Contact ID: {existing_contact.id}"
+                        )
                         # Update existing contact if necessary
                         update_needed = False
                         if existing_contact.address != row.get("address"):
-                            existing_contact.address = row.get("address")
+                            logger.info(
+                                f"Updating address for contact ID {existing_contact.id}. Old: '{existing_contact.address}', New: '{row.get('address')}'"
+                            )
+                            existing_contact.address = (
+                                str(row.get("address", "")).strip()
+                                if pd.notna(row.get("address"))
+                                else None
+                            )  # ensure string or None
                             update_needed = True
                         if existing_contact.phone != row.get("phone"):
-                            existing_contact.phone = row.get("phone")
+                            logger.info(
+                                f"Updating phone for contact ID {existing_contact.id}. Old: '{existing_contact.phone}', New: '{row.get('phone')}'"
+                            )
+                            existing_contact.phone = (
+                                str(row.get("phone", "")).strip()
+                                if pd.notna(row.get("phone"))
+                                else None
+                            )
                             update_needed = True
                         if existing_contact.email != row.get("email"):
-                            existing_contact.email = row.get("email")
+                            logger.info(
+                                f"Updating email for contact ID {existing_contact.id}. Old: '{existing_contact.email}', New: '{row.get('email')}'"
+                            )
+                            existing_contact.email = (
+                                str(row.get("email", "")).strip()
+                                if pd.notna(row.get("email"))
+                                else None
+                            )
                             update_needed = True
                         if existing_contact.hours != row.get("hours"):
-                            existing_contact.hours = row.get("hours")
+                            logger.info(
+                                f"Updating hours for contact ID {existing_contact.id}. Old: '{existing_contact.hours}', New: '{row.get('hours')}'"
+                            )
+                            existing_contact.hours = (
+                                str(row.get("hours", "")).strip()
+                                if pd.notna(row.get("hours"))
+                                else None
+                            )
                             update_needed = True
 
                         if update_needed:
                             logger.info(
-                                f"Updated contact for court '{court.abbreviation}' at location '{row.get('location_name')}'"
+                                f"Applying updates for contact for court '{court.abbreviation}' at location '{processed_location_name}'"
                             )
-                    else:
+                            # imported_contacts_count += 1 # Not a new import, but an update
+                        else:
+                            logger.info(
+                                f"No updates needed for existing contact ID {existing_contact.id} at location '{processed_location_name}'."
+                            )
+                    elif processed_location_name is None:
+                        logger.warning(
+                            f"Skipping contact for court '{court.abbreviation}' due to missing location_name in CSV."
+                        )
+                    else:  # No existing contact found, and processed_location_name is not None
+                        logger.info(
+                            f"No existing contact found for Court ID {court.id} and Location '{processed_location_name}'. Creating new contact."
+                        )
                         contact = DistrictCourtContact(
                             court_id=court.id,
-                            location_name=row.get("location_name"),
-                            address=row.get("address"),
-                            phone=row.get("phone"),
-                            email=row.get("email"),
-                            hours=row.get("hours"),
+                            location_name=processed_location_name,  # Use the processed name
+                            address=str(row.get("address", "")).strip()
+                            if pd.notna(row.get("address"))
+                            else None,
+                            phone=str(row.get("phone", "")).strip()
+                            if pd.notna(row.get("phone"))
+                            else None,
+                            email=str(row.get("email", "")).strip()
+                            if pd.notna(row.get("email"))
+                            else None,
+                            hours=str(row.get("hours", "")).strip()
+                            if pd.notna(row.get("hours"))
+                            else None,
                         )
                         db.add(contact)
                         imported_contacts_count += 1
                         logger.info(
-                            f"Added contact for court '{court.abbreviation}': Location '{row.get('location_name', 'N/A')}'"
+                            f"ADDED new contact for court '{court.abbreviation}': Location '{processed_location_name}'. Count: {imported_contacts_count}"
                         )
                 else:
                     logger.warning(
-                        f"Court with abbreviation '{row['court_abbreviation']}' not found. Skipping contact: {row.get('location_name', 'N/A')}"
+                        f"Court with abbreviation '{court_abbreviation_csv}' not found. Skipping contact: Location '{location_name_csv}'"
                     )
             except Exception as e:
                 logger.error(
