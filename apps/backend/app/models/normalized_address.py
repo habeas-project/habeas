@@ -4,11 +4,11 @@ from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
 
-from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
 from app.database import Base
+from app.database_types import JSONType
 
 if TYPE_CHECKING:
     pass  # IceDetentionFacility import no longer needed here directly for relationship
@@ -36,7 +36,7 @@ class NormalizedAddress(Base):
     latitude: Mapped[float | None] = mapped_column(sa.Float, nullable=True)
     longitude: Mapped[float | None] = mapped_column(sa.Float, nullable=True)
     api_response_json: Mapped[dict | None] = mapped_column(
-        JSONB, nullable=True, comment="Complete JSON response from the geocoding API for reference"
+        JSONType, nullable=True, comment="Complete JSON response from the geocoding API for reference"
     )
 
     created_at: Mapped[sa.DateTime] = mapped_column(
