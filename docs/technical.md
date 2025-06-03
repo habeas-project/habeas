@@ -20,6 +20,9 @@
   - [Overview](#overview)
   - [Migration Structure](#migration-structure)
   - [Running Migrations](#running-migrations)
+- [Data Ingestion](#data-ingestion)
+  - [Overview](#data-ingestion-overview)
+  - [Running Data Ingestion](#running-data-ingestion)
 - [Common Troubleshooting](#common-troubleshooting)
   - [pg_config executable not found](#pgconfig-executable-not-found)
   - [Python module not found](#python-module-not-found)
@@ -350,6 +353,40 @@ alembic revision --autogenerate -m "Brief description of changes"
 # Revert the last applied migration
 alembic downgrade -1
 ```
+
+## Data Ingestion
+
+### Overview
+
+The Habeas project includes a comprehensive data ingestion system for importing court data and ICE detention facility information into the PostgreSQL database. The system is fully integrated with Docker Compose and provides robust error handling, verification, and geocoding capabilities.
+
+For complete documentation on the data ingestion system, including:
+- Docker integration and workflow
+- Data pipeline structure and phases
+- ICE detention facilities geocoding workflow
+- Database schema integration
+- Issue resolution and troubleshooting
+- Verification and testing procedures
+
+See the dedicated **[Data Ingestion Documentation](data-ingestion.md)**.
+
+### Quick Start
+
+To run the complete data ingestion pipeline:
+
+```bash
+# Clean state (recommended for testing)
+docker compose -f apps/docker-compose.yml down -v
+
+# Run complete data ingestion pipeline
+docker compose -f apps/docker-compose.yml up data-ingestion
+```
+
+The system will automatically:
+1. Run database migrations
+2. Import court data and ICE detention facilities
+3. Perform geocoding operations (if API keys are available)
+4. Verify all data was imported successfully
 
 ## Common Troubleshooting
 

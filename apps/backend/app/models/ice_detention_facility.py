@@ -15,15 +15,26 @@ class IceDetentionFacility(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
-    address: Mapped[str | None] = mapped_column(String, nullable=True)  # Original address from Excel
+    original_address: Mapped[str | None] = mapped_column(String, nullable=True)  # Original address from CSV
     city: Mapped[str | None] = mapped_column(String(100), nullable=True)
     state: Mapped[str | None] = mapped_column(String(2), nullable=True)  # 2-letter state code
     zip_code: Mapped[str | None] = mapped_column(String(20), nullable=True)
     aor: Mapped[str | None] = mapped_column(String(255), nullable=True, name="aor")  # Area of Responsibility
-    facility_type_detailed: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    facility_type: Mapped[str | None] = mapped_column(String(255), nullable=True)  # Type Detailed from CSV
     gender_capacity: Mapped[str | None] = mapped_column(
         String(50), nullable=True
     )  # e.g., "Male", "Female", "Male/Female"
+
+    # Capacity fields
+    mandatory: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    guaranteed_minimum: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+    # Inspection fields
+    last_inspection_type: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    last_inspection_end_date: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    pending_fy25_inspection: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    last_inspection_standard: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    last_final_rating: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # Foreign Key to courts table
     court_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("courts.id"), nullable=True, index=True)

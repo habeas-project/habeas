@@ -121,16 +121,40 @@ def import_ice_facilities_from_csv(
             with open(geocoded_csv_path, "r", encoding="utf-8") as f:
                 reader = csv.DictReader(f)
                 for row in reader:
-                    facility_name = row.get("facility_name", "").strip()
+                    facility_name = row.get("Name", "").strip()
                     if facility_name:
-                        geocoded_data[facility_name] = {
-                            "latitude": row.get("latitude"),
-                            "longitude": row.get("longitude"),
-                            "normalized_address": row.get("normalized_address"),
-                            "geocoding_source": row.get(
-                                "geocoding_source", "Static CSV"
-                            ),
-                        }
+                        # Convert coordinates to float, handle empty/failed values
+                        latitude = row.get("latitude", "").strip()
+                        longitude = row.get("longitude", "").strip()
+
+                        # Only include geocoded data if we have valid coordinates
+                        if (
+                            latitude
+                            and longitude
+                            and latitude != ""
+                            and longitude != ""
+                        ):
+                            try:
+                                lat_float = float(latitude)
+                                lon_float = float(longitude)
+                                geocoded_data[facility_name] = {
+                                    "latitude": lat_float,
+                                    "longitude": lon_float,
+                                    "normalized_address": str(
+                                        row.get("normalized_address", "")
+                                    ).strip(),
+                                    "geocoding_source": str(
+                                        row.get("geocoding_source", "Static CSV")
+                                    ).strip(),
+                                }
+                            except (ValueError, TypeError) as e:
+                                logger.warning(
+                                    f"Invalid coordinates for {facility_name}: lat={latitude}, lon={longitude} - {e}"
+                                )
+                                continue
+                        else:
+                            logger.warning(f"Missing coordinates for {facility_name}")
+                            continue
             logger.info(f"Loaded geocoded data for {len(geocoded_data)} facilities")
         except Exception as e:
             logger.error(f"Error loading geocoded data: {e}")
@@ -267,9 +291,10 @@ def import_ice_facilities_from_csv(
                 geocoded_info = geocoded_data[facility_name]
 
                 # Parse the normalized address into components
-                address_components = parse_geocoded_address(
-                    geocoded_info.get("normalized_address")
+                normalized_address_value = str(
+                    geocoded_info.get("normalized_address", "")
                 )
+                address_components = parse_geocoded_address(normalized_address_value)
 
                 # Check if normalized address already exists
                 existing_address = (
@@ -287,12 +312,13 @@ def import_ice_facilities_from_csv(
                         original_address_query=f"{original_address}, {city}, {state}",
                         latitude=geocoded_info["latitude"],
                         longitude=geocoded_info["longitude"],
-                        street_address=address_components.get("street_address"),
-                        city=address_components.get("city"),
-                        state=address_components.get("state"),
-                        zip_code=address_components.get("zip_code"),
+                        normalized_street_address=address_components.get(
+                            "street_address"
+                        ),
+                        normalized_city=address_components.get("city"),
+                        normalized_state=address_components.get("state"),
+                        normalized_zip_code=address_components.get("zip_code"),
                         county=None,  # Will be parsed from normalized address if available
-                        country=address_components.get("country", "United States"),
                     )
                     db.add(normalized_address)
                     db.flush()  # Get the ID
