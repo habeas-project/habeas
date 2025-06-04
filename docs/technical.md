@@ -15,10 +15,14 @@
   - [Router Implementation Pattern](#router-implementation-pattern)
   - [Schema Organization](#schema-organization)
   - [Testing Strategy](#testing-strategy)
+  - [SQLAlchemy ORM Style](#sqlalchemy-orm-style)
 - [Database Migrations](#database-migrations)
   - [Overview](#overview)
   - [Migration Structure](#migration-structure)
   - [Running Migrations](#running-migrations)
+- [Data Ingestion](#data-ingestion)
+  - [Overview](#data-ingestion-overview)
+  - [Running Data Ingestion](#running-data-ingestion)
 - [Common Troubleshooting](#common-troubleshooting)
   - [pg_config executable not found](#pgconfig-executable-not-found)
   - [Python module not found](#python-module-not-found)
@@ -258,6 +262,23 @@ pytest --cov=app
 - **Test validation**: Ensure schema validation works by testing both valid and invalid inputs
 - **Mock Authentication**: Utilize the mock authentication system for relevant development and testing scenarios (see below).
 
+### SQLAlchemy ORM Style
+
+This project utilizes **SQLAlchemy version 2.0 (specifically `sqlalchemy>=2.0.12` as defined in `apps/backend/pyproject.toml`)**. We adhere to the modern SQLAlchemy 2.0 declarative style for defining ORM models, which emphasizes explicit type annotations for better integration with static analysis tools like MyPy and Pylance.
+
+**Key Conventions:**
+
+*   **`Mapped` and `mapped_column`:** All model attributes that represent database columns should be defined using `Mapped[<python_type>]` for the type hint and `mapped_column(<SQLAlchemyType>, ...)` for the column definition.
+    *   Example: `user_name: Mapped[str] = mapped_column(String(100), unique=True)`
+*   **Avoid `Column` for Mapped Attributes:** While SQLAlchemy might support `attribute: Mapped[type] = Column(...)` for backward compatibility, we explicitly use `mapped_column()` for all new and refactored model definitions. This provides the clearest contract for type checkers and aligns with SQLAlchemy 2.0 best practices.
+*   **Benefits:** This approach leads to:
+    *   Improved static type checking and reduced runtime errors.
+    *   Better autocompletion and code intelligence in IDEs.
+    *   More readable and maintainable model definitions.
+*   **Relationships:** Relationships are also defined using `Mapped`, for example: `posts: Mapped[List["Post"]] = relationship(back_populates="author")`.
+
+All new model development and any refactoring of existing models should strictly follow this style to ensure consistency and leverage the full benefits of SQLAlchemy 2.0 and modern type hinting.
+
 ## Mock Authentication (Development/Testing)
 
 ### Overview
@@ -332,6 +353,40 @@ alembic revision --autogenerate -m "Brief description of changes"
 # Revert the last applied migration
 alembic downgrade -1
 ```
+
+## Data Ingestion
+
+### Overview
+
+The Habeas project includes a comprehensive data ingestion system for importing court data and ICE detention facility information into the PostgreSQL database. The system is fully integrated with Docker Compose and provides robust error handling, verification, and geocoding capabilities.
+
+For complete documentation on the data ingestion system, including:
+- Docker integration and workflow
+- Data pipeline structure and phases
+- ICE detention facilities geocoding workflow
+- Database schema integration
+- Issue resolution and troubleshooting
+- Verification and testing procedures
+
+See the dedicated **[Data Ingestion Documentation](data-ingestion.md)**.
+
+### Quick Start
+
+To run the complete data ingestion pipeline:
+
+```bash
+# Clean state (recommended for testing)
+docker compose -f apps/docker-compose.yml down -v
+
+# Run complete data ingestion pipeline
+docker compose -f apps/docker-compose.yml up data-ingestion
+```
+
+The system will automatically:
+1. Run database migrations
+2. Import court data and ICE detention facilities
+3. Perform geocoding operations (if API keys are available)
+4. Verify all data was imported successfully
 
 ## Common Troubleshooting
 

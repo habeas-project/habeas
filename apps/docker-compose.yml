@@ -22,19 +22,47 @@ services:
       - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   migration:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    command: uv run alembic upgrade head
+    command: python /app/run_migrations.py
     env_file:
       - ../.env
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
     volumes:
       - ./backend/app:/app/app
       - ./backend/migrations:/app/migrations
+      - ./backend/run_migrations.py:/app/run_migrations.py
+      - ./backend/alembic.ini:/app/alembic.ini
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+
+  data-ingestion:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: >
+      bash -c "echo 'DEBUG: Listing data directories...' &&  ls -la /app/data/pipeline &&  ls -la /app/data/pipeline/2_staging_data &&  ls -la /app/data/static_assets &&  echo 'Running ingestion' &&  python /app/data/pipeline/run_data_ingestion.py"
+    env_file:
+      - ../.env
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+    volumes:
+      - ./backend/app:/app/app
+      - ../data:/app/data
+    depends_on:
+      migration:
+        condition: service_completed_successfully
 
 volumes:
   postgres_data:

@@ -35,12 +35,15 @@ dev = [
     "bandit[toml]>=1.7.6",
     "types-requests>=2.31.0",
     "sqlalchemy-stubs>=0.4",
+    "ipykernel>=6.29.5",
 ]
 data-import = [
     "pandas>=2.0.0",
     "requests>=2.28.0",
     "beautifulsoup4>=4.12.0",
     "lxml>=4.9.0",
+    "openpyxl>=0.1.0",
+    "geopy>=2.3.0",
 ]
 
 [tool.ruff]

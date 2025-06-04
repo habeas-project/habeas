@@ -1,45 +1,48 @@
-FROM python:3.12-slim AS base
+FROM python:3.12-slim
 
-ENV PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=off \
-    PIP_DISABLE_PIP_VERSION_CHECK=on \
-    PIP_DEFAULT_TIMEOUT=100
-
-# System dependencies
 RUN apt-get update && apt-get install -y \
     gcc libpq-dev \
-    # Add curl for healthcheck
     curl \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Install uv package manager
+# Install uv for package management
 RUN pip install uv
 
-# Copy dependency definition files
+# Copy dependency files
 COPY pyproject.toml README.md* alembic.ini ./
 
-# Setup virtual environment
+# Create and activate virtual environment
 RUN uv venv
-ENV VIRTUAL_ENV=/.venv
-ENV PATH="/.venv/bin:$PATH"
 
-# Install dependencies (use uv for faster installs)
+# Setup virtual environment
+ENV VIRTUAL_ENV=/app/.venv
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Install dependencies from pyproject.toml including data-import extras
+RUN uv pip install -e ".[data-import]"
+
+# Explicitly install required packages for migrations and data ingestion
+# RUN pip install python-dotenv pandas sqlalchemy psycopg2-binary requests beautifulsoup4 lxml alembic
+
+# Install development dependencies if ARG INSTALL_DEV=true
 ARG INSTALL_DEV=false
-RUN uv pip install -e "."
-RUN if [ "$INSTALL_DEV" = "true" ]; then \
+RUN if [ "${INSTALL_DEV}" = "true" ]; then \
     echo "Installing development dependencies..."; \
     uv pip install -e ".[dev]"; \
     else \
     echo "Skipping development dependencies."; \
     fi
 
-# Copy the rest of the application code
+# Copy application files
 COPY ./app ./app
 COPY ./migrations ./migrations
 COPY ./tests ./tests
 
-# Default command to run the application using uvicorn via uv
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Add the parent directory to Python path so the app package can be imported from anywhere
+ENV PYTHONPATH=/app:$PYTHONPATH
+
+# Default command
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
