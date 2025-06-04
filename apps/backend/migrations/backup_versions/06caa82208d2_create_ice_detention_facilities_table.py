@@ -51,7 +51,6 @@ def upgrade() -> None:
         )
 
         # Create indexes only if the table was created
-        op.create_index("ix_ice_detention_facilities_id", "ice_detention_facilities", ["id"], unique=False)
         op.create_index("ix_ice_detention_facilities_name", "ice_detention_facilities", ["name"], unique=False)
         op.create_index(
             "ix_ice_detention_facilities_normalized_address_id",
