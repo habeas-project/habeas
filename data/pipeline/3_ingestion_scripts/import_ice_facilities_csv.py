@@ -149,7 +149,7 @@ def import_ice_facilities_from_csv(
                                 }
                             except (ValueError, TypeError) as e:
                                 logger.warning(
-                                    f"Invalid coordinates for {facility_name}: lat={latitude}, lon={longitude} - {e}"
+                                    f"Invalid coordinates for {facility_name}: Coordinates are not valid - {e}"
                                 )
                                 continue
                         else:

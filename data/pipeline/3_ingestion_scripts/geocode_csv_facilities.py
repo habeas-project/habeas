@@ -86,15 +86,17 @@ def geocode_address_positionstack(
             }
         else:
             logger.warning(
-                f"No Positionstack geocoding results found for query: {query}. Response: {data}"
+                f"No Positionstack geocoding results found for address in {city}, {state}. Response: {data}"
             )
             return None
     except requests.exceptions.RequestException as e:
-        logger.error(f"Positionstack API request failed for query '{query}': {e}")
+        logger.error(
+            f"Positionstack API request failed for address in {city}, {state}: {e}"
+        )
         return None
     except (KeyError, IndexError) as e:
         logger.error(
-            f"Error parsing Positionstack API response for query '{query}': {e}. Response: {response.text if 'response' in locals() else 'No response'}"
+            f"Error parsing Positionstack API response for address in {city}, {state}: {e}. Response: {response.text if 'response' in locals() else 'No response'}"
         )
         return None
 
@@ -121,7 +123,7 @@ def geocode_address_nominatim(
     for attempt in range(max_retries):
         try:
             logger.info(
-                f"Nominatim geocoding attempt {attempt + 1}/{max_retries}: {full_address}"
+                f"Nominatim geocoding attempt {attempt + 1}/{max_retries} for address in {city}, {state}"
             )
             # Type ignore for geopy's geocode method which returns Location or None
             location = geolocator.geocode(full_address, timeout=10)  # type: ignore[arg-type]
@@ -135,38 +137,32 @@ def geocode_address_nominatim(
                 }
 
                 logger.info(
-                    f"Successfully geocoded with Nominatim: {full_address} -> ({location.latitude}, {location.longitude})"  # type: ignore[attr-defined]
+                    f"Successfully geocoded with Nominatim: Address hash -> ({round(location.latitude, 2)}, {round(location.longitude, 2)})"  # type: ignore[attr-defined]
                 )
                 return result
             else:
-                logger.warning(
-                    f"No Nominatim geocoding results found for: {full_address}"
-                )
+                logger.warning("No Nominatim geocoding results found for address")
                 return None
 
         except GeocoderTimedOut:
             logger.warning(
-                f"Nominatim geocoding timeout for {full_address} (attempt {attempt + 1}/{max_retries})"
+                f"Nominatim geocoding timeout for address (attempt {attempt + 1}/{max_retries})"
             )
             if attempt < max_retries - 1:
                 time.sleep(2**attempt)  # Exponential backoff
             continue
 
         except GeocoderServiceError as e:
-            logger.error(f"Nominatim geocoding service error for {full_address}: {e}")
+            logger.error(f"Nominatim geocoding service error: {e}")
             if attempt < max_retries - 1:
                 time.sleep(2**attempt)  # Exponential backoff
             continue
 
         except Exception as e:
-            logger.error(
-                f"Unexpected error geocoding {full_address} with Nominatim: {e}"
-            )
+            logger.error(f"Unexpected error geocoding address with Nominatim: {e}")
             return None
 
-    logger.error(
-        f"Failed to geocode with Nominatim after {max_retries} attempts: {full_address}"
-    )
+    logger.error(f"Failed to geocode with Nominatim after {max_retries} attempts")
     return None
 
 
@@ -199,7 +195,7 @@ def geocode_address_with_fallback(
     # If Nominatim fails and we have a Positionstack API key, try that
     if positionstack_api_key:
         logger.info(
-            f"Nominatim failed, trying Positionstack fallback for: {address}, {city}, {state}"
+            f"Nominatim failed, trying Positionstack fallback for address in {city}, {state}"
         )
         positionstack_result = geocode_address_positionstack(
             address, city, state, positionstack_api_key
@@ -207,12 +203,12 @@ def geocode_address_with_fallback(
 
         if positionstack_result:
             logger.info(
-                f"Successfully geocoded with Positionstack fallback: {address}, {city}, {state}"
+                f"Successfully geocoded with Positionstack fallback for address in {city}, {state}"
             )
             return positionstack_result
 
     logger.warning(
-        f"Both Nominatim and Positionstack failed for: {address}, {city}, {state}"
+        f"Both Nominatim and Positionstack failed for address in {city}, {state}"
     )
     return None
 
