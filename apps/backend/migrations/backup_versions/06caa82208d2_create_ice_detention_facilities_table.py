@@ -87,8 +87,7 @@ def downgrade() -> None:
         if "ix_ice_detention_facilities_name" in indexes:
             op.drop_index("ix_ice_detention_facilities_name", table_name="ice_detention_facilities")
 
-        if "ix_ice_detention_facilities_id" in indexes:
-            op.drop_index("ix_ice_detention_facilities_id", table_name="ice_detention_facilities")
+# Removed redundant check and drop operation for ix_ice_detention_facilities_id
 
         # Now drop the table
         op.drop_table("ice_detention_facilities")
