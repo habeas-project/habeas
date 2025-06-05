@@ -10,7 +10,7 @@ from .normalized_address import NormalizedAddressResponse  # Add this import
 # Base schema for IceDetentionFacility - common fields
 class IceDetentionFacilityBase(BaseModel):
     name: str
-    address: Optional[str] = None  # This is the original address from Excel
+    original_address: Optional[str] = None  # This is the original address from Excel
     city: Optional[str] = None
     state: Optional[str] = None  # Simplified to Optional[str], DB enforces length
     zip_code: Optional[str] = None
