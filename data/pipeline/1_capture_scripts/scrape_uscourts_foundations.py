@@ -11,7 +11,7 @@ from urllib.parse import urlparse
 
 import pandas as pd
 import requests
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 
 # Configure logging
 logging.basicConfig(
@@ -21,8 +21,8 @@ logger = logging.getLogger(__name__)
 
 # Constants
 SOURCE_URL = "https://www.uscourts.gov/about-federal-courts/court-role-and-structure/court-website-links"
-OUTPUT_DIR = "scripts/output"
-OUTPUT_FILE = "district_courts.csv"
+OUTPUT_DIR = "data/pipeline/2_staging_data"
+OUTPUT_FILE = "uscourts_foundations.csv"
 OUTPUT_PATH = os.path.join(OUTPUT_DIR, OUTPUT_FILE)
 
 
@@ -51,18 +51,21 @@ class CourtScraper:
     def extract_court_data(self, html_content: str) -> List[Dict[str, str]]:
         """Extract court data from HTML content."""
         soup = BeautifulSoup(html_content, "lxml")
-        courts_data = []
+        courts_data: List[Dict[str, str]] = []
 
         # Find the table with class="usa-table"
         table = soup.find("table", class_="usa-table")
-        if not table:
-            logger.error("Could not find the target table")
+        if not isinstance(table, Tag):
+            logger.error("Could not find the target table or it's not a Tag")
             return courts_data
 
         # Process each row in the table
-        for row in table.find_all("tr"):
+        for row_element in table.find_all("tr"):
+            if not isinstance(row_element, Tag):
+                continue
+
             # Get all cells in the row
-            cells = row.find_all("td")
+            cells = row_element.find_all("td")
 
             # Skip header row and empty rows
             if not cells:
@@ -70,11 +73,24 @@ class CourtScraper:
 
             # Only process the first column
             first_cell = cells[0]
+            if not isinstance(first_cell, Tag):
+                continue
             links = first_cell.find_all("a")
 
-            for link in links:
-                url = link.get("href", "").strip()
-                court_name = link.text.strip()
+            for link_element in links:
+                if not isinstance(link_element, Tag):
+                    continue
+
+                href_value = link_element.get("href")
+                url = ""
+                if isinstance(href_value, str):
+                    url = href_value.strip()
+                elif isinstance(href_value, list):
+                    # Though 'href' is typically a string, handle list case if linter implies it
+                    url = " ".join(href_value).strip()
+                # If href_value is None, url remains ""
+
+                court_name = link_element.text.strip() if link_element.text else ""
 
                 # Skip empty or non-court links
                 if not url or not court_name or "uscourts.gov" not in url:
@@ -160,7 +176,7 @@ def main():
         return
 
     # Extract court data
-    courts_data = scraper.extract_court_data(html_content)
+    courts_data: List[Dict[str, str]] = scraper.extract_court_data(html_content)
 
     # Validate data
     if not scraper.validate_data(courts_data):

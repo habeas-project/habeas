@@ -54,6 +54,21 @@ jobs:
           # Use awk for safer masking that handles potential special characters in password
           awk -F'=' '/POSTGRES_PASSWORD|SECRET_KEY/ {$2="******"} {print}' OFS='=' .env
 
+          # Set environment variables in GitHub Actions environment for subsequent steps
+          echo "POSTGRES_USER=postgres" >> $GITHUB_ENV
+          echo "POSTGRES_PASSWORD=${ACTUAL_DB_PASSWORD}" >> $GITHUB_ENV
+          echo "POSTGRES_DB=habeas" >> $GITHUB_ENV
+          echo "POSTGRES_HOST=db" >> $GITHUB_ENV
+          echo "POSTGRES_PORT=5432" >> $GITHUB_ENV
+
+          # Verify environment variables are set
+          echo "Environment variables verification:"
+          echo "POSTGRES_USER=postgres"
+          echo "POSTGRES_PASSWORD=${ACTUAL_DB_PASSWORD:+******}"
+          echo "POSTGRES_DB=habeas"
+          echo "POSTGRES_HOST=db"
+          echo "POSTGRES_PORT=5432"
+
       - name: Start DB service
         working-directory: ./apps
         run: docker compose up -d db
@@ -85,7 +100,12 @@ jobs:
         working-directory: ./apps
         # Use run with --rm to ensure container is removed after execution
         # Pass environment variables explicitly if needed, though docker-compose should handle it
-        run: docker compose run --rm migration
+        run: |
+          echo "Verifying environment setup before migrations..."
+          echo "Contents of .env file (with masked passwords):"
+          awk -F'=' '/POSTGRES_PASSWORD|SECRET_KEY/ {$2="******"} {print}' OFS='=' ../.env
+          echo "Running migrations..."
+          docker compose run --rm migration
 
       - name: Run Backend Tests
         working-directory: ./apps

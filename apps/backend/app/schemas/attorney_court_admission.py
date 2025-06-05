@@ -21,9 +21,7 @@ class AttorneyCourtAdmissionResponse(BaseModel):
     attorney_id: int
     court_id: int
 
-    class Config:
-        # orm_mode=True for Pydantic v1
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 class AttorneyCourtAdmission(AttorneyCourtAdmissionBase):
