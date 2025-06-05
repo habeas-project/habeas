@@ -47,5 +47,4 @@ class IceDetentionFacilityResponse(IceDetentionFacilityBase):
     updated_at: datetime.datetime
     normalized_address_info: Optional[NormalizedAddressResponse] = None  # Add this field
 
-    class Config:
-        orm_mode = True  # For Pydantic V1, use from_attributes = True for V2
+    model_config = {"from_attributes": True}

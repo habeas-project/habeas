@@ -36,7 +36,4 @@ class DistrictCourtContactResponse(DistrictCourtContactBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        """Pydantic configuration."""
-
-        orm_mode = True
+    model_config = {"from_attributes": True}

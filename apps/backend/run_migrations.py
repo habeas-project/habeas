@@ -11,6 +11,7 @@ import time
 
 from pathlib import Path
 
+import alembic.command
 import alembic.config
 import sqlalchemy as sa
 
@@ -29,7 +30,32 @@ def get_database_url() -> str:
     db_url = os.getenv("DATABASE_URL")
     if not db_url:
         logger.error("DATABASE_URL environment variable not set")
+        # Log individual components for debugging
+        logger.info("Individual database environment variables:")
+        logger.info(f"  POSTGRES_USER: {os.getenv('POSTGRES_USER', 'NOT_SET')}")
+        logger.info(f"  POSTGRES_PASSWORD: {'SET' if os.getenv('POSTGRES_PASSWORD') else 'NOT_SET'}")
+        logger.info(f"  POSTGRES_HOST: {os.getenv('POSTGRES_HOST', 'NOT_SET')}")
+        logger.info(f"  POSTGRES_PORT: {os.getenv('POSTGRES_PORT', 'NOT_SET')}")
+        logger.info(f"  POSTGRES_DB: {os.getenv('POSTGRES_DB', 'NOT_SET')}")
         sys.exit(1)
+
+    # Validate that the URL is properly formatted
+    if not db_url.startswith("postgresql://"):
+        logger.error(f"Invalid DATABASE_URL format. Expected to start with 'postgresql://', got: {db_url[:20]}...")
+        sys.exit(1)
+
+    # Check for obviously malformed URLs
+    if "@:/" in db_url or "****@:/" in db_url:
+        logger.error("DATABASE_URL appears to be malformed - contains '@:/' pattern")
+        logger.info("This usually indicates empty environment variables during URL construction")
+        logger.info("Individual database environment variables:")
+        logger.info(f"  POSTGRES_USER: {os.getenv('POSTGRES_USER', 'NOT_SET')}")
+        logger.info(f"  POSTGRES_PASSWORD: {'SET' if os.getenv('POSTGRES_PASSWORD') else 'NOT_SET'}")
+        logger.info(f"  POSTGRES_HOST: {os.getenv('POSTGRES_HOST', 'NOT_SET')}")
+        logger.info(f"  POSTGRES_PORT: {os.getenv('POSTGRES_PORT', 'NOT_SET')}")
+        logger.info(f"  POSTGRES_DB: {os.getenv('POSTGRES_DB', 'NOT_SET')}")
+        sys.exit(1)
+
     return db_url
 
 

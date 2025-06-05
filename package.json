@@ -15,7 +15,7 @@
         "backend:lint": "cd apps/backend && source .venv/bin/activate && python3 -m ruff check .",
         "backend:format": "cd apps/backend && source .venv/bin/activate && python3 -m ruff format .",
         "backend:format-check": "cd apps/backend && source .venv/bin/activate && python3 -m ruff format --check .",
-        "test:ci:local": "act -W .github/workflows/test.yml",
+        "test:ci:local": "bash scripts/run_local_ci.sh",
         "lint": "eslint 'apps/mobile/**/*.{js,jsx,ts,tsx}'",
         "typecheck": "yarn workspace mobile tsc --noEmit"
     },

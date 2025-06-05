@@ -12,9 +12,7 @@ class CourtMinimalResponse(BaseModel):
     name: str
     abbreviation: str
 
-    class Config:
-        orm_mode = True  # Pydantic v1 style for orm_mode
-        # from_attributes = True # Pydantic v2 style
+    model_config = {"from_attributes": True}
 
 
 class CourtCountyBase(BaseModel):
@@ -38,9 +36,7 @@ class CourtCountyInDBBase(CourtCountyBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        orm_mode = True  # Pydantic v1 style for orm_mode
-        # from_attributes = True # Pydantic v2 style
+    model_config = {"from_attributes": True}
 
 
 class CourtCountyResponse(CourtCountyInDBBase):
@@ -55,6 +51,4 @@ class CourtCountyForCourtResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        orm_mode = True
-        # from_attributes = True
+    model_config = {"from_attributes": True}

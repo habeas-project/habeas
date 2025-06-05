@@ -58,13 +58,15 @@ def create_attorney(
     attorney: AttorneyCreate = Body(
         ...,
         description="Attorney information to create",
-        example={
-            "name": "Jane Doe",
-            "phone_number": "+15551234567",
-            "email": "jane.doe@example.com",
-            "zip_code": "12345",
-            "state": "CA",
-        },
+        examples=[
+            {
+                "name": "Jane Doe",
+                "phone_number": "+15551234567",
+                "email": "jane.doe@example.com",
+                "zip_code": "12345",
+                "state": "CA",
+            }
+        ],
     ),
     db: Session = Depends(get_db),
 ):
@@ -238,7 +240,7 @@ def update_attorney(
     attorney: AttorneyUpdate = Body(
         ...,
         description="Attorney information to update",
-        example={"name": "Jane Smith", "email": "jane.smith@example.com"},
+        examples=[{"name": "Jane Smith", "email": "jane.smith@example.com"}],
     ),
     db: Session = Depends(get_db),
 ):
@@ -330,7 +332,9 @@ def delete_attorney(
 )
 def add_court_admission(
     attorney_id: int = Path(..., description="The ID of the attorney", ge=1),
-    admission: AttorneyCourtAdmissionCreate = Body(..., description="Court admission to add", example={"court_id": 2}),
+    admission: AttorneyCourtAdmissionCreate = Body(
+        ..., description="Court admission to add", examples=[{"court_id": 2}]
+    ),
     db: Session = Depends(get_db),
 ):
     """Add a court admission link for an attorney by calling the service layer."""
