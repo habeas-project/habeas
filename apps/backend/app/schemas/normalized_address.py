@@ -15,7 +15,7 @@ class NormalizedAddressBase(BaseModel):
     normalized_city: Optional[str] = None
     normalized_state: Optional[str] = None
     normalized_zip_code: Optional[str] = None
-    county: str
+    county: Optional[str] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     api_response_json: Optional[Dict[str, Any]] = None
