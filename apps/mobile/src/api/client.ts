@@ -29,7 +29,40 @@ interface UserRegistrationData {
   zipCode?: string;
   jurisdiction?: string; // Maps to 'state' in AttorneyCreate
   // Client-specific fields could be added here (optional)
-  // ...
+  firstName?: string;
+  lastName?: string;
+  countryOfBirth?: string;
+  birthDate?: string;
+  nationality?: string;
+  alienRegistrationNumber?: string;
+  passportNumber?: string;
+  schoolName?: string;
+  studentIdNumber?: string;
+}
+
+// Interface for attorney registration data
+interface AttorneyRegistrationData {
+  name: string;
+  phoneNumber: string;
+  email: string;
+  zipCode: string;
+  jurisdiction: string;
+  password?: string; // Optional since it might not be provided in all scenarios
+}
+
+// Interface for client registration data
+interface ClientRegistrationData {
+  firstName: string;
+  lastName: string;
+  countryOfBirth: string;
+  birthDate: string; // YYYY-MM-DD format
+  password: string;
+  // Optional fields
+  nationality?: string;
+  alienRegistrationNumber?: string;
+  passportNumber?: string;
+  schoolName?: string;
+  studentIdNumber?: string;
 }
 
 // --- Configuration from Environment Variables ---
@@ -100,6 +133,57 @@ const api = {
     }
   },
 
+  registerAttorney: async (formData: AttorneyRegistrationData) => {
+    console.log("Using attorney signup endpoint");
+
+    // Prepare the signup data according to the backend schema
+    const signupData = {
+      name: formData.name,
+      phone_number: formData.phoneNumber,
+      email: formData.email,
+      zip_code: formData.zipCode,
+      state: formData.jurisdiction.toUpperCase(), // Ensure uppercase for state validation
+      password: formData.password || 'TempPassword123!', // Default password for now
+    };
+
+    try {
+      // Call the signup endpoint directly using axiosInstance
+      const response = await axiosInstance.post('/signup/attorney', signupData);
+      return response.data;
+    } catch (error) {
+      console.error('Attorney registration failed:', error);
+      throw error;
+    }
+  },
+
+  registerClient: async (formData: ClientRegistrationData) => {
+    console.log("Using client signup endpoint");
+
+    // Prepare the signup data according to the backend schema
+    const signupData = {
+      first_name: formData.firstName,
+      last_name: formData.lastName,
+      country_of_birth: formData.countryOfBirth,
+      birth_date: formData.birthDate,
+      password: formData.password,
+      // Optional fields
+      nationality: formData.nationality || null,
+      alien_registration_number: formData.alienRegistrationNumber || null,
+      passport_number: formData.passportNumber || null,
+      school_name: formData.schoolName || null,
+      student_id_number: formData.studentIdNumber || null,
+    };
+
+    try {
+      // Call the signup endpoint directly using axiosInstance
+      const response = await axiosInstance.post('/signup/client', signupData);
+      return response.data;
+    } catch (error) {
+      console.error('Client registration failed:', error);
+      throw error;
+    }
+  },
+
   login: async (credentials: LoginCredentials) => {
     if (authMode === 'mock') {
       console.log("Using MOCK login endpoint");
@@ -114,9 +198,6 @@ const api = {
       throw new Error('Real login not implemented');
     }
   },
-
-  // --- Original Attorney Registration (kept for reference, maybe remove later) ---
-  // registerAttorney: async (formData: { ... }) => { ... }, // Original function
 
   // --- Other API methods ---
   createClient: async (clientData: ClientCreate) => {

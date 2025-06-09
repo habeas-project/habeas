@@ -1,14 +1,18 @@
 import os
+import tempfile
 
 import pytest
 
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 from app.database import Base, get_db
 from app.main import app
 
+# Import all models explicitly to ensure they are registered with Base.metadata
+# This must happen before create_all_tables is called
 # Import our test utility functions
 from tests.test_utils import create_all_tables
 
@@ -37,26 +41,79 @@ def enable_mock_auth():
         os.environ.pop("ENABLE_MOCK_AUTH", None)
 
 
-# Test database setup
-@pytest.fixture(scope="session")
-def db_engine():
-    """Create a SQLAlchemy engine for the test database."""
-    # Use in-memory SQLite for tests
+# SQLModel-style testing fixtures for proper session isolation
+@pytest.fixture(name="session")
+def session_fixture():
+    """
+    Create a test database session using SQLModel best practices.
+
+    This uses an in-memory SQLite database with StaticPool to ensure
+    the same database is used across all connections within a test.
+    """
     engine = create_engine(
-        "sqlite:///:memory:",
-        connect_args={"check_same_thread": False},  # Allow SQLite to be used in multiple threads
+        "sqlite://",  # In-memory database
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,  # Keep the same database across all connections
+        echo=False,  # Set to True for SQL debugging
     )
 
     # Create all tables using our utility function
-    create_all_tables(engine)
+    tables = create_all_tables(engine)
+    print(f"Test database initialized with tables: {tables}")
+
+    # Create session and ensure it's properly cleaned up
+    SessionLocal = sessionmaker(bind=engine)
+    with SessionLocal() as session:
+        yield session
+
+
+@pytest.fixture(name="client")
+def client_fixture(session):
+    """
+    Create a test client that uses the same session as the test.
+
+    This follows the SQLModel testing best practice of sharing the same
+    session between the API and the test assertions.
+    """
+
+    def get_session_override():
+        return session
+
+    app.dependency_overrides[get_db] = get_session_override
+    client = TestClient(app)
+    yield client
+    app.dependency_overrides.clear()
+
+
+# Legacy fixtures for backward compatibility with existing tests
+@pytest.fixture(scope="session")
+def db_engine():
+    """Create a SQLAlchemy engine for the test database (legacy fixture)."""
+    # Use a temporary file-based SQLite database for tests
+    # This ensures tables persist across different sessions
+    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
+    temp_db.close()
+
+    engine = create_engine(
+        f"sqlite:///{temp_db.name}",
+        connect_args={"check_same_thread": False},  # Allow SQLite to be used in multiple threads
+        echo=False,  # Set to True for SQL debugging
+    )
+
+    # Create all tables using our utility function
+    tables = create_all_tables(engine)
+    print(f"Legacy test database initialized with tables: {tables}")
 
     yield engine
+
+    # Cleanup
     Base.metadata.drop_all(bind=engine)
+    os.unlink(temp_db.name)
 
 
 @pytest.fixture(scope="function")
 def db_session(db_engine):
-    """Create a new database session for a test."""
+    """Create a new database session for a test (legacy fixture)."""
     # Create a new session for each test
     SessionLocal = sessionmaker(bind=db_engine)
     session = SessionLocal()
@@ -65,23 +122,6 @@ def db_session(db_engine):
     finally:
         session.rollback()
         session.close()
-
-
-@pytest.fixture
-def client(db_session):
-    """Create a test client using the test database session."""
-
-    # Override the dependency to use our test session
-    def override_get_db():
-        try:
-            yield db_session
-        finally:
-            pass
-
-    app.dependency_overrides[get_db] = override_get_db
-    with TestClient(app) as test_client:
-        yield test_client
-    app.dependency_overrides.clear()
 
 
 # --- Factory Fixtures ---

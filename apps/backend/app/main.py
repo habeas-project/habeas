@@ -14,6 +14,7 @@ from app.routers import (
     emergency_contact_router,
     example_router,
     health,  # Import the new health router
+    signup_router,
     user_router,
 )
 
@@ -58,6 +59,7 @@ app.include_router(attorney_router.router)
 app.include_router(client_router.router)
 app.include_router(emergency_contact_router.router)
 app.include_router(user_router.router)
+app.include_router(signup_router.router)
 
 # Conditionally register mock auth router
 if ENABLE_MOCK_AUTH:
