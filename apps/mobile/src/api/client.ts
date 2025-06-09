@@ -143,9 +143,12 @@ const api = {
       email: formData.email,
       zip_code: formData.zipCode,
       state: formData.jurisdiction.toUpperCase(), // Ensure uppercase for state validation
-      password: formData.password || 'TempPassword123!', // Default password for now
+      password: formData.password, // Password must be explicitly provided
     };
 
+    if (!signupData.password) {
+      throw new Error("Password is required for attorney registration.");
+    }
     try {
       // Call the signup endpoint directly using axiosInstance
       const response = await axiosInstance.post('/signup/attorney', signupData);
