@@ -8,6 +8,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 type RootStackParamList = {
     Home: undefined;
     AttorneySignup: undefined;
+    ClientSignup: undefined;
     PersonalInfo: undefined;
 };
 
@@ -108,6 +109,13 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
                 </TouchableOpacity>
 
                 <TouchableOpacity
+                    style={styles.clientSignupButton}
+                    onPress={() => navigation.navigate('ClientSignup')}
+                >
+                    <Text style={styles.buttonText}>Register as a Client</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
                     style={styles.personalInfoButton}
                     onPress={() => navigation.navigate('PersonalInfo')}
                 >
@@ -126,6 +134,14 @@ const styles = StyleSheet.create({
     },
     buttonsSection: {
         marginTop: 20,
+    },
+    clientSignupButton: {
+        alignItems: 'center',
+        backgroundColor: '#28a745',
+        borderRadius: 5,
+        marginBottom: 30,
+        padding: 15,
+        textAlign: 'center',
     },
     container: {
         flex: 1,

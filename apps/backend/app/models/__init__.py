@@ -1,3 +1,4 @@
+from .admin import Admin
 from .attorney import Attorney
 from .attorney_court_admission import attorney_court_admission_table
 from .client import Client
@@ -10,6 +11,7 @@ from .ice_detention_facility import IceDetentionFacility
 from .user import User
 
 __all__ = [
+    "Admin",
     "Attorney",
     "attorney_court_admission_table",
     "Client",

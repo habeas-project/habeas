@@ -146,6 +146,108 @@ Key elements include:
 
 Refer to files within [`apps/backend/app/routers/`](../../apps/backend/app/routers/) for concrete examples.
 
+### Router Architecture
+
+The API uses a **three-router architecture** that provides clear separation of concerns between different types of operations:
+
+#### Router Types and Responsibilities
+
+1. **`signup_router` (`/signup`)** - **User Registration Workflows**
+   - Handles complete user onboarding processes
+   - Creates multiple related entities in atomic transactions
+   - Manages authentication token generation
+   - Validates passwords and handles signup-specific logic
+
+   **Endpoints:**
+   - `POST /signup/attorney` - Complete attorney registration (creates User + Attorney + auth)
+   - `POST /signup/client` - Complete client registration (creates User + Client + auth)
+   - `POST /signup/admin` - Complete admin registration (creates User + Admin + auth)
+
+2. **`user_router` (`/users`)** - **User Entity Management**
+   - Standard CRUD operations for User entities
+   - Post-authentication user management
+   - User lookup and profile updates
+
+   **Endpoints:**
+   - `GET /users/{id}` - Get user by ID (for authentication systems)
+   - `GET /users/cognito/{cognito_id}` - Get user by Cognito ID (critical for AWS Cognito)
+   - `PATCH /users/{id}` - Update user profile
+   - `POST /users` - Create user (admin/internal use)
+
+3. **`attorney_router` (`/attorneys`)** - **Attorney Entity Management**
+   - Standard CRUD operations for Attorney entities
+   - Attorney discovery and search functionality
+   - Court admission management
+   - Attorney-specific business logic
+
+   **Endpoints:**
+   - `GET /attorneys` - List/search attorneys with filtering (state, zip code)
+   - `GET /attorneys/{id}` - Get attorney profile
+   - `PATCH /attorneys/{id}` - Update attorney profile
+   - `DELETE /attorneys/{id}` - Remove attorney (admin)
+   - `POST /attorneys/{id}/admissions` - Manage court admissions
+   - `DELETE /attorneys/{id}/admissions/{court_id}` - Remove court admissions
+
+#### Architectural Rationale
+
+**Why Three Separate Routers:**
+
+1. **Clear Separation of Concerns**
+   - Signup workflows involve complex multi-entity operations with authentication
+   - User management focuses on single-entity CRUD for authentication systems
+   - Attorney management handles business-specific operations and discovery
+
+2. **Transaction Safety**
+   - Signup operations require atomic creation of User + Attorney/Client records
+   - CRUD operations work with single entities and don't need complex transactions
+   - Prevents coupling of authentication logic with entity management
+
+3. **API Semantics and User Experience**
+   - `POST /signup/attorney` clearly indicates "Register as an attorney"
+   - `POST /attorneys` indicates "Create attorney record" (admin/internal use)
+   - `GET /attorneys` provides attorney discovery (client-facing search)
+
+4. **Maintainability and Testing**
+   - Each router has focused responsibilities and can be tested independently
+   - Authentication logic is isolated to signup workflows
+   - Business logic for attorney operations is separate from user management
+
+#### Real-World Use Cases
+
+**Attorney Registration Flow:**
+```
+Mobile App → POST /signup/attorney → Creates User + Attorney + Returns auth token
+```
+
+**Client Searching for Attorneys:**
+```
+Mobile App → GET /attorneys?state=CA&zip_code=90210 → Returns filtered attorney list
+```
+
+**Authentication System User Lookup:**
+```
+Auth Middleware → GET /users/cognito/{cognito_id} → Returns user for session validation
+```
+
+**Attorney Profile Management:**
+```
+Attorney App → PATCH /attorneys/{id} → Updates attorney profile information
+```
+
+**Admin Operations:**
+```
+Admin Panel → DELETE /attorneys/{id} → Removes attorney from system
+Admin Panel → POST /users → Creates user without full signup flow
+```
+
+#### Alternative Architectures Considered
+
+**Single Combined Router:** Rejected because it would mix authentication, user management, and business logic in one place, violating single responsibility principle.
+
+**Two-Router Architecture (signup + combined entities):** Rejected because User and Attorney operations serve different purposes (authentication vs business logic) and have different access patterns.
+
+**Service-Based Architecture:** Considered but rejected in favor of keeping CRUD logic directly in routers per our architectural principles for simplicity and maintainability.
+
 ### Schema Organization
 
 Pydantic schemas, located in [`apps/backend/app/schemas/`](../../apps/backend/app/schemas/), define the data structures for API requests and responses. They follow a consistent pattern:

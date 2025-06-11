@@ -66,9 +66,13 @@ def test_attorney_required_fields(db_session):
 @pytest.mark.unit
 def test_attorney_unique_email(db_session):
     """Test that attorney model enforces unique email constraint."""
-    # Create first attorney
+    # Create first attorney with unique email to avoid conflicts with other tests
     attorney1 = Attorney(
-        name="First Attorney", phone_number="+15551234567", email="duplicate@example.com", zip_code="12345", state="CA"
+        name="First Attorney",
+        phone_number="+15551234567",
+        email="unique_test_duplicate@example.com",
+        zip_code="12345",
+        state="CA",
     )
     db_session.add(attorney1)
     db_session.commit()
@@ -77,15 +81,17 @@ def test_attorney_unique_email(db_session):
     attorney2 = Attorney(
         name="Second Attorney",
         phone_number="+15559876543",
-        email="duplicate@example.com",  # Same email as attorney1
+        email="unique_test_duplicate@example.com",  # Same email as attorney1
         zip_code="67890",
         state="NY",
     )
     db_session.add(attorney2)
 
+    # This should raise an IntegrityError due to unique constraint violation
     with pytest.raises(IntegrityError):
         db_session.commit()
 
+    # Rollback is automatically called by pytest.raises, but let's be explicit
     db_session.rollback()
 
 

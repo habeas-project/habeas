@@ -9,10 +9,11 @@ type RootStackParamList = {
   Home: undefined;
   PersonalInfo: undefined;
   AttorneySignup: undefined;
+  ClientSignup: undefined;
 };
 
 type PersonalInfoScreenProps = {
-  _navigation: NativeStackNavigationProp<RootStackParamList, 'PersonalInfo'>;
+  navigation: NativeStackNavigationProp<RootStackParamList, 'PersonalInfo'>;
 };
 
 const STORAGE_KEY = '@personal_info';
@@ -34,7 +35,7 @@ export interface PersonalInfo {
   emergencyContacts: EmergencyContact[];
 }
 
-export default function PersonalInfoScreen({ _navigation }: PersonalInfoScreenProps) {
+export default function PersonalInfoScreen({ navigation: _navigation }: PersonalInfoScreenProps) {
   const [personalInfo, setPersonalInfo] = useState<PersonalInfo>({
     firstName: '',
     lastName: '',

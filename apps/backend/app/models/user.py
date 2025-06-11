@@ -21,3 +21,4 @@ class User(Base):
     # Relationships
     attorney = relationship("Attorney", back_populates="user", uselist=False)
     client = relationship("Client", back_populates="user", uselist=False)
+    admin = relationship("Admin", back_populates="user", uselist=False)

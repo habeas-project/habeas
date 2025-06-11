@@ -1,5 +1,6 @@
 from app.schemas.user import UserBase, UserCreate, UserDB, UserResponse, UserUpdate
 
+from .admin import AdminBase, AdminCreate, AdminResponse, AdminUpdate
 from .attorney import Attorney, AttorneyCreate, AttorneyUpdate
 from .attorney_court_admission import (
     AttorneyCourtAdmission,
@@ -33,8 +34,23 @@ from .ice_detention_facility import (
     IceDetentionFacilityResponse,
     IceDetentionFacilityUpdate,
 )
+from .signup import (
+    AdminInfo,
+    AdminSignupRequest,
+    AdminSignupResponse,
+    AttorneyInfo,
+    AttorneySignupRequest,
+    AttorneySignupResponse,
+    ClientInfo,
+    ClientSignupRequest,
+    ClientSignupResponse,
+)
 
 __all__ = [
+    "AdminBase",
+    "AdminCreate",
+    "AdminUpdate",
+    "AdminResponse",
     "Attorney",
     "AttorneyCreate",
     "AttorneyUpdate",
@@ -65,4 +81,13 @@ __all__ = [
     "IceDetentionFacilityCreate",
     "IceDetentionFacilityUpdate",
     "IceDetentionFacilityResponse",
+    "AdminInfo",
+    "AdminSignupRequest",
+    "AdminSignupResponse",
+    "AttorneyInfo",
+    "AttorneySignupRequest",
+    "AttorneySignupResponse",
+    "ClientInfo",
+    "ClientSignupRequest",
+    "ClientSignupResponse",
 ]
