@@ -4,18 +4,11 @@ import pytest
 
 from app.models.attorney import Attorney
 from app.models.court import Court
-from tests.test_utils import create_all_tables
 
 
 @pytest.mark.unit
-def test_attorney_court_admission_relationship(db_session, db_engine):
+def test_attorney_court_admission_relationship(session):
     """Test that the many-to-many relationship between Attorney and Court works correctly."""
-    # Ensure the tables are properly created - defensive check
-    tables = create_all_tables(db_engine)
-    if "attorneys" not in tables or "courts" not in tables or "attorney_court_admissions" not in tables:
-        tables_str = ", ".join(tables)
-        pytest.skip(f"Required tables are missing. Available tables: {tables_str}")
-
     try:
         # Create test attorney
         attorney = Attorney(
@@ -30,12 +23,12 @@ def test_attorney_court_admission_relationship(db_session, db_engine):
         court = Court(name="Test Relationship Court", abbreviation="REL", url="https://relationship-court.gov")
 
         # Add both objects to the database
-        db_session.add_all([attorney, court])
-        db_session.commit()
+        session.add_all([attorney, court])
+        session.commit()
 
         # Test adding court to attorney's admitted courts
         attorney.admitted_courts.append(court)
-        db_session.commit()
+        session.commit()
 
         # Verify the relationship from both directions
         assert court in attorney.admitted_courts
@@ -43,7 +36,7 @@ def test_attorney_court_admission_relationship(db_session, db_engine):
 
         # Test removing the relationship
         attorney.admitted_courts.remove(court)
-        db_session.commit()
+        session.commit()
 
         # Verify the relationship is removed
         assert court not in attorney.admitted_courts
@@ -56,7 +49,7 @@ def test_attorney_court_admission_relationship(db_session, db_engine):
 
 
 @pytest.mark.unit
-def test_attorney_court_multiple_admissions(db_session):
+def test_attorney_court_multiple_admissions(session):
     """Test that an attorney can be admitted to multiple courts."""
     # Create test attorney
     attorney = Attorney(
@@ -75,12 +68,12 @@ def test_attorney_court_multiple_admissions(db_session):
     court3 = Court(name="Third District Court", abbreviation="THC", url="https://thirdcourt.gov")
 
     # Add all objects to the database
-    db_session.add_all([attorney, court1, court2, court3])
-    db_session.commit()
+    session.add_all([attorney, court1, court2, court3])
+    session.commit()
 
     # Add multiple courts to attorney
     attorney.admitted_courts.extend([court1, court2, court3])
-    db_session.commit()
+    session.commit()
 
     # Verify all courts are in the relationship
     assert len(attorney.admitted_courts) == 3
@@ -95,7 +88,7 @@ def test_attorney_court_multiple_admissions(db_session):
 
 
 @pytest.mark.unit
-def test_court_multiple_attorneys(db_session):
+def test_court_multiple_attorneys(session):
     """Test that a court can have multiple admitted attorneys."""
     # Create multiple attorneys
     attorney1 = Attorney(
@@ -126,12 +119,12 @@ def test_court_multiple_attorneys(db_session):
     court = Court(name="Popular District Court", abbreviation="PDC", url="https://popularcourt.gov")
 
     # Add all objects to the database
-    db_session.add_all([attorney1, attorney2, attorney3, court])
-    db_session.commit()
+    session.add_all([attorney1, attorney2, attorney3, court])
+    session.commit()
 
     # Add all attorneys to the court
     court.admitted_attorneys.extend([attorney1, attorney2, attorney3])
-    db_session.commit()
+    session.commit()
 
     # Verify all attorneys are admitted to the court
     assert len(court.admitted_attorneys) == 3

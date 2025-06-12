@@ -1,6 +1,4 @@
 import os
-import tempfile
-import warnings
 
 import pytest
 
@@ -9,7 +7,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.database import Base, get_db
+from app.database import get_db
 from app.main import app
 
 # Import all models explicitly to ensure they are registered with Base.metadata
@@ -97,72 +95,10 @@ def client_fixture(session):
 
 
 # =============================================================================
-# LEGACY FIXTURES (DEPRECATED)
+# LEGACY FIXTURES (REMOVED)
 # =============================================================================
-# These fixtures are maintained for backward compatibility but should not be
-# used for new tests. They will be removed in a future version.
-
-
-@pytest.fixture(scope="session")
-def db_engine():
-    """
-    Create a SQLAlchemy engine for the test database (legacy fixture).
-
-    DEPRECATED: This fixture is deprecated. Use 'session' fixture instead.
-    Legacy fixture using file-based SQLite will be removed in future versions.
-    """
-    warnings.warn(
-        "db_engine fixture is deprecated. Use 'session' fixture instead for new tests. "
-        "This fixture will be removed once all tests are migrated.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-
-    # Use a temporary file-based SQLite database for tests
-    # This ensures tables persist across different sessions
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-    temp_db.close()
-
-    engine = create_engine(
-        f"sqlite:///{temp_db.name}",
-        connect_args={"check_same_thread": False},  # Allow SQLite to be used in multiple threads
-        echo=False,  # Set to True for SQL debugging
-    )
-
-    # Create all tables using our utility function
-    tables = create_all_tables(engine)
-    print(f"Legacy test database initialized with tables: {tables}")
-
-    yield engine
-
-    # Cleanup
-    Base.metadata.drop_all(bind=engine)
-    os.unlink(temp_db.name)
-
-
-@pytest.fixture(scope="function")
-def db_session(db_engine):
-    """
-    Create a new database session for a test (legacy fixture).
-
-    DEPRECATED: This fixture is deprecated. Use 'session' fixture instead.
-    Legacy session management will be removed in future versions.
-    """
-    warnings.warn(
-        "db_session fixture is deprecated. Use 'session' fixture instead for new tests. "
-        "This fixture will be removed once all tests are migrated.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-
-    # Create a new session for each test
-    SessionLocal = sessionmaker(bind=db_engine)
-    session = SessionLocal()
-    try:
-        yield session
-    finally:
-        session.rollback()
-        session.close()
+# Legacy fixtures have been removed to eliminate deprecation warnings.
+# All tests have been migrated to use the modern 'session' and 'client' fixtures.
 
 
 # =============================================================================
@@ -189,29 +125,8 @@ def SessionScopedFactory(session):
     return SessionFactory
 
 
-@pytest.fixture
-def LegacySessionScopedFactory(db_session):
-    """
-    Legacy factory fixture for backward compatibility.
-
-    DEPRECATED: This fixture is deprecated. Use 'SessionScopedFactory' instead.
-    Maintained only for existing tests that haven't been migrated yet.
-    """
-    warnings.warn(
-        "LegacySessionScopedFactory is deprecated. Use 'SessionScopedFactory' instead. "
-        "This fixture will be removed once all tests are migrated.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-
-    from .factories import BaseFactory  # type: ignore
-
-    class LegacySessionFactory(BaseFactory):
-        class Meta:
-            sqlalchemy_session = db_session
-            sqlalchemy_session_persistence = "flush"
-
-    return LegacySessionFactory
+# Legacy LegacySessionScopedFactory fixture has been removed.
+# All tests now use SessionScopedFactory with the modern 'session' fixture.
 
 
 @pytest.fixture
@@ -248,46 +163,8 @@ def UserTestFactory(SessionScopedFactory):
 
 
 # Legacy factory fixtures for backward compatibility
-@pytest.fixture
-def LegacyAttorneyTestFactory(LegacySessionScopedFactory):
-    """
-    DEPRECATED: Use AttorneyTestFactory instead.
-    Legacy factory fixture maintained for backward compatibility.
-    """
-    from .factories import AttorneyFactory
-
-    class LegacyTestAttorneyFactory(AttorneyFactory, LegacySessionScopedFactory):
-        pass
-
-    return LegacyTestAttorneyFactory
-
-
-@pytest.fixture
-def LegacyCourtTestFactory(LegacySessionScopedFactory):
-    """
-    DEPRECATED: Use CourtTestFactory instead.
-    Legacy factory fixture maintained for backward compatibility.
-    """
-    from .factories import CourtFactory
-
-    class LegacyTestCourtFactory(CourtFactory, LegacySessionScopedFactory):
-        pass
-
-    return LegacyTestCourtFactory
-
-
-@pytest.fixture
-def LegacyUserTestFactory(LegacySessionScopedFactory):
-    """
-    DEPRECATED: Use UserTestFactory instead.
-    Legacy factory fixture maintained for backward compatibility.
-    """
-    from .factories import UserFactory
-
-    class LegacyTestUserFactory(UserFactory, LegacySessionScopedFactory):
-        pass
-
-    return LegacyTestUserFactory
+# Legacy factory fixtures have been removed.
+# All tests now use the modern factory fixtures with the 'session' fixture.
 
 
 # Test markers setup
