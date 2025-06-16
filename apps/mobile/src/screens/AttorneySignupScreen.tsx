@@ -27,6 +27,7 @@ type SignupFormData = {
   email: string;
   zipCode: string;
   jurisdiction: string;
+  password: string;
 };
 
 export default function AttorneySignupScreen({ navigation }: AttorneySignupScreenProps) {
@@ -36,6 +37,7 @@ export default function AttorneySignupScreen({ navigation }: AttorneySignupScree
     email: '',
     zipCode: '',
     jurisdiction: '',
+    password: '',
   });
 
   const [errors, setErrors] = useState<Partial<SignupFormData>>({});
@@ -71,6 +73,12 @@ export default function AttorneySignupScreen({ navigation }: AttorneySignupScree
 
     if (!formData.jurisdiction.trim()) newErrors.jurisdiction = 'Jurisdiction is required';
 
+    if (!formData.password.trim()) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters long';
+    }
+
     setErrors(newErrors);
     const valid = Object.keys(newErrors).length === 0;
     setIsFormValid(valid);
@@ -89,14 +97,45 @@ export default function AttorneySignupScreen({ navigation }: AttorneySignupScree
 
     try {
       setLoading(true);
-      await api.registerAttorney(formData);
+      const response = await api.registerAttorney(formData);
 
-      alert('Signup successful! We will review your information.');
+      console.log('Attorney registration successful:', response);
+      alert('Signup successful! Your attorney account has been created.');
       // Navigate back or to a confirmation screen
       navigation.navigate('Home');
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error during attorney signup:', error);
-      alert('Failed to submit. Please try again later.');
+
+      // Handle different types of errors
+      let errorMessage = 'Failed to submit. Please try again later.';
+
+      // Type guard for axios-like error objects
+      const hasResponse = error && typeof error === 'object' && 'response' in error;
+      const hasRequest = error && typeof error === 'object' && 'request' in error;
+
+      if (hasResponse) {
+        // Server responded with an error status
+        const response = (error as { response: { status: number; data?: { detail?: string } } }).response;
+        const status = response.status;
+        const detail = response.data?.detail;
+
+        if (status === 400 && detail) {
+          if (detail.includes('email already exists')) {
+            errorMessage = 'An account with this email already exists. Please use a different email or try logging in.';
+          } else {
+            errorMessage = detail;
+          }
+        } else if (status === 422) {
+          errorMessage = 'Please check your information and ensure all fields are filled correctly.';
+        } else if (status >= 500) {
+          errorMessage = 'Server error. Please try again later.';
+        }
+      } else if (hasRequest) {
+        // Network error
+        errorMessage = 'Network error. Please check your connection and try again.';
+      }
+
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -169,9 +208,25 @@ export default function AttorneySignupScreen({ navigation }: AttorneySignupScree
             value={formData.jurisdiction}
             onChangeText={(text) => setFormData({ ...formData, jurisdiction: text })}
             onBlur={() => setTouchedFields({ ...touchedFields, jurisdiction: true })}
-            placeholder="Enter your jurisdiction"
+            placeholder="Enter your jurisdiction (e.g., CA, NY)"
+            autoCapitalize="characters"
+            maxLength={2}
           />
           {touchedFields.jurisdiction && errors.jurisdiction && <Text style={styles.errorText}>{errors.jurisdiction}</Text>}
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Password</Text>
+          <TextInput
+            style={styles.input}
+            value={formData.password}
+            onChangeText={(text) => setFormData({ ...formData, password: text })}
+            onBlur={() => setTouchedFields({ ...touchedFields, password: true })}
+            placeholder="Enter your password (minimum 8 characters)"
+            secureTextEntry={true}
+            autoCapitalize="none"
+          />
+          {touchedFields.password && errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
         </View>
 
         <TouchableOpacity

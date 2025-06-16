@@ -5,10 +5,13 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
-from app.database import Base, get_db
+from app.database import get_db
 from app.main import app
 
+# Import all models explicitly to ensure they are registered with Base.metadata
+# This must happen before create_all_tables is called
 # Import our test utility functions
 from tests.test_utils import create_all_tables
 
@@ -37,72 +40,98 @@ def enable_mock_auth():
         os.environ.pop("ENABLE_MOCK_AUTH", None)
 
 
-# Test database setup
-@pytest.fixture(scope="session")
-def db_engine():
-    """Create a SQLAlchemy engine for the test database."""
-    # Use in-memory SQLite for tests
+# =============================================================================
+# MODERN FIXTURES (RECOMMENDED)
+# =============================================================================
+# These fixtures follow SQLModel best practices with in-memory databases
+# and proper session isolation. Use these for all new tests.
+
+
+@pytest.fixture(name="session")
+def session_fixture():
+    """
+    Create a test database session using SQLModel best practices.
+
+    This uses an in-memory SQLite database with StaticPool to ensure
+    the same database is used across all connections within a test.
+
+    RECOMMENDED: Use this fixture for all new tests.
+    """
     engine = create_engine(
-        "sqlite:///:memory:",
-        connect_args={"check_same_thread": False},  # Allow SQLite to be used in multiple threads
+        "sqlite://",  # In-memory database
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,  # Keep the same database across all connections
+        echo=False,  # Set to True for SQL debugging
     )
 
     # Create all tables using our utility function
-    create_all_tables(engine)
+    tables = create_all_tables(engine)
+    print(f"Test database initialized with tables: {tables}")
 
-    yield engine
-    Base.metadata.drop_all(bind=engine)
-
-
-@pytest.fixture(scope="function")
-def db_session(db_engine):
-    """Create a new database session for a test."""
-    # Create a new session for each test
-    SessionLocal = sessionmaker(bind=db_engine)
-    session = SessionLocal()
-    try:
+    # Create session and ensure it's properly cleaned up
+    SessionLocal = sessionmaker(bind=engine)
+    with SessionLocal() as session:
         yield session
-    finally:
-        session.rollback()
-        session.close()
 
 
-@pytest.fixture
-def client(db_session):
-    """Create a test client using the test database session."""
+@pytest.fixture(name="client")
+def client_fixture(session):
+    """
+    Create a test client that uses the same session as the test.
 
-    # Override the dependency to use our test session
-    def override_get_db():
-        try:
-            yield db_session
-        finally:
-            pass
+    This follows the SQLModel testing best practice of sharing the same
+    session between the API and the test assertions.
 
-    app.dependency_overrides[get_db] = override_get_db
-    with TestClient(app) as test_client:
-        yield test_client
+    RECOMMENDED: Use this fixture for all new tests.
+    """
+
+    def get_session_override():
+        return session
+
+    app.dependency_overrides[get_db] = get_session_override
+    client = TestClient(app)
+    yield client
     app.dependency_overrides.clear()
 
 
-# --- Factory Fixtures ---
+# =============================================================================
+# LEGACY FIXTURES (REMOVED)
+# =============================================================================
+# Legacy fixtures have been removed to eliminate deprecation warnings.
+# All tests have been migrated to use the modern 'session' and 'client' fixtures.
+
+
+# =============================================================================
+# FACTORY FIXTURES (UPDATED TO SUPPORT BOTH LEGACY AND MODERN)
+# =============================================================================
+# These factories now support both legacy and modern fixtures during transition.
 
 
 @pytest.fixture
-def SessionScopedFactory(db_session):
-    """Fixture to provide factories scoped to the test db session."""
+def SessionScopedFactory(session):
+    """
+    Factory fixture that provides factories scoped to the modern test session.
+
+    UPDATED: Now uses modern 'session' fixture instead of legacy 'db_session'.
+    This provides better test isolation and follows SQLModel best practices.
+    """
     from .factories import BaseFactory  # type: ignore
 
     class SessionFactory(BaseFactory):
         class Meta:
-            sqlalchemy_session = db_session
+            sqlalchemy_session = session
             sqlalchemy_session_persistence = "flush"
 
     return SessionFactory
 
 
+# Legacy LegacySessionScopedFactory fixture has been removed.
+# All tests now use SessionScopedFactory with the modern 'session' fixture.
+
+
 @pytest.fixture
 def AttorneyTestFactory(SessionScopedFactory):
-    """Factory fixture for creating Attorney instances."""
+    """Factory fixture for creating Attorney instances using modern session."""
     from .factories import AttorneyFactory
 
     class TestAttorneyFactory(AttorneyFactory, SessionScopedFactory):
@@ -113,7 +142,7 @@ def AttorneyTestFactory(SessionScopedFactory):
 
 @pytest.fixture
 def CourtTestFactory(SessionScopedFactory):
-    """Factory fixture for creating Court instances."""
+    """Factory fixture for creating Court instances using modern session."""
     from .factories import CourtFactory
 
     class TestCourtFactory(CourtFactory, SessionScopedFactory):
@@ -124,13 +153,18 @@ def CourtTestFactory(SessionScopedFactory):
 
 @pytest.fixture
 def UserTestFactory(SessionScopedFactory):
-    """Factory fixture for creating User instances."""
+    """Factory fixture for creating User instances using modern session."""
     from .factories import UserFactory
 
     class TestUserFactory(UserFactory, SessionScopedFactory):
         pass
 
     return TestUserFactory
+
+
+# Legacy factory fixtures for backward compatibility
+# Legacy factory fixtures have been removed.
+# All tests now use the modern factory fixtures with the 'session' fixture.
 
 
 # Test markers setup

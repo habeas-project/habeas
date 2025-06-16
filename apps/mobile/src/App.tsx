@@ -6,6 +6,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import HomeScreen from './screens/HomeScreen';
 import AttorneySignupScreen from './screens/AttorneySignupScreen';
+import ClientSignupScreen from './screens/ClientSignupScreen';
 import PersonalInfoScreen from './screens/PersonalInfoScreen';
 
 const Stack = createNativeStackNavigator();
@@ -24,6 +25,11 @@ export default function App() {
                         name="AttorneySignup"
                         component={AttorneySignupScreen}
                         options={{ title: 'Attorney Registration' }}
+                    />
+                    <Stack.Screen
+                        name="ClientSignup"
+                        component={ClientSignupScreen}
+                        options={{ title: 'Client Registration' }}
                     />
                     <Stack.Screen
                         name="PersonalInfo"

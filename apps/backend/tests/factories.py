@@ -4,6 +4,7 @@ import factory
 
 from faker import Faker
 
+from app.models.admin import Admin
 from app.models.attorney import Attorney
 from app.models.court import Court
 from app.models.user import User
@@ -81,6 +82,20 @@ class UserFactory(BaseFactory):
 #             courts = CourtFactory.create_batch(2)
 #             for court in courts:
 #                 self.admitted_courts.append(court)
+
+
+class AdminFactory(BaseFactory):
+    """Factory for the Admin model."""
+
+    class Meta:
+        model = Admin
+
+    id = factory.Sequence(lambda n: n + 1)
+    name = factory.Faker("name")
+    email = factory.LazyAttribute(lambda obj: f"{obj.name.lower().replace(' ', '.')}@{fake.domain_name()}")
+    department = factory.Faker("random_element", elements=["IT", "Security", "HR", "Legal", "Operations"])
+    role = factory.Faker("random_element", elements=["admin", "super_admin", "moderator"])
+
 
 # TODO: Add factories for other core models as needed.
 # TODO: Configure factory session injection in conftest.py

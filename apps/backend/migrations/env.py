@@ -23,6 +23,7 @@ from app.database import Base  # noqa: E402
 
 # Explicitly import all model *classes* to ensure they are registered with Base.metadata
 # before target_metadata is defined for Alembic autogenerate.
+from app.models.admin import Admin  # noqa: F401, E402
 from app.models.attorney import Attorney  # noqa: F401, E402
 from app.models.attorney_court_admission import attorney_court_admission_table  # noqa: F401, E402
 from app.models.client import Client  # noqa: F401, E402

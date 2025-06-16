@@ -38,7 +38,7 @@ export class SecureStorage {
         return newKey;
 
       }
-    } catch (error) {
+    } catch {
 
       // Key doesn't exist, generate and store a new one
       const newKey = this.generateEncryptionKey();

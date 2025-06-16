@@ -10,7 +10,7 @@ from app.models.court import Court
 class TestAttorneyAdmissionEndpoints:
     """Integration tests for the attorney admission API endpoints."""
 
-    def test_add_court_admission_success(self, client, db_session):
+    def test_add_court_admission_success(self, client, session):
         """Test that adding a court admission works correctly."""
         # Create test attorney and court
         attorney = Attorney(
@@ -25,8 +25,8 @@ class TestAttorneyAdmissionEndpoints:
             abbreviation="INT",
             url="https://integration-court.gov",
         )
-        db_session.add_all([attorney, court])
-        db_session.commit()
+        session.add_all([attorney, court])
+        session.commit()
 
         # Make API request to add the admission
         response = client.post(f"/attorneys/{attorney.id}/admissions", json={"court_id": court.id})
@@ -37,12 +37,15 @@ class TestAttorneyAdmissionEndpoints:
         assert data["court_id"] == court.id
 
         # Verify the relationship is created in the database
-        db_attorney = db_session.query(Attorney).filter(Attorney.id == attorney.id).first()
-        db_court = db_session.query(Court).filter(Court.id == court.id).first()
-        assert db_court in db_attorney.admitted_courts
-        assert db_attorney in db_court.admitted_attorneys
+        # With the shared session pattern, we can directly query the same session
+        # that the API is using, so we can see the committed changes immediately
+        session.refresh(attorney)
+        session.refresh(court)
 
-    def test_add_court_admission_duplicate(self, client, db_session):
+        assert court in attorney.admitted_courts
+        assert attorney in court.admitted_attorneys
+
+    def test_add_court_admission_duplicate(self, client, session):
         """Test that adding a duplicate court admission returns 409 Conflict."""
         # Create test attorney and court
         attorney = Attorney(
@@ -57,12 +60,12 @@ class TestAttorneyAdmissionEndpoints:
             abbreviation="DUP",
             url="https://duplicate-court.gov",
         )
-        db_session.add_all([attorney, court])
-        db_session.commit()
+        session.add_all([attorney, court])
+        session.commit()
 
         # Add the admission
         attorney.admitted_courts.append(court)
-        db_session.commit()
+        session.commit()
 
         # Make API request to add the same admission again
         response = client.post(f"/attorneys/{attorney.id}/admissions", json={"court_id": court.id})
@@ -80,7 +83,7 @@ class TestAttorneyAdmissionEndpoints:
                 "The API should handle duplicate court admissions more gracefully."
             )
 
-    def test_add_court_admission_attorney_not_found(self, client, db_session):
+    def test_add_court_admission_attorney_not_found(self, client, session):
         """Test that adding a court admission for a non-existent attorney returns 404."""
         # Create test court only
         court = Court(
@@ -88,8 +91,8 @@ class TestAttorneyAdmissionEndpoints:
             abbreviation="ANF",
             url="https://anf-court.gov",
         )
-        db_session.add(court)
-        db_session.commit()
+        session.add(court)
+        session.commit()
 
         # Make API request with non-existent attorney ID
         response = client.post("/attorneys/9999/admissions", json={"court_id": court.id})
@@ -100,7 +103,7 @@ class TestAttorneyAdmissionEndpoints:
         error_message = response.json()["detail"].lower()
         assert "attorney" in error_message and "not found" in error_message
 
-    def test_add_court_admission_court_not_found(self, client, db_session):
+    def test_add_court_admission_court_not_found(self, client, session):
         """Test that adding a non-existent court admission returns 404."""
         # Create test attorney only
         attorney = Attorney(
@@ -110,8 +113,8 @@ class TestAttorneyAdmissionEndpoints:
             zip_code="12345",
             state="CA",
         )
-        db_session.add(attorney)
-        db_session.commit()
+        session.add(attorney)
+        session.commit()
 
         # Make API request with non-existent court ID
         response = client.post(f"/attorneys/{attorney.id}/admissions", json={"court_id": 9999})
@@ -122,7 +125,7 @@ class TestAttorneyAdmissionEndpoints:
         error_message = response.json()["detail"].lower()
         assert "court" in error_message and "not found" in error_message
 
-    def test_remove_court_admission_success(self, client, db_session):
+    def test_remove_court_admission_success(self, client, session):
         """Test that removing a court admission works correctly."""
         # Create test attorney and court
         attorney = Attorney(
@@ -137,12 +140,12 @@ class TestAttorneyAdmissionEndpoints:
             abbreviation="REM",
             url="https://remove-court.gov",
         )
-        db_session.add_all([attorney, court])
-        db_session.commit()
+        session.add_all([attorney, court])
+        session.commit()
 
         # Add the admission
         attorney.admitted_courts.append(court)
-        db_session.commit()
+        session.commit()
 
         # Make API request to remove the admission
         response = client.delete(f"/attorneys/{attorney.id}/admissions/{court.id}")
@@ -152,12 +155,14 @@ class TestAttorneyAdmissionEndpoints:
         assert response.content == b""  # Empty response body for 204
 
         # Verify the relationship is removed in the database
-        db_attorney = db_session.query(Attorney).filter(Attorney.id == attorney.id).first()
-        db_court = db_session.query(Court).filter(Court.id == court.id).first()
-        assert db_court not in db_attorney.admitted_courts
-        assert db_attorney not in db_court.admitted_attorneys
+        # With the shared session pattern, we can directly check the relationship
+        session.refresh(attorney)
+        session.refresh(court)
 
-    def test_remove_court_admission_attorney_not_found(self, client, db_session):
+        assert court not in attorney.admitted_courts
+        assert attorney not in court.admitted_attorneys
+
+    def test_remove_court_admission_attorney_not_found(self, client, session):
         """Test that removing a court admission for a non-existent attorney returns 404."""
         # Create test court only
         court = Court(
@@ -165,8 +170,8 @@ class TestAttorneyAdmissionEndpoints:
             abbreviation="RNF",
             url="https://remove-anf-court.gov",
         )
-        db_session.add(court)
-        db_session.commit()
+        session.add(court)
+        session.commit()
 
         # Make API request with non-existent attorney ID
         response = client.delete(f"/attorneys/9999/admissions/{court.id}")
@@ -177,7 +182,7 @@ class TestAttorneyAdmissionEndpoints:
         error_message = response.json()["detail"].lower()
         assert "attorney" in error_message and "not found" in error_message
 
-    def test_remove_court_admission_court_not_found(self, client, db_session):
+    def test_remove_court_admission_court_not_found(self, client, session):
         """Test that removing a non-existent court admission returns 404."""
         # Create test attorney only
         attorney = Attorney(
@@ -187,8 +192,8 @@ class TestAttorneyAdmissionEndpoints:
             zip_code="12345",
             state="CA",
         )
-        db_session.add(attorney)
-        db_session.commit()
+        session.add(attorney)
+        session.commit()
 
         # Make API request with non-existent court ID
         response = client.delete(f"/attorneys/{attorney.id}/admissions/9999")
@@ -199,7 +204,7 @@ class TestAttorneyAdmissionEndpoints:
         error_message = response.json()["detail"].lower()
         assert "court" in error_message and "not found" in error_message
 
-    def test_remove_court_admission_not_found(self, client, db_session):
+    def test_remove_court_admission_not_found(self, client, session):
         """Test that removing a non-existent admission returns 404."""
         # Create test attorney and court (but no admission between them)
         attorney = Attorney(
@@ -214,8 +219,8 @@ class TestAttorneyAdmissionEndpoints:
             abbreviation="NFA",
             url="https://not-found-admission-court.gov",
         )
-        db_session.add_all([attorney, court])
-        db_session.commit()
+        session.add_all([attorney, court])
+        session.commit()
 
         # Make API request to remove a non-existent admission
         response = client.delete(f"/attorneys/{attorney.id}/admissions/{court.id}")

@@ -77,6 +77,16 @@ The React Native mobile app will communicate with the FastAPI backend through RE
 
 The API will handle authentication, data retrieval/storage, and any other server-side operations required by the application.
 
+### API Router Architecture
+
+The backend implements a **three-router architecture** that provides clear separation of concerns:
+
+- **`/signup`** - User registration workflows (creates User + Attorney/Client + handles authentication)
+- **`/users`** - User entity management (authentication system integration, profile updates)
+- **`/attorneys`** - Attorney entity management (discovery, profiles, court admissions)
+
+This architecture separates complex signup workflows from standard CRUD operations, ensuring transaction safety for multi-entity creation while maintaining clear API semantics. For detailed information about router responsibilities and design rationale, see the [Router Architecture section in technical.md](technical.md#router-architecture).
+
 ## Testing Architecture
 
 The project implements a comprehensive testing strategy focused on backend code quality and reliability.
