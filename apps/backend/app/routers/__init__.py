@@ -1,6 +1,7 @@
 from . import (
     attorney_router,
     emergency_contact_router,
+    emergency_router,
     example_router,
     health,
     mock_auth_router,
@@ -11,6 +12,7 @@ __all__ = [
     "example_router",
     "attorney_router",
     "emergency_contact_router",
+    "emergency_router",
     "user_router",
     "health",
     "mock_auth_router",

@@ -198,6 +198,30 @@ The API uses an **enhanced router architecture** that provides clear separation 
    - `PATCH /attorneys/{id}` - Update attorney profile
    - `DELETE /attorneys/{id}` - Remove attorney (admin)
    - `POST /attorneys/{id}/admissions` - Manage court admissions
+
+6. **`emergency_router` (`/emergency`)** - **NEW: Emergency Case Management and Attorney Notification**
+   - Emergency case creation and management
+   - Attorney notification system with multi-channel delivery
+   - GPS-based court jurisdiction determination
+   - Case status tracking and attorney assignment
+   - Notification preference management
+
+   **Endpoints:**
+   - `GET /emergency/users/{user_id}/status` - Check user's emergency information status
+   - `POST /emergency/cases` - Create emergency case with location and court assignment
+   - `POST /emergency/cases/{case_id}/deactivate` - Deactivate emergency case
+   - `GET /emergency/cases/{case_id}/status` - Get detailed emergency case status
+   - `GET /emergency/cases/available/{court_id}` - Get available cases for court-admitted attorneys
+   - `POST /emergency/cases/{case_id}/accept` - Attorney accepts case (voluntary)
+   - `GET /emergency/courts/jurisdiction` - Determine district court by location
+   - `POST /emergency/notify/immediate` - Send immediate case notifications to attorneys
+   - `POST /emergency/notify/escalated` - Send escalated notifications (1-hour follow-up)
+   - `POST /emergency/notify/daily-digest` - Send daily digest of unassigned cases
+   - `GET /emergency/attorneys/{attorney_id}/preferences` - Get attorney notification preferences
+   - `PUT /emergency/attorneys/{attorney_id}/preferences` - Update attorney notification preferences
+   - `POST /emergency/test/notifications` - Test notification service configuration
+   - `POST /emergency/test/sendgrid` - Test SendGrid email configuration
+   - `POST /emergency/test/twilio` - Test Twilio SMS configuration
    - `DELETE /attorneys/{id}/admissions/{court_id}` - Remove court admissions
 
 #### Architectural Rationale
@@ -509,6 +533,90 @@ yarn test --coverage
 # Run specific test files
 yarn test AttorneyCard.test.tsx
 ```
+
+### Service Layer Architecture
+
+The backend implements a comprehensive service layer that encapsulates business logic and external integrations, following the principle of separation of concerns:
+
+#### Service Layer Principles
+
+- **Business Logic Encapsulation**: Complex business rules and workflows are implemented in service classes
+- **External Service Integration**: All third-party API calls and external dependencies are managed through services
+- **Reusability**: Services can be used across multiple routers and contexts
+- **Testability**: Services are designed for easy unit testing with dependency injection and mocking
+- **Error Handling**: Centralized error handling and graceful degradation for external service failures
+
+#### Core Services
+
+**EmergencyService** (`app/services/emergency_service.py`):
+- Emergency case creation and lifecycle management
+- Court jurisdiction determination from location data
+- Attorney notification orchestration and preference management
+- Case status tracking and attorney assignment workflows
+- Integration with GeocodingService and NotificationService
+
+**NotificationService** (`app/services/notification_service.py`):
+- Multi-channel notification delivery (Email via SendGrid, SMS via Twilio, Push framework-ready)
+- Professional emergency notification templates with HTML/text formatting
+- Attorney notification preference enforcement and channel selection
+- Delivery status tracking with retry logic and error handling
+- Configuration testing and service health checks
+
+**GeocodingService** (`app/services/geocoding_service.py`):
+- Reverse geocoding from GPS coordinates to addresses via Nominatim/OpenStreetMap
+- Federal district court jurisdiction determination from location coordinates
+- Rate limiting compliance with free service requirements (1 request/second)
+- Coordinate validation and bounds checking
+- Graceful fallback handling for API failures
+
+#### Service Integration Patterns
+
+Services follow consistent patterns for integration and error handling:
+
+```python
+# Example service integration in router
+from app.services.emergency_service import EmergencyService
+from app.services.notification_service import NotificationService
+
+@router.post("/cases")
+async def create_emergency_case(
+    case_data: EmergencyActivationRequest,
+    db: Session = Depends(get_db)
+):
+    emergency_service = EmergencyService(db)
+
+    # Service handles complex business logic
+    case = emergency_service.create_emergency_case(
+        user_id=case_data.user_id,
+        coordinates=case_data.coordinates,
+        case_type=case_data.case_type
+    )
+
+    return case
+```
+
+#### External Service Configuration
+
+Services require environment variables for external API integration:
+
+```bash
+# Email notifications (SendGrid)
+SENDGRID_API_KEY=your_sendgrid_api_key
+SENDGRID_FROM_EMAIL=noreply@habeas.app
+
+# SMS notifications (Twilio)
+TWILIO_ACCOUNT_SID=your_twilio_account_sid
+TWILIO_AUTH_TOKEN=your_twilio_auth_token
+TWILIO_FROM_NUMBER=+1234567890
+```
+
+#### Service Testing Strategy
+
+Services are tested with comprehensive unit tests using mocking for external dependencies:
+
+- **Unit Tests**: Mock external APIs and test business logic in isolation
+- **Integration Tests**: Test service integration with database and internal dependencies
+- **Configuration Tests**: Verify external service configuration and connectivity
 
 ### SQLAlchemy ORM Style
 

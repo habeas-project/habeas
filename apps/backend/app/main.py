@@ -12,6 +12,7 @@ from app.routers import (
     attorney_router,
     client_profile_router,
     emergency_contact_router,
+    emergency_router,
     example_router,
     health,  # Import the new health router
     mock_auth_router,
@@ -59,6 +60,7 @@ app.include_router(health.router)  # Include the new health router
 app.include_router(example_router.router)
 app.include_router(attorney_router.router)
 app.include_router(emergency_contact_router.router)
+app.include_router(emergency_router.router)  # Include the new emergency router
 app.include_router(user_router.router)
 app.include_router(signup_router.router)
 app.include_router(mock_auth_router.router)

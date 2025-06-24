@@ -141,6 +141,67 @@ export interface ClientProfileResponse {
   updated_at: string;
 }
 
+// --- Emergency-related interfaces ---
+
+export interface LocationData {
+  latitude?: number;
+  longitude?: number;
+  address?: string;
+  description?: string;
+}
+
+export interface EmergencyStatusResponse {
+  has_emergency_contacts: boolean;
+  has_client_profiles: boolean;
+  active_emergency_case_id?: number;
+  active_case_status?: string;
+  assigned_attorney_name?: string;
+  assigned_court_name?: string;
+  can_activate_emergency: boolean;
+}
+
+export interface EmergencyActivationRequest {
+  client_profile_id: number;
+  case_type: 'self' | 'loved_one';
+  location: LocationData;
+}
+
+export interface EmergencyActivationResponse {
+  case_id: number;
+  status: string;
+  assigned_court_name?: string;
+  message: string;
+  attorneys_notified_count: number;
+}
+
+export interface EmergencyStatusUpdate {
+  case_id: number;
+  status: string;
+  assigned_attorney_name?: string;
+  assigned_court_name?: string;
+  last_updated: string;
+  created_at: string;
+  message: string;
+  attorneys_notified_count?: number;
+}
+
+export interface EmergencyDeactivationRequest {
+  reason?: string;
+}
+
+export interface EmergencyDeactivationResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface CourtJurisdictionResponse {
+  court_id: number;
+  court_name: string;
+  court_abbreviation: string;
+  confidence: number;
+  message: string;
+}
+
 // --- Smart Configuration from Environment Variables ---
 
 // Function to detect the best API base URL
@@ -442,5 +503,174 @@ export const deleteClientProfile = async (profileId: number): Promise<void> => {
   } catch (error) {
     console.error('Client profile deletion failed:', error);
     throw error;
+  }
+};
+
+// --- Emergency API Methods ---
+
+/**
+ * Get emergency status for a user
+ */
+export const getUserEmergencyStatus = async (userId: number): Promise<EmergencyStatusResponse> => {
+  const response = await axiosInstance.get(`/emergency/users/${userId}/status`);
+  return response.data;
+};
+
+/**
+ * Create an emergency case
+ */
+export const createEmergencyCase = async (
+  userId: number,
+  request: EmergencyActivationRequest
+): Promise<EmergencyActivationResponse> => {
+  const response = await axiosInstance.post(
+    `/emergency/cases?user_id=${userId}`,
+    request
+  );
+  return response.data;
+};
+
+/**
+ * Get emergency case status
+ */
+export const getEmergencyCaseStatus = async (caseId: number): Promise<EmergencyStatusUpdate> => {
+  const response = await axiosInstance.get(`/emergency/cases/${caseId}/status`);
+  return response.data;
+};
+
+/**
+ * Deactivate an emergency case
+ */
+export const deactivateEmergencyCase = async (
+  caseId: number,
+  userId: number,
+  request: EmergencyDeactivationRequest
+): Promise<EmergencyDeactivationResponse> => {
+  const response = await axiosInstance.post(
+    `/emergency/cases/${caseId}/deactivate?user_id=${userId}`,
+    request
+  );
+  return response.data;
+};
+
+/**
+ * Get court jurisdiction based on location
+ */
+export const getCourtJurisdiction = async (
+  latitude: number,
+  longitude: number
+): Promise<CourtJurisdictionResponse> => {
+  const response = await axiosInstance.get(
+    `/emergency/courts/jurisdiction?latitude=${latitude}&longitude=${longitude}`
+  );
+  return response.data;
+};
+
+/**
+ * Poll for emergency case status updates
+ * This function will repeatedly check case status until attorney is assigned or case is resolved
+ */
+export const pollEmergencyCaseStatus = async (
+  caseId: number,
+  onStatusUpdate: (status: EmergencyStatusUpdate) => void,
+  pollingInterval: number = 30000, // 30 seconds
+  maxPollingTime: number = 3600000 // 1 hour
+): Promise<void> => {
+  const startTime = Date.now();
+  let isPolling = true;
+
+  const poll = async () => {
+    try {
+      const status = await getEmergencyCaseStatus(caseId);
+      onStatusUpdate(status);
+
+      // Stop polling if case is resolved, attorney assigned, or deactivated
+      if (status.status === 'attorney_assigned' ||
+        status.status === 'resolved' ||
+        status.status === 'deactivated') {
+        isPolling = false;
+        return;
+      }
+
+      // Stop polling if max time exceeded
+      if (Date.now() - startTime > maxPollingTime) {
+        isPolling = false;
+        return;
+      }
+
+      // Schedule next poll
+      if (isPolling) {
+        setTimeout(poll, pollingInterval);
+      }
+    } catch (error) {
+      console.error('Error polling emergency case status:', error);
+      // Continue polling even if individual requests fail
+      if (isPolling && Date.now() - startTime < maxPollingTime) {
+        setTimeout(poll, pollingInterval * 2); // Longer interval on error
+      }
+    }
+  };
+
+  // Start polling
+  poll();
+};
+
+// --- Location Services ---
+
+import * as Location from 'expo-location';
+
+/**
+ * Request location permissions from the user
+ */
+export const requestLocationPermission = async (): Promise<boolean> => {
+  try {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    return status === 'granted';
+  } catch (error) {
+    console.error('Failed to request location permission:', error);
+    return false;
+  }
+};
+
+/**
+ * Get user's current location with GPS coordinates
+ * Uses expo-location for Expo managed workflow
+ */
+export const getCurrentLocation = async (): Promise<LocationData | null> => {
+  try {
+    // Check if location services are enabled
+    const isLocationEnabled = await Location.hasServicesEnabledAsync();
+    if (!isLocationEnabled) {
+      console.log('Location services are disabled');
+      return null;
+    }
+
+    // Request permission if not already granted
+    const hasPermission = await requestLocationPermission();
+    if (!hasPermission) {
+      console.log('Location permission denied');
+      return null;
+    }
+
+    // Get current position with basic accuracy for speed
+    const location = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced, // Faster than High, more accurate than Low
+      timeInterval: 10000, // 10 second timeout
+      distanceInterval: 0, // No distance filtering
+    });
+
+    if (!location) {
+      console.log('Failed to get location');
+      return null;
+    }
+
+    return {
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+      description: `GPS: ${location.coords.latitude.toFixed(4)}, ${location.coords.longitude.toFixed(4)}`,
+    };
+  } catch (error) {
+    console.error('Failed to get current location:', error);
+    return null;
   }
 };

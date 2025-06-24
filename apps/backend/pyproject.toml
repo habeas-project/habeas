@@ -20,6 +20,11 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "phonenumbers>=8.13.1",
     "pydantic[email]>=1.10.16",
+    "requests>=2.32.3",
+    "sendgrid>=6.12.4",
+    "twilio>=9.6.3",
+    "celery>=5.3.4",
+    "redis>=5.0.1",
 ]
 
 [project.optional-dependencies]
@@ -103,6 +108,8 @@ exclude = [
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401", "F403", "F405"]
 "tests/**/*.py" = ["D"]
+"run_celery_beat.py" = ["E402"]
+"run_celery_worker.py" = ["E402"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 10
@@ -132,3 +139,8 @@ packages = ["app"]
 [tool.bandit]
 exclude_dirs = ["tests", "migrations"]
 skips = ["B101"]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.2.0",
+]

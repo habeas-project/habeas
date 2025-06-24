@@ -27,3 +27,4 @@ class User(Base):
     attorney = relationship("Attorney", back_populates="user", uselist=False)
     admin = relationship("Admin", back_populates="user", uselist=False)
     client_profiles = relationship("ClientProfile", back_populates="user", cascade="all, delete-orphan")
+    emergency_cases = relationship("EmergencyCase", back_populates="user", cascade="all, delete-orphan")

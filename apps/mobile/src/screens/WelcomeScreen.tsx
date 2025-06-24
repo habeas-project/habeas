@@ -6,7 +6,6 @@ import {
     TouchableOpacity,
     ScrollView,
     SafeAreaView,
-    Dimensions,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../App';
@@ -15,7 +14,8 @@ type WelcomeScreenProps = {
     navigation: NativeStackNavigationProp<RootStackParamList, 'Welcome'>;
 };
 
-const { width: screenWidth } = Dimensions.get('window');
+// Screen width available if needed for responsive design
+// const { width: screenWidth } = Dimensions.get('window');
 
 interface OnboardingStep {
     title: string;
@@ -138,6 +138,19 @@ export default function WelcomeScreen({ navigation }: WelcomeScreenProps) {
                             </Text>
                         </TouchableOpacity>
                     </View>
+
+                    {/* Login Option */}
+                    {isLastStep && (
+                        <View style={styles.loginSection}>
+                            <Text style={styles.loginPrompt}>Already have an account?</Text>
+                            <TouchableOpacity
+                                style={styles.loginButton}
+                                onPress={() => navigation.navigate('Login')}
+                            >
+                                <Text style={styles.loginButtonText}>Sign In</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
                 </View>
             </ScrollView>
         </SafeAreaView>
@@ -227,6 +240,33 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         marginBottom: 32,
         width: 120,
+    },
+    loginButton: {
+        backgroundColor: 'transparent',
+        borderColor: '#3182ce',
+        borderRadius: 8,
+        borderWidth: 1,
+        paddingHorizontal: 24,
+        paddingVertical: 12,
+    },
+    loginButtonText: {
+        color: '#3182ce',
+        fontSize: 16,
+        fontWeight: '600',
+        textAlign: 'center',
+    },
+    loginPrompt: {
+        color: '#4a5568',
+        fontSize: 16,
+        marginBottom: 12,
+        textAlign: 'center',
+    },
+    loginSection: {
+        alignItems: 'center',
+        borderTopColor: '#e2e8f0',
+        borderTopWidth: 1,
+        marginTop: 24,
+        paddingTop: 24,
     },
     navigation: {
         paddingBottom: 40,

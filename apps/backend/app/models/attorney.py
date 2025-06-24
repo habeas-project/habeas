@@ -39,6 +39,9 @@ class Attorney(Base):
 
     # Add relationship
     user = relationship("User", back_populates="attorney")
+    notification_preferences = relationship(
+        "AttorneyNotificationPreference", back_populates="attorney", uselist=False, cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<Attorney(id={self.id}, name='{self.name}', email='{self.email}')>"

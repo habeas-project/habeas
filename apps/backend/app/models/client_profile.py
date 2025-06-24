@@ -46,6 +46,7 @@ class ClientProfile(Base):
     # Relationships
     user = relationship("User", back_populates="client_profiles")
     emergency_contacts = relationship("EmergencyContact", back_populates="client_profile", cascade="all, delete-orphan")
+    emergency_cases = relationship("EmergencyCase", back_populates="client_profile", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<ClientProfile(id={self.id}, profile_name='{self.profile_name}', first_name='{self.first_name}', last_name='{self.last_name}', is_self={self.is_self})>"
