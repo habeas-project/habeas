@@ -2,24 +2,34 @@
 
 This document outlines the database schema for the Habeas project backend, based on the SQLAlchemy models found in `apps/backend/app/models/`.
 
+**Schema Version**: Multi-Profile Architecture (v2.0)
+**Key Changes**: ClientProfile model replaces Client, multi-profile support, enhanced User model
+
 ## Core Tables
 
 ### Table: `users`
 
-Represents system users with different roles (attorney, client, admin).
+Represents system users with different roles and multi-profile support.
 
 | Column       | Type               | Constraints                             | Description                               |
 | ------------ | ------------------ | --------------------------------------- | ----------------------------------------- |
 | `id`         | `Integer`          | Primary Key, Index                      | Unique identifier for the user            |
 | `cognito_id` | `String(255)`      | Not Null, Unique                        | AWS Cognito user ID or mock ID            |
-| `user_type`  | `String(20)`       | Not Null                                | User role: attorney, client, admin        |
+| `user_type`  | `String(20)`       | Not Null                                | **LEGACY**: User role: attorney, client, admin |
+| `primary_role` | `String(20)`     | Not Null                                | **NEW**: Primary role: attorney, client_helper, admin |
 | `is_active`  | `Boolean`          | Not Null, Default: True                 | Whether the user account is active        |
 | `created_at` | `TIMESTAMP(timezone=True)` | Not Null, Server Default: `func.now()` | Timestamp of record creation              |
 | `updated_at` | `TIMESTAMP(timezone=True)` | Not Null, Server Default: `func.now()`, On Update: `func.now()` | Timestamp of last record update |
 
 **Relationships:**
 - One-to-One with `attorneys` (via `attorneys.user_id`)
-- One-to-One with `clients` (via `clients.user_id`)
+- **NEW**: One-to-Many with `client_profiles` (via `client_profiles.user_id`)
+- One-to-One with `admins` (via `admins.user_id`)
+
+**Migration Notes:**
+- `primary_role` field added for enhanced multi-profile support
+- `user_type` maintained for backward compatibility
+- Multi-profile relationship added via `client_profiles`
 
 ---
 
@@ -45,14 +55,16 @@ Represents legal professionals who can file habeas corpus petitions.
 
 ---
 
-### Table: `clients`
+### Table: `client_profiles`
 
-Represents individuals who may file a habeas corpus petition.
+**NEW**: Represents client profiles with multi-profile support for family helpers.
 
 | Column                    | Type               | Constraints                             | Description                               |
 | ------------------------- | ------------------ | --------------------------------------- | ----------------------------------------- |
-| `id`                      | `Integer`          | Primary Key, Index                      | Unique identifier for the client          |
-| `user_id`                 | `Integer`          | Not Null, Foreign Key (`users.id`), Unique | ID of the associated user account         |
+| `id`                      | `Integer`          | Primary Key, Index                      | Unique identifier for the client profile  |
+| `user_id`                 | `Integer`          | Not Null, Foreign Key (`users.id`)     | ID of the associated user account         |
+| `profile_name`            | `String(100)`      | Not Null                                | **NEW**: Name for this profile (e.g., "Mom", "Brother") |
+| `is_self`                 | `Boolean`          | Not Null, Default: False                | **NEW**: Whether this profile represents the user themselves |
 | `first_name`              | `String(100)`      | Not Null                                | Client's first name                       |
 | `last_name`               | `String(100)`      | Not Null                                | Client's last name                        |
 | `country_of_birth`        | `String(100)`      | Not Null                                | Client's country of birth                 |
@@ -66,8 +78,14 @@ Represents individuals who may file a habeas corpus petition.
 | `updated_at`              | `TIMESTAMP(timezone=True)` | Not Null, Server Default: `func.now()`, On Update: `func.now()` | Timestamp of last record update |
 
 **Relationships:**
-- One-to-One with `users` (via `user_id`)
-- One-to-Many with `emergency_contacts` (via `emergency_contacts.client_id`)
+- Many-to-One with `users` (via `user_id`) - **NEW**: Supports multiple profiles per user
+- One-to-Many with `emergency_contacts` (via `emergency_contacts.client_profile_id`)
+
+**Multi-Profile Features:**
+- **Family Helper Support**: One user can manage multiple client profiles
+- **Profile Identification**: `profile_name` helps users organize multiple profiles
+- **Self-Identification**: `is_self` flag indicates if profile represents the user themselves
+- **Flexible Relationships**: No unique constraint on `user_id` allows multiple profiles per user
 
 ---
 
@@ -75,23 +93,27 @@ Represents individuals who may file a habeas corpus petition.
 
 ### Table: `emergency_contacts`
 
-Represents a person to contact in case of emergency for a client.
+Represents a person to contact in case of emergency for a client profile.
 
-| Column         | Type               | Constraints                             | Description                                 |
-| -------------- | ------------------ | --------------------------------------- | ------------------------------------------- |
-| `id`           | `Integer`          | Primary Key, Index                      | Unique identifier for the emergency contact |
-| `client_id`    | `Integer`          | Not Null, Foreign Key (`clients.id`), On Delete: CASCADE | ID of the associated client               |
-| `full_name`    | `String(255)`      | Not Null                                | Full name of the emergency contact          |
-| `relationship` | `String(50)`       | Not Null                                | Relationship to the client                  |
-| `phone_number` | `String(20)`       | Not Null                                | Phone number of the emergency contact       |
-| `email`        | `String(255)`      | Nullable                                | Email address of the emergency contact      |
-| `address`      | `String(255)`      | Nullable                                | Address of the emergency contact            |
-| `notes`        | `Text`             | Nullable                                | Additional notes about the contact          |
-| `created_at`   | `TIMESTAMP(timezone=True)` | Not Null, Server Default: `func.now()` | Timestamp of record creation                |
-| `updated_at`   | `TIMESTAMP(timezone=True)` | Not Null, Server Default: `func.now()`, On Update: `func.now()` | Timestamp of last record update   |
+| Column                | Type               | Constraints                             | Description                                 |
+| --------------------- | ------------------ | --------------------------------------- | ------------------------------------------- |
+| `id`                  | `Integer`          | Primary Key, Index                      | Unique identifier for the emergency contact |
+| `client_profile_id`   | `Integer`          | Not Null, Foreign Key (`client_profiles.id`), On Delete: CASCADE | **UPDATED**: ID of the associated client profile |
+| `full_name`           | `String(255)`      | Not Null                                | Full name of the emergency contact          |
+| `relationship`        | `String(50)`       | Not Null                                | Relationship to the client                  |
+| `phone_number`        | `String(20)`       | Not Null                                | Phone number of the emergency contact       |
+| `email`               | `String(255)`      | Nullable                                | Email address of the emergency contact      |
+| `address`             | `String(255)`      | Nullable                                | Address of the emergency contact            |
+| `notes`               | `Text`             | Nullable                                | Additional notes about the contact          |
+| `created_at`          | `TIMESTAMP(timezone=True)` | Not Null, Server Default: `func.now()` | Timestamp of record creation                |
+| `updated_at`          | `TIMESTAMP(timezone=True)` | Not Null, Server Default: `func.now()`, On Update: `func.now()` | Timestamp of last record update   |
 
 **Relationships:**
-- Many-to-One with `clients` (via `client_id`)
+- Many-to-One with `client_profiles` (via `client_profile_id`) - **UPDATED**: References client profiles instead of clients
+
+**Migration Notes:**
+- `client_id` field renamed to `client_profile_id` to reference new `client_profiles` table
+- Maintains cascade delete behavior for data integrity
 
 ---
 

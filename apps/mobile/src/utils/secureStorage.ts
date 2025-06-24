@@ -1,5 +1,6 @@
 import 'react-native-get-random-values';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+// @ts-expect-error - react-native-crypto-js doesn't have type definitions
 import CryptoJS from 'react-native-crypto-js';
 import * as SecureStore from 'expo-secure-store';
 import { v4 as uuidv4 } from 'uuid';

@@ -26,13 +26,14 @@ from app.database import Base  # noqa: E402
 from app.models.admin import Admin  # noqa: F401, E402
 from app.models.attorney import Attorney  # noqa: F401, E402
 from app.models.attorney_court_admission import attorney_court_admission_table  # noqa: F401, E402
-from app.models.client import Client  # noqa: F401, E402
+from app.models.client_profile import ClientProfile  # noqa: F401, E402
 from app.models.court import Court  # noqa: F401, E402
 from app.models.court_county import CourtCounty  # noqa: F401, E402
 from app.models.district_court_contact import DistrictCourtContact  # noqa: F401, E402
 from app.models.emergency_contact import EmergencyContact  # noqa: F401, E402
 from app.models.example_model import Example  # noqa: F401, E402
 from app.models.ice_detention_facility import IceDetentionFacility  # noqa: F401, E402
+from app.models.normalized_address import NormalizedAddress  # noqa: F401, E402
 from app.models.user import User  # noqa: F401, E402
 
 # Get the database URL from environment variables

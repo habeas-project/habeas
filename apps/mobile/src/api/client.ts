@@ -65,12 +65,117 @@ interface ClientRegistrationData {
   studentIdNumber?: string;
 }
 
-// --- Configuration from Environment Variables ---
+// Unified signup interfaces
+export interface UnifiedSignupData {
+  email: string;
+  password: string;
+  primary_role: 'attorney' | 'client_helper' | 'admin';
+}
 
-// Expo Go requires environment variables to be prefixed with EXPO_PUBLIC_
-// Access them via Constants.expoConfig.extra
-const apiBaseUrl = Constants.expoConfig?.extra?.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:8000'; // Default for safety
-const authMode = Constants.expoConfig?.extra?.EXPO_PUBLIC_AUTH_MODE ?? 'cognito'; // Default to 'cognito' (real auth)
+export interface RoleSpecificData {
+  attorney_data?: AttorneyRegistrationData;
+  client_profile_data?: ClientProfileData;
+  admin_data?: AdminRegistrationData;
+}
+
+export interface ClientProfileData {
+  profile_name: string;
+  is_self: boolean;
+  first_name: string;
+  last_name: string;
+  country_of_birth: string;
+  nationality?: string;
+  birth_date: string;
+  alien_registration_number?: string;
+  passport_number?: string;
+  school_name?: string;
+  student_id_number?: string;
+}
+
+export interface AdminRegistrationData {
+  name: string;
+  email: string;
+  department: string;
+  role: string;
+}
+
+export interface MultiProfileSignupData {
+  email: string;
+  password: string;
+  primary_role: 'client_helper';
+  client_profiles: ClientProfileData[];
+  attorney_data?: AttorneyRegistrationData;
+}
+
+export interface UnifiedSignupResponse {
+  message: string;
+  user_id: number;
+  email: string;
+  primary_role: string;
+  created_at: string;
+}
+
+export interface MultiProfileSignupResponse {
+  message: string;
+  user_id: number;
+  email: string;
+  profiles_created: number;
+  created_at: string;
+}
+
+export interface ClientProfileResponse {
+  id: number;
+  user_id: number;
+  profile_name: string;
+  is_self: boolean;
+  first_name: string;
+  last_name: string;
+  country_of_birth: string;
+  nationality?: string;
+  birth_date: string;
+  alien_registration_number?: string;
+  passport_number?: string;
+  school_name?: string;
+  student_id_number?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// --- Smart Configuration from Environment Variables ---
+
+// Function to detect the best API base URL
+function getApiBaseUrl(): string {
+  // 1. Try to get from environment variables first
+  const envApiUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
+  if (envApiUrl) {
+    return envApiUrl;
+  }
+
+  // 2. Try Constants.expoConfig.extra (fallback)
+  const configApiUrl = Constants.expoConfig?.extra?.EXPO_PUBLIC_API_BASE_URL;
+  if (configApiUrl) {
+    return configApiUrl;
+  }
+
+  // 3. Development warning - configuration should be provided
+  if (__DEV__) {
+    console.warn('⚠️  No API_BASE_URL configured. Using localhost fallback.');
+    console.warn('💡 For WSL testing, run: ./temp/update_wsl_ip.sh to configure proper IP');
+    return 'http://localhost:8000';
+  }
+
+  // 4. Production fallback
+  return 'http://localhost:8000';
+}
+
+function getAuthMode(): string {
+  return process.env.EXPO_PUBLIC_AUTH_MODE ??
+    Constants.expoConfig?.extra?.EXPO_PUBLIC_AUTH_MODE ??
+    (__DEV__ ? 'mock' : 'cognito');
+}
+
+const apiBaseUrl = getApiBaseUrl();
+const authMode = getAuthMode();
 
 console.log(`API Config: BaseURL=${apiBaseUrl}, AuthMode=${authMode}`); // For debugging
 
@@ -216,3 +321,126 @@ const api = {
 };
 
 export default api;
+
+/**
+ * Register user via unified signup endpoint
+ */
+export const registerUnified = async (
+  signupData: UnifiedSignupData,
+  roleData: RoleSpecificData
+): Promise<UnifiedSignupResponse> => {
+  try {
+    console.log('Registering user via unified signup:', {
+      email: signupData.email,
+      role: signupData.primary_role
+    });
+
+    const response = await axiosInstance.post('/signup/unified', {
+      signup_data: signupData,
+      role_data: roleData
+    });
+
+    console.log('Unified signup successful:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Unified signup failed:', error);
+    throw error;
+  }
+};
+
+/**
+ * Register user with multiple client profiles
+ */
+export const registerMultiProfile = async (
+  signupData: MultiProfileSignupData
+): Promise<MultiProfileSignupResponse> => {
+  try {
+    console.log('Registering multi-profile user:', {
+      email: signupData.email,
+      profileCount: signupData.client_profiles.length
+    });
+
+    const response = await axiosInstance.post('/signup/multi-profile', signupData);
+
+    console.log('Multi-profile signup successful:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Multi-profile signup failed:', error);
+    throw error;
+  }
+};
+
+/**
+ * Create a new client profile for an existing user
+ */
+export const createClientProfile = async (
+  profileData: ClientProfileData & { user_id: number }
+): Promise<ClientProfileResponse> => {
+  try {
+    console.log('Creating client profile:', {
+      user_id: profileData.user_id,
+      profile_name: profileData.profile_name
+    });
+
+    const response = await axiosInstance.post('/client-profiles/', profileData);
+
+    console.log('Client profile created:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Client profile creation failed:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get all client profiles for a user
+ */
+export const getUserClientProfiles = async (userId: number): Promise<ClientProfileResponse[]> => {
+  try {
+    console.log('Fetching client profiles for user:', userId);
+
+    const response = await axiosInstance.get(`/client-profiles/user/${userId}`);
+
+    console.log('Client profiles fetched:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch client profiles:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update a client profile
+ */
+export const updateClientProfile = async (
+  profileId: number,
+  updateData: Partial<ClientProfileData>
+): Promise<ClientProfileResponse> => {
+  try {
+    console.log('Updating client profile:', { profileId, updateData });
+
+    const response = await axiosInstance.put(`/client-profiles/${profileId}`, updateData);
+
+    console.log('Client profile updated:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Client profile update failed:', error);
+    throw error;
+  }
+};
+
+/**
+ * Delete a client profile
+ */
+export const deleteClientProfile = async (profileId: number): Promise<void> => {
+  try {
+    console.log('Deleting client profile:', profileId);
+
+    await axiosInstance.delete(`/client-profiles/${profileId}`);
+
+    console.log('Client profile deleted successfully');
+  } catch (error) {
+    console.error('Client profile deletion failed:', error);
+    throw error;
+  }
+};

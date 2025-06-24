@@ -8,6 +8,12 @@ Habeas is an open-source project designed to help detained individuals connect w
 
 The project follows a monorepo structure with a React Native mobile application frontend (written in TypeScript) and a Python FastAPI backend that communicates with a PostgreSQL database. The architecture separates the frontend and backend while providing a clear organization for shared resources.
 
+**Key Architectural Features:**
+- **Multi-Profile Data Model**: Support allowing family helpers to manage multiple client profiles
+- **Unified Signup Workflow**: Human-centered signup flow with progressive disclosure
+- **Role-Based Architecture**: Single user accounts with role-specific capabilities
+- **Enhanced Profile Management**: Support for users managing multiple client profiles under one account
+
 ## Repository Structure
 
 ```
@@ -79,13 +85,89 @@ The API will handle authentication, data retrieval/storage, and any other server
 
 ### API Router Architecture
 
-The backend implements a **three-router architecture** that provides clear separation of concerns:
+The backend implements an **enhanced router architecture** that provides clear separation of concerns while supporting the new multi-profile system:
 
-- **`/signup`** - User registration workflows (creates User + Attorney/Client + handles authentication)
+- **`/signup`** - User registration workflows (creates User + Attorney/ClientProfile + handles authentication)
+- **`/unified-signup`** - **NEW**: Human-centered unified signup with role-based routing
+- **`/client-profiles`** - **NEW**: Multi-profile management for client profiles
 - **`/users`** - User entity management (authentication system integration, profile updates)
 - **`/attorneys`** - Attorney entity management (discovery, profiles, court admissions)
 
-This architecture separates complex signup workflows from standard CRUD operations, ensuring transaction safety for multi-entity creation while maintaining clear API semantics. For detailed information about router responsibilities and design rationale, see the [Router Architecture section in technical.md](technical.md#router-architecture).
+This enhanced architecture supports both traditional single-profile users and modern multi-profile family helpers, ensuring transaction safety for multi-entity creation while maintaining clear API semantics. For detailed information about router responsibilities and design rationale, see the [Router Architecture section in technical.md](technical.md#router-architecture).
+
+## Data Model Architecture
+
+### Enhanced User Model
+
+The system uses an **enhanced approach** that combines the benefits of unified user accounts with multi-profile support:
+
+```
+User (primary_role: attorney|client_helper|admin)
+├── Attorney (1:1) - if primary_role = attorney
+├── ClientProfile (1:many) - if primary_role = client_helper
+└── Admin (1:1) - if primary_role = admin
+```
+
+### Key Model Changes
+
+**ClientProfile Model** (replaces Client):
+- **Multi-Profile Support**: Users can have multiple ClientProfile records
+- **Profile Identification**: `profile_name` and `is_self` fields for profile management
+- **Family Helper Support**: Allows one account to manage multiple people's information
+- **Clean Relationships**: Proper foreign keys with `client_profiles` table
+
+**Enhanced User Model**:
+- **Primary Role Field**: `primary_role` enum (attorney, client_helper, admin)
+- **Multi-Profile Relationships**: `client_profiles` relationship for 1:many support
+- **Backward Compatible**: Maintains existing attorney and admin relationships
+
+**Updated Emergency Contacts**:
+- **ClientProfile Integration**: References `client_profile_id` instead of `client_id`
+- **Cascade Support**: Proper deletion cascading for data integrity
+
+### Architecture Benefits
+
+1. **Multi-Profile Support**: Family helpers can manage multiple client profiles
+2. **Clean Data Model**: No duplicate user records, proper normalization
+3. **Flexible Roles**: Users can have attorney capability + client profiles
+4. **Simplified Signup**: Single entry point with progressive disclosure
+5. **Enhanced UX**: Human-centered language and workflow
+
+## Mobile Application Architecture
+
+### Unified Signup Flow
+
+The mobile app implements a **human-centered signup workflow** with progressive disclosure:
+
+```
+HomeScreen → "Get Help" → UnifiedSignupScreen
+    ↓
+Intent Selection:
+- "I'm worried that ICE may detain me or a loved one"
+- "I am an attorney willing to file a habeas petition"
+    ↓
+Account Info (email, password)
+    ↓
+Role-Specific Details (based on intent)
+    ↓
+Confirmation & Account Creation
+    ↓
+Success → Return to HomeScreen
+```
+
+### Key UX Improvements
+
+- **Human-Centered Language**: "I'm worried that ICE may detain me or a loved one" vs technical role selection
+- **Empathetic Messaging**: "Get connected with legal help and prepare for potential detention"
+- **Unified Entry Point**: Single "Get Help" button replaces separate signup buttons
+- **Progressive Disclosure**: Intent → Account → Details → Confirmation flow
+- **Role-Based Forms**: Different form fields based on user selection
+
+### Screen Architecture
+
+- **UnifiedSignupScreen**: 4-step progressive disclosure signup process
+- **HomeScreen**: Simplified with single "Get Help" entry point
+- **Profile Management**: Future screens for managing multiple client profiles
 
 ## Testing Architecture
 

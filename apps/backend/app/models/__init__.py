@@ -1,7 +1,7 @@
 from .admin import Admin
 from .attorney import Attorney
 from .attorney_court_admission import attorney_court_admission_table
-from .client import Client
+from .client_profile import ClientProfile
 from .court import Court
 from .court_county import CourtCounty
 from .district_court_contact import DistrictCourtContact
@@ -14,7 +14,7 @@ __all__ = [
     "Admin",
     "Attorney",
     "attorney_court_admission_table",
-    "Client",
+    "ClientProfile",
     "Court",
     "CourtCounty",
     "DistrictCourtContact",

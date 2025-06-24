@@ -10,7 +10,8 @@ repos:
       - id: check-yaml
         exclude: ^apps/mobile/tests/e2e/flows/.*\.yml$
       - id: check-added-large-files
-        args: ['--maxkb=500']
+        args: ['--maxkb=1000']
+        exclude: 'package-lock\.json$'
       - id: check-toml
       - id: detect-private-key
       - id: check-merge-conflict

@@ -3,47 +3,36 @@
 <!-- TOC -->
 - [Development Requirements](#development-requirements)
   - [System Dependencies](#system-dependencies)
-    - [PostgreSQL and Development Package](#postgresql-and-development-package)
-    - [Yarn Package Manager](#yarn-package-manager)
   - [Python Environment Setup](#python-environment-setup)
-    - [Python Command Note](#python-command-note)
-    - [Virtual Environment Activation](#virtual-environment-activation)
   - [Python Dependencies](#python-dependencies)
 - [API Development Patterns](#api-development-patterns)
   - [Core Principles](#core-principles)
   - [Directory Structure](#directory-structure)
   - [Router Implementation Pattern](#router-implementation-pattern)
+  - [Router Architecture](#router-architecture)
   - [Schema Organization](#schema-organization)
   - [Testing Strategy](#testing-strategy)
+  - [Mobile Testing Strategy](#mobile-testing-strategy)
   - [SQLAlchemy ORM Style](#sqlalchemy-orm-style)
+- [Mock Authentication (Development/Testing)](#mock-authentication-developmenttesting)
 - [Database Migrations](#database-migrations)
-  - [Overview](#overview)
-  - [Migration Structure](#migration-structure)
-  - [Running Migrations](#running-migrations)
 - [Data Ingestion](#data-ingestion)
-  - [Overview](#data-ingestion-overview)
+  - [Overview](#overview)
+  - [Architecture](#architecture)
+  - [Docker Integration](#docker-integration)
   - [Running Data Ingestion](#running-data-ingestion)
+  - [Data Pipeline Structure](#data-pipeline-structure)
+  - [ICE Detention Facilities Geocoding](#ice-detention-facilities-geocoding)
+  - [Database Schema Integration](#database-schema-integration)
+  - [Common Issues and Resolutions](#common-issues-and-resolutions)
 - [Common Troubleshooting](#common-troubleshooting)
-  - [pg_config executable not found](#pgconfig-executable-not-found)
-  - [Python module not found](#python-module-not-found)
+- [React Native Expo Development](#react-native-expo-development)
 - [Development Tools](#development-tools)
   - [Pre-commit Hooks](#pre-commit-hooks)
-    - [Setup](#setup)
-    - [Configured Hooks](#configured-hooks)
-    - [Configuration Files](#configuration-files)
-    - [Troubleshooting](#troubleshooting)
-    - [Local CI Testing (`act`)](#local-ci-testing-act)
+  - [Local CI Testing (`act`)](#local-ci-testing-act)
   - [Continuous Integration (CI)](#continuous-integration-ci)
-    - [Workflow Overview](#workflow-overview)
-    - [Key Steps](#key-steps)
-- [React Native/Expo Development](#react-native-expo-development)
-  - [Running the Mobile App](#running-the-mobile-app)
 - [Testing](#testing)
   - [Mobile End-to-End (E2E) Testing Setup](#mobile-end-to-end-e2e-testing-setup)
-    - [E2E Docker Environment](#e2e-docker-environment)
-    - [Prerequisites](#prerequisites)
-    - [Running E2E Tests](#running-e2e-tests)
-    - [Troubleshooting](#troubleshooting)
 
 ## Development Requirements
 
@@ -148,11 +137,11 @@ Refer to files within [`apps/backend/app/routers/`](../../apps/backend/app/route
 
 ### Router Architecture
 
-The API uses a **three-router architecture** that provides clear separation of concerns between different types of operations:
+The API uses an **enhanced router architecture** that provides clear separation of concerns while supporting multi-profile functionality:
 
 #### Router Types and Responsibilities
 
-1. **`signup_router` (`/signup`)** - **User Registration Workflows**
+1. **`signup_router` (`/signup`)** - **Traditional User Registration Workflows**
    - Handles complete user onboarding processes
    - Creates multiple related entities in atomic transactions
    - Manages authentication token generation
@@ -160,10 +149,33 @@ The API uses a **three-router architecture** that provides clear separation of c
 
    **Endpoints:**
    - `POST /signup/attorney` - Complete attorney registration (creates User + Attorney + auth)
-   - `POST /signup/client` - Complete client registration (creates User + Client + auth)
+   - `POST /signup/client` - Complete client registration (creates User + ClientProfile + auth)
    - `POST /signup/admin` - Complete admin registration (creates User + Admin + auth)
 
-2. **`user_router` (`/users`)** - **User Entity Management**
+2. **`unified_signup_router` (`/signup`)** - **NEW: Human-Centered Unified Signup**
+   - Modern signup workflow with progressive disclosure
+   - Role-based routing with human-centered language
+   - Multi-profile support for family helpers
+   - Enhanced UX with empathetic messaging
+
+   **Endpoints:**
+   - `POST /signup/unified` - Universal signup with role-based routing
+   - `POST /signup/multi-profile` - Multi-profile signup for family helpers
+
+3. **`client_profile_router` (`/client-profiles`)** - **NEW: Multi-Profile Management**
+   - CRUD operations for ClientProfile entities
+   - Multi-profile support for family helpers
+   - Profile-specific business logic
+   - Profile management and organization
+
+   **Endpoints:**
+   - `POST /client-profiles/` - Create new client profile
+   - `GET /client-profiles/user/{user_id}` - Get user's profiles
+   - `GET /client-profiles/{profile_id}` - Get specific profile
+   - `PUT /client-profiles/{profile_id}` - Update profile
+   - `DELETE /client-profiles/{profile_id}` - Delete profile
+
+4. **`user_router` (`/users`)** - **User Entity Management**
    - Standard CRUD operations for User entities
    - Post-authentication user management
    - User lookup and profile updates
@@ -174,7 +186,7 @@ The API uses a **three-router architecture** that provides clear separation of c
    - `PATCH /users/{id}` - Update user profile
    - `POST /users` - Create user (admin/internal use)
 
-3. **`attorney_router` (`/attorneys`)** - **Attorney Entity Management**
+5. **`attorney_router` (`/attorneys`)** - **Attorney Entity Management**
    - Standard CRUD operations for Attorney entities
    - Attorney discovery and search functionality
    - Court admission management
@@ -190,10 +202,12 @@ The API uses a **three-router architecture** that provides clear separation of c
 
 #### Architectural Rationale
 
-**Why Three Separate Routers:**
+**Why Enhanced Router Architecture:**
 
 1. **Clear Separation of Concerns**
-   - Signup workflows involve complex multi-entity operations with authentication
+   - Traditional signup workflows for backward compatibility
+   - Modern unified signup for enhanced user experience
+   - Multi-profile management for family helper use cases
    - User management focuses on single-entity CRUD for authentication systems
    - Attorney management handles business-specific operations and discovery
 
@@ -214,7 +228,24 @@ The API uses a **three-router architecture** that provides clear separation of c
 
 #### Real-World Use Cases
 
-**Attorney Registration Flow:**
+**Modern Unified Signup Flow:**
+```
+Mobile App → POST /signup/unified → Creates User + Attorney/ClientProfile + Returns auth token
+```
+
+**Family Helper Multi-Profile Creation:**
+```
+Mobile App → POST /signup/multi-profile → Creates User + Multiple ClientProfiles + Returns auth token
+```
+
+**Client Profile Management:**
+```
+Family Helper → GET /client-profiles/user/{user_id} → Returns all managed profiles
+Family Helper → POST /client-profiles/ → Creates new client profile
+Family Helper → PUT /client-profiles/{profile_id} → Updates specific profile
+```
+
+**Traditional Attorney Registration (Backward Compatible):**
 ```
 Mobile App → POST /signup/attorney → Creates User + Attorney + Returns auth token
 ```
@@ -364,6 +395,121 @@ pytest --cov=app
 - **Test validation**: Ensure schema validation works by testing both valid and invalid inputs
 - **Mock Authentication**: Utilize the mock authentication system for relevant development and testing scenarios (see below).
 
+### Mobile Testing Strategy
+
+The mobile app uses React Native with Expo and follows a comprehensive testing strategy covering unit, integration, and end-to-end tests.
+
+#### Mobile Test Structure
+
+```
+apps/mobile/tests/             # Mobile app tests directory
+├── setup/                     # Test setup and utilities
+│   ├── test-utils.tsx         # Common RNTL test utilities and wrappers
+│   └── mocks/                 # Mock data and services
+├── unit/                      # Unit tests directory
+│   ├── components/            # Individual component tests
+│   ├── hooks/                 # Custom hook tests
+│   └── utils/                 # Utility function tests
+├── integration/               # Integration tests directory
+│   ├── screens/               # Screen component tests
+│   └── features/              # Feature integration tests
+└── e2e/                       # End-to-end tests using Maestro
+    └── flows/                 # YAML flow definitions for Maestro
+```
+
+#### Mobile Testing Framework
+
+- **Primary Framework**: Jest (Test runner and framework)
+- **Component/Integration Testing**: React Native Testing Library (RNTL)
+- **API Mocking**: Jest's built-in mocking capabilities
+- **E2E Testing**: Maestro for mobile automation
+
+#### Mobile Test Types
+
+**Unit Tests**: Verify individual React Native components, hooks, and utilities in isolation.
+
+```typescript
+// Example RNTL component test
+import React from 'react';
+import { render, fireEvent } from '@testing-library/react-native';
+import { AttorneyCard } from '@/components/AttorneyCard';
+
+describe('AttorneyCard', () => {
+  it('renders attorney information correctly', () => {
+    const attorney = {
+      id: 1,
+      name: 'John Doe',
+      email: 'john@example.com'
+    };
+
+    const { getByText } = render(<AttorneyCard attorney={attorney} />);
+
+    expect(getByText(attorney.name)).toBeTruthy();
+    expect(getByText(attorney.email)).toBeTruthy();
+  });
+
+  it('calls onSelect when pressed', () => {
+    const onSelect = jest.fn();
+    const attorney = { id: 1, name: 'John Doe' };
+
+    const { getByTestId } = render(
+      <AttorneyCard attorney={attorney} onSelect={onSelect} testID="attorney-card-touchable" />
+    );
+
+    fireEvent.press(getByTestId('attorney-card-touchable'));
+
+    expect(onSelect).toHaveBeenCalledWith(attorney.id);
+  });
+});
+```
+
+**Hook Tests**: Test custom React hooks with proper mocking.
+
+```typescript
+// Example hook test
+import { renderHook, waitFor } from '@testing-library/react-native';
+import { useAttorney } from '@/hooks/useAttorney';
+
+jest.mock('@/services/api', () => ({
+  fetchAttorney: jest.fn(),
+}));
+
+describe('useAttorney', () => {
+  it('fetches attorney data successfully', async () => {
+    const mockAttorneyData = {
+      id: 1,
+      name: 'John Doe',
+      email: 'john@example.com'
+    };
+
+    fetchAttorney.mockResolvedValue(mockAttorneyData);
+
+    const { result } = renderHook(() => useAttorney(1));
+
+    await waitFor(() => {
+      expect(result.current.attorney).toEqual(mockAttorneyData);
+    });
+  });
+});
+```
+
+#### Running Mobile Tests
+
+```bash
+# Run all mobile tests
+cd apps/mobile
+yarn test
+
+# Run tests in watch mode
+yarn test --watch
+
+# Run tests with coverage
+yarn test --coverage
+
+# Run specific test files
+yarn test AttorneyCard.test.tsx
+```
+
 ### SQLAlchemy ORM Style
 
 This project utilizes **SQLAlchemy version 2.0 (specifically `sqlalchemy>=2.0.12` as defined in `apps/backend/pyproject.toml`)**. We adhere to the modern SQLAlchemy 2.0 declarative style for defining ORM models, which emphasizes explicit type annotations for better integration with static analysis tools like MyPy and Pylance.
@@ -462,19 +608,37 @@ alembic downgrade -1
 
 The Habeas project includes a comprehensive data ingestion system for importing court data and ICE detention facility information into the PostgreSQL database. The system is fully integrated with Docker Compose and provides robust error handling, verification, and geocoding capabilities.
 
-For complete documentation on the data ingestion system, including:
-- Docker integration and workflow
-- Data pipeline structure and phases
-- ICE detention facilities geocoding workflow
-- Database schema integration
-- Issue resolution and troubleshooting
-- Verification and testing procedures
+### Architecture
 
-See the dedicated **[Data Ingestion Documentation](data-ingestion.md)**.
+The data ingestion system follows a structured pipeline approach:
 
-### Quick Start
+```
+data/pipeline/
+├── 2_staging_data/          # CSV and Excel source files
+├── 3_ingestion_scripts/     # Python scripts to import data
+├── 4_verification/          # Scripts to verify successful import
+└── run_data_ingestion.py    # Main orchestrator script
+```
 
-To run the complete data ingestion pipeline:
+**Key Components:**
+1. **Docker Service**: `data-ingestion` service in `apps/docker-compose.yml`
+2. **Main Runner**: `data/pipeline/run_data_ingestion.py` - orchestrates the entire process
+3. **Ingestion Scripts**:
+   - `import_court_data.py` - Imports court data, counties, and contact information
+   - `import_ice_facilities.py` - Imports ICE detention facilities and geocodes addresses
+4. **Verification**: `verify_migration.py` - Validates schema and data completeness
+
+### Docker Integration
+
+The data ingestion system is fully integrated into the Docker Compose workflow:
+- **Service**: `data-ingestion` runs after `migration` service completes
+- **Dependencies**: Proper dependency chain: `db` → `migration` → `data-ingestion`
+- **Health Checks**: PostgreSQL health checks ensure database readiness
+- **Volume Mapping**: Maps `../data:/app/data` for access to staging files
+
+### Running Data Ingestion
+
+#### Full Integration Test
 
 ```bash
 # Clean state (recommended for testing)
@@ -484,11 +648,80 @@ docker compose -f apps/docker-compose.yml down -v
 docker compose -f apps/docker-compose.yml up data-ingestion
 ```
 
-The system will automatically:
-1. Run database migrations
-2. Import court data and ICE detention facilities
-3. Perform geocoding operations (if API keys are available)
-4. Verify all data was imported successfully
+#### Individual Script Testing
+
+```bash
+# Test court data import only
+docker compose -f apps/docker-compose.yml run --rm data-ingestion python /app/data/pipeline/3_ingestion_scripts/import_court_data.py
+
+# Test ICE facilities basic data only
+docker compose -f apps/docker-compose.yml run --rm -e SKIP_API_CALLS=true data-ingestion python /app/data/pipeline/3_ingestion_scripts/import_ice_facilities.py
+```
+
+### Data Pipeline Structure
+
+The pipeline operates in two distinct phases:
+
+**Phase 1: Basic Data Loading (No API Calls)**
+- Sets `SKIP_API_CALLS=true` environment variable
+- Imports court data and ICE facilities basic information
+- Verifies basic data with `basic_data` verification mode
+- **Expected Results**:
+  - Courts table: ~91 records
+  - Court counties table: ~2945 records
+  - District court contacts table: ~258 records
+  - ICE facilities table: ~142 records (basic data only)
+
+**Phase 2: API-Dependent Operations**
+- Only runs if Phase 1 succeeds
+- Only runs if `POSITIONSTACK_KEY` is available
+- Performs geocoding and court mapping operations
+- **Expected Results**:
+  - Normalized addresses table: Records based on API success
+  - ICE facilities with court mappings where geocoding succeeded
+
+### ICE Detention Facilities Geocoding
+
+#### Geocoding Strategy
+- **Primary**: Nominatim (OpenStreetMap) - Free, no API key required
+- **Fallback**: Positionstack API - Commercial service for better coverage
+- **Result**: Maximum geocoding success rate
+
+#### File Structure
+```
+data/static_assets/
+├── 2025_ice_detention_facilities.csv          # Main facility data
+├── 2025_ice_detention_facilities_geocoded.csv # Geocoded facility data
+└── 2025_ice_detention_facilities.xlsx         # Original Excel file (legacy)
+```
+
+#### Usage
+```bash
+# Geocode facilities (one-time or when data changes)
+cd apps/backend
+uv run --extra data-import python ../../data/pipeline/3_ingestion_scripts/geocode_csv_facilities.py
+
+# Import facilities to database
+uv run --extra data-import python ../../data/pipeline/3_ingestion_scripts/import_ice_facilities_csv.py
+```
+
+**Environment Variables:**
+- `POSITIONSTACK_KEY` (optional) - For fallback geocoding
+- `SKIP_API_CALLS=true` (optional) - Skip API calls entirely
+
+### Database Schema Integration
+
+- **Models**: Proper SQLAlchemy models for all data entities
+- **Foreign Keys**: Relationships between courts, counties, and contacts
+- **Migrations**: Alembic migrations for schema management
+- **Column Length Fixes**: Migration fixes for data compatibility
+
+### Common Issues and Resolutions
+
+**Database Type Mismatch**: Clear Docker volumes to ensure clean database state
+**Missing Dependencies**: Added `openpyxl>=0.1.0` to data-import dependencies
+**Column Length Issues**: Updated phone and location columns to varchar(255)
+**ICE Facilities Processing**: Fixed header parsing with `header=6` parameter
 
 ## Common Troubleshooting
 

@@ -8,13 +8,15 @@ from app.database import Base
 
 class EmergencyContact(Base):
     """
-    Emergency contact model representing a person to contact in case of emergency for a client
+    Emergency contact model representing a person to contact in case of emergency for a client profile
     """
 
     __tablename__ = "emergency_contacts"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    client_id: Mapped[int] = mapped_column(Integer, ForeignKey("clients.id", ondelete="CASCADE"), nullable=False)
+    client_profile_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("client_profiles.id", ondelete="CASCADE"), nullable=False
+    )
     full_name: Mapped[str] = mapped_column(String(255), nullable=False)
     relationship: Mapped[str] = mapped_column(String(50), nullable=False)
     phone_number: Mapped[str] = mapped_column(String(20), nullable=False)
@@ -26,8 +28,8 @@ class EmergencyContact(Base):
         TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
     )
 
-    # Relationship with client
-    client = orm_relationship("Client", back_populates="emergency_contacts")
+    # Relationship
+    client_profile = orm_relationship("ClientProfile", back_populates="emergency_contacts")
 
     def __repr__(self):
         return f"<EmergencyContact(id={self.id}, full_name='{self.full_name}', relationship='{self.relationship}')>"

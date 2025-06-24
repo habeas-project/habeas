@@ -7,7 +7,13 @@ from .attorney_court_admission import (
     AttorneyCourtAdmissionCreate,
     AttorneyCourtAdmissionRead,
 )
-from .client import ClientBase, ClientCreate, ClientResponse, ClientUpdate
+from .client_profile import (
+    ClientProfileBase,
+    ClientProfileCreate,
+    ClientProfileListResponse,
+    ClientProfileResponse,
+    ClientProfileUpdate,
+)
 from .court import Court, CourtCreate, CourtUpdate
 from .court_county import (
     CourtCountyBase,
@@ -45,6 +51,14 @@ from .signup import (
     ClientSignupRequest,
     ClientSignupResponse,
 )
+from .unified_signup import (
+    MultiProfileSignupRequest,
+    MultiProfileSignupResponse,
+    RoleSpecificData,
+    StepwiseSignupData,
+    UnifiedSignupRequest,
+    UnifiedSignupResponse,
+)
 
 __all__ = [
     "AdminBase",
@@ -54,10 +68,6 @@ __all__ = [
     "Attorney",
     "AttorneyCreate",
     "AttorneyUpdate",
-    "ClientBase",
-    "ClientCreate",
-    "ClientUpdate",
-    "ClientResponse",
     "EmergencyContactBase",
     "EmergencyContactCreate",
     "EmergencyContactUpdate",
@@ -90,4 +100,15 @@ __all__ = [
     "ClientInfo",
     "ClientSignupRequest",
     "ClientSignupResponse",
+    "ClientProfileBase",
+    "ClientProfileCreate",
+    "ClientProfileUpdate",
+    "ClientProfileResponse",
+    "ClientProfileListResponse",
+    "UnifiedSignupRequest",
+    "RoleSpecificData",
+    "UnifiedSignupResponse",
+    "StepwiseSignupData",
+    "MultiProfileSignupRequest",
+    "MultiProfileSignupResponse",
 ]

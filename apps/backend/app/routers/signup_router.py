@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.admin import Admin
 from app.models.attorney import Attorney
-from app.models.client import Client
+from app.models.client_profile import ClientProfile
 from app.models.user import User
 from app.schemas.signup import (
     AdminInfo,
@@ -287,11 +287,11 @@ def signup_client(
         # Note: Clients don't have email in their model, so we use first_name + last_name for uniqueness check
         # Create a unique identifier for the client based on name and birth date
         existing_client = (
-            db.query(Client)
+            db.query(ClientProfile)
             .filter(
-                Client.first_name == signup_data.first_name,
-                Client.last_name == signup_data.last_name,
-                Client.birth_date == signup_data.birth_date,
+                ClientProfile.first_name == signup_data.first_name,
+                ClientProfile.last_name == signup_data.last_name,
+                ClientProfile.birth_date == signup_data.birth_date,
             )
             .first()
         )
@@ -322,7 +322,9 @@ def signup_client(
         db.flush()  # Flush to get the user ID without committing
 
         # Create Client record linked to User
-        db_client = Client(
+        db_client = ClientProfile(
+            profile_name=f"{signup_data.first_name} {signup_data.last_name}",  # Auto-generate profile name
+            is_self=True,  # Legacy client signup assumes self-registration
             first_name=signup_data.first_name,
             last_name=signup_data.last_name,
             country_of_birth=signup_data.country_of_birth,

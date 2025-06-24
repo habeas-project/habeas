@@ -1,6 +1,5 @@
 import { Vibration } from 'react-native';
 import { SecureStorage } from './secureStorage';
-import api from '../api/client';
 import { PersonalInfo } from 'screens/PersonalInfoScreen';
 
 const EMERGENCY_STATE_KEY = '@emergency_state';
@@ -60,18 +59,19 @@ export class EmergencyHandler {
       // If we have personal info, send it to the server
       if (personalInfo) {
         try {
+          // TODO: Implement emergency API endpoint
           // Send the personal information to the server using the API client
-          await api.submitEmergencyClientInfo({
-            firstName: personalInfo.firstName || '',
-            lastName: personalInfo.lastName || '',
-            countryOfBirth: personalInfo.countryOfBirth || '',
-            nationality: personalInfo.nationality || '',
-            birthDate: personalInfo.birthDate || '',
-            alienNumber: personalInfo.alienNumber || '',
-            emergencyContacts: personalInfo.emergencyContacts || []
-          });
+          // await api.submitEmergencyClientInfo({
+          //   firstName: personalInfo.firstName || '',
+          //   lastName: personalInfo.lastName || '',
+          //   countryOfBirth: personalInfo.countryOfBirth || '',
+          //   nationality: personalInfo.nationality || '',
+          //   birthDate: personalInfo.birthDate || '',
+          //   alienNumber: personalInfo.alienNumber || '',
+          //   emergencyContacts: personalInfo.emergencyContacts || []
+          // });
 
-          console.log('Successfully sent emergency information to server');
+          console.log('Emergency activated - server submission not yet implemented');
         } catch (apiError) {
           // If server submission fails, just log it - we'll still activate emergency mode locally
           // TODO: Handle API error more gracefully - retry on an interval, etc.
