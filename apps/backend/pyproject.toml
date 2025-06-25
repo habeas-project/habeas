@@ -21,8 +21,10 @@ dependencies = [
     "phonenumbers>=8.13.1",
     "pydantic[email]>=1.10.16",
     "requests>=2.32.3",
-    "sendgrid>=6.12.4",
+    "boto3>=1.35.0",
     "twilio>=9.6.3",
+    # Legacy SendGrid (being phased out for AWS SES)
+    "sendgrid>=6.12.4",
     "celery>=5.3.4",
     "redis>=5.0.1",
 ]

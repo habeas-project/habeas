@@ -70,11 +70,11 @@ The project follows a monorepo structure with a React Native mobile application 
 - **Package Management:** uv
 - **API Documentation:** Auto-generated with Swagger/OpenAPI (built into FastAPI)
 - **External Services:**
-  - **Email:** SendGrid for professional notification delivery
+  - **Email:** AWS SES for cost-effective, scalable notification delivery
   - **SMS:** Twilio for text message notifications
   - **Geocoding:** Nominatim/OpenStreetMap for location services
 - **Key Dependencies:**
-  - `sendgrid`: Email notification delivery
+  - `boto3`: AWS SES email notification delivery
   - `twilio`: SMS notification delivery
   - `requests`: HTTP client for geocoding API calls
   - `phonenumbers`: Phone number validation and formatting
@@ -262,7 +262,7 @@ The backend implements a comprehensive service layer that encapsulates business 
 - **Preference Management**: Handle attorney notification preferences
 
 #### NotificationService (`app/services/notification_service.py`)
-- **Multi-Channel Delivery**: Email (SendGrid), SMS (Twilio), Push (framework ready)
+- **Multi-Channel Delivery**: Email (AWS SES), SMS (Twilio), Push (framework ready)
 - **Template System**: Professional emergency notification templates
 - **Preference Enforcement**: Respect attorney notification channel preferences
 - **Delivery Tracking**: Monitor notification success/failure with retry logic
@@ -277,7 +277,7 @@ The backend implements a comprehensive service layer that encapsulates business 
 
 ### External Service Integration
 
-#### Email Notifications (SendGrid)
+#### Email Notifications (AWS SES)
 - **Professional Templates**: HTML email with action buttons and emergency branding
 - **Delivery Tracking**: Message ID tracking and delivery status monitoring
 - **Error Handling**: Graceful degradation when service unavailable
@@ -301,7 +301,7 @@ The backend implements a comprehensive service layer that encapsulates business 
 2. → GeocodingService.geocode_and_determine_jurisdiction()
 3. → EmergencyService._notify_attorneys_for_court()
 4. → NotificationService.send_immediate_case_notification()
-5. → SendGrid/Twilio API calls (based on preferences)
+5. → AWS SES/Twilio API calls (based on preferences)
 ```
 
 #### Notification Scheduling

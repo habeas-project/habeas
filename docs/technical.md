@@ -220,7 +220,7 @@ The API uses an **enhanced router architecture** that provides clear separation 
    - `GET /emergency/attorneys/{attorney_id}/preferences` - Get attorney notification preferences
    - `PUT /emergency/attorneys/{attorney_id}/preferences` - Update attorney notification preferences
    - `POST /emergency/test/notifications` - Test notification service configuration
-   - `POST /emergency/test/sendgrid` - Test SendGrid email configuration
+   - `POST /emergency/test/ses` - Test AWS SES email configuration
    - `POST /emergency/test/twilio` - Test Twilio SMS configuration
    - `DELETE /attorneys/{id}/admissions/{court_id}` - Remove court admissions
 
@@ -556,7 +556,7 @@ The backend implements a comprehensive service layer that encapsulates business 
 - Integration with GeocodingService and NotificationService
 
 **NotificationService** (`app/services/notification_service.py`):
-- Multi-channel notification delivery (Email via SendGrid, SMS via Twilio, Push framework-ready)
+- Multi-channel notification delivery (Email via AWS SES, SMS via Twilio, Push framework-ready)
 - Professional emergency notification templates with HTML/text formatting
 - Attorney notification preference enforcement and channel selection
 - Delivery status tracking with retry logic and error handling
@@ -600,9 +600,15 @@ async def create_emergency_case(
 Services require environment variables for external API integration:
 
 ```bash
-# Email notifications (SendGrid)
-SENDGRID_API_KEY=your_sendgrid_api_key
-SENDGRID_FROM_EMAIL=noreply@habeas.app
+# Email notifications (AWS SES - migrated from SendGrid for cost optimization)
+AWS_ACCESS_KEY_ID=your_aws_access_key_id
+AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
+AWS_REGION=us-east-1
+SES_FROM_EMAIL=noreply@habeas.app
+
+# Legacy SendGrid (being migrated to AWS SES)
+# SENDGRID_API_KEY=your_sendgrid_api_key
+# SENDGRID_FROM_EMAIL=noreply@habeas.app
 
 # SMS notifications (Twilio)
 TWILIO_ACCOUNT_SID=your_twilio_account_sid
@@ -617,6 +623,63 @@ Services are tested with comprehensive unit tests using mocking for external dep
 - **Unit Tests**: Mock external APIs and test business logic in isolation
 - **Integration Tests**: Test service integration with database and internal dependencies
 - **Configuration Tests**: Verify external service configuration and connectivity
+
+## AWS SES Integration
+
+### Overview
+
+The project has migrated from SendGrid to AWS SES for email notifications to achieve significant cost savings and better integration with AWS infrastructure.
+
+### Benefits of AWS SES
+
+**Cost Optimization**:
+- **78-87% cost reduction** compared to SendGrid pricing
+- **$0.10 per 1,000 emails** vs SendGrid's tiered pricing
+- **62,000 free emails/month** when deployed on AWS EC2
+- No monthly minimums or setup fees
+
+**AWS Ecosystem Integration**:
+- Seamless integration with existing AWS deployment
+- CloudWatch metrics and monitoring built-in
+- IAM role-based security
+- Better suited for high-volume emergency notifications
+
+### Configuration
+
+AWS SES requires the following environment variables:
+
+```bash
+# AWS SES Configuration
+AWS_ACCESS_KEY_ID=your_aws_access_key_id
+AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
+AWS_REGION=us-east-1
+SES_FROM_EMAIL=noreply@habeas.app
+```
+
+### Production Setup
+
+**Domain Verification**:
+1. Add your domain to SES in AWS Console
+2. Verify domain ownership via DNS records
+3. Set up DKIM for email authentication
+4. Configure bounce and complaint handling
+
+**IAM Permissions**:
+The service requires `ses:SendEmail` and `ses:SendRawEmail` permissions.
+
+### Webhook Integration
+
+AWS SES provides webhook integration for:
+- **Bounce Management**: Automatic handling of bounced emails
+- **Complaint Management**: Processing of spam complaints
+- **Delivery Tracking**: Real-time delivery status updates
+
+### Migration Status
+
+**Current State**:
+- NotificationService still uses SendGrid temporarily
+- Migration to SES is Phase 7 of the emergency system implementation
+- All templates and delivery logic are SES-ready
 
 ### SQLAlchemy ORM Style
 
@@ -977,6 +1040,101 @@ A GitHub Actions workflow (`.github/workflows/test.yml`) automates backend testi
 9.  **Cleanup:** Stops and removes Docker Compose services and volumes (`docker-compose down -v --remove-orphans`).
 
 This ensures that migrations and tests are run against a clean, consistent environment on relevant code changes.
+
+## External Service Integration
+
+### AWS SES Email Service
+
+The notification system uses AWS Simple Email Service (SES) as the primary email delivery service, migrated from SendGrid for cost optimization and AWS ecosystem integration.
+
+#### AWS SES Configuration
+
+**Environment Variables:**
+```bash
+# Primary email service configuration
+USE_AWS_SES=true
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=your_aws_access_key_here
+AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key_here
+SES_FROM_EMAIL=alerts@habeas.app
+SES_CONFIGURATION_SET=habeas-production
+
+# Legacy SendGrid configuration (fallback during migration)
+SENDGRID_API_KEY=your_sendgrid_api_key_here
+SENDGRID_FROM_EMAIL=alerts@habeas.app
+```
+
+**Key Features:**
+- **Cost Optimization:** 78-87% lower costs compared to SendGrid ($0.10/1000 emails vs SendGrid's tiered pricing)
+- **AWS Integration:** Seamless integration with existing AWS infrastructure
+- **Free Tier:** 62,000 free emails/month when deployed on AWS EC2
+- **Fallback Support:** Maintains SendGrid integration during migration period
+
+#### SES Implementation Details
+
+**Service Initialization:**
+```python
+# AWS SES client initialization with environment-based configuration
+self.ses_client = boto3.client(
+    "ses",
+    aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+    aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+    region_name=aws_region,
+)
+```
+
+**Email Delivery Methods:**
+- **Simple Email:** For basic notifications using `send_email()` API
+- **Template Support:** Rich HTML templates with variable substitution
+- **Error Handling:** Comprehensive error handling with automatic fallback to SendGrid
+- **Delivery Tracking:** Message ID tracking for delivery status monitoring
+
+**Testing Endpoints:**
+- `POST /emergency/test/ses` - Test AWS SES email delivery with sample emergency notification
+- `GET /emergency/notifications/test-configuration` - Verify SES configuration and connectivity
+
+#### Production Deployment Considerations
+
+**Domain Verification:**
+1. Verify sending domain in AWS SES console
+2. Configure DKIM authentication for improved deliverability
+3. Set up SPF and DMARC records for domain reputation
+
+**Bounce and Complaint Handling:**
+- Configure SES to send bounce/complaint notifications to SNS
+- Implement webhook handlers for bounce/complaint processing
+- Automatic suppression list management for failed addresses
+
+**Monitoring and Alerting:**
+- CloudWatch metrics integration for email sending statistics
+- Delivery rate monitoring and alerting
+- Cost monitoring for usage optimization
+
+### Background Job System
+
+The application uses Celery with Redis as the message broker for handling asynchronous notification tasks.
+
+#### Celery Configuration
+
+**Core Components:**
+- **Celery Worker:** Processes background tasks (`run_celery_worker.py`)
+- **Celery Beat:** Schedules periodic tasks (`run_celery_beat.py`)
+- **Redis Broker:** Message queue and result backend
+- **Flower Monitoring:** Web-based task monitoring interface
+
+**Environment Variables:**
+```bash
+CELERY_BROKER_URL=redis://localhost:6379/0
+CELERY_RESULT_BACKEND=redis://localhost:6379/0
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_DB=0
+```
+
+**Key Background Tasks:**
+- **Escalated Notifications:** 1-hour follow-up for unaccepted cases
+- **Daily Digest:** Morning summary of unassigned cases
+- **Case-Specific Scheduling:** Automatic escalation scheduling on case creation
 
 ## Testing
 

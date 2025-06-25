@@ -1,3 +1,5 @@
+import os
+
 from datetime import datetime
 from typing import List
 
@@ -443,6 +445,54 @@ def test_notification_configuration():
         return {"success": True, "configuration": config_status, "message": "Notification service configuration tested"}
     except Exception as e:
         return {"success": False, "error": str(e), "message": "Failed to test notification configuration"}
+
+
+@router.post("/test/ses")
+def test_ses_email():
+    """Test AWS SES email delivery (development/testing only)"""
+    try:
+        from app.services.notification_service import NotificationService
+
+        notification_service = NotificationService()
+
+        # Check if SES is configured
+        if not notification_service.use_ses or not notification_service.ses_client:
+            return {
+                "success": False,
+                "error": "AWS SES not configured or not enabled",
+                "message": "Set USE_AWS_SES=true and configure AWS credentials",
+            }
+
+        # Test email data
+        test_template_data = {
+            "case_location": "Los Angeles, CA",
+            "court_name": "Central District of California",
+            "case_id": "TEST123",
+            "created_at": "2025-01-01 12:00:00",
+            "case_url": "https://habeas.app/cases/TEST123",
+        }
+
+        # Send test email
+        result = notification_service._send_email_ses(
+            attorney=type(
+                "TestAttorney", (), {"email": os.getenv("TEST_EMAIL", "test@example.com"), "full_name": "Test Attorney"}
+            )(),
+            template=notification_service.templates["immediate_case"],
+            template_data=test_template_data,
+        )
+
+        if result.status == "sent":
+            return {
+                "success": True,
+                "message": "AWS SES test email sent successfully",
+                "message_id": result.message_id,
+                "to_email": os.getenv("TEST_EMAIL", "test@example.com"),
+            }
+        else:
+            return {"success": False, "error": result.error_message, "message": "Failed to send AWS SES test email"}
+
+    except Exception as e:
+        return {"success": False, "error": str(e), "message": "Failed to test AWS SES"}
 
 
 # Background Job Management Endpoints

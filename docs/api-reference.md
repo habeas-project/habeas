@@ -72,7 +72,7 @@ Authorization: Bearer <jwt_token>
 
 ### 8. Notification Testing
 - `POST /emergency/test/notifications` - Test notification configuration
-- `POST /emergency/test/sendgrid` - Test SendGrid configuration
+- `POST /emergency/test/ses` - Test AWS SES configuration
 - `POST /emergency/test/twilio` - Test Twilio configuration
 
 ---
@@ -529,9 +529,9 @@ All endpoints return consistent error responses:
 **Response:**
 ```json
 {
-  "sendgrid_configured": true,
-  "sendgrid_test_result": "success",
-  "sendgrid_message_id": "test-email-123",
+  "ses_configured": true,
+"ses_test_result": "success",
+"ses_message_id": "test-email-123",
   "twilio_configured": true,
   "twilio_test_result": "success",
   "twilio_message_sid": "test-sms-456",

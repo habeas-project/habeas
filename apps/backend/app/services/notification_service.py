@@ -2,7 +2,7 @@
 Notification service for sending multi-channel notifications to attorneys.
 
 This service handles:
-- Email notifications via SendGrid
+- Email notifications via AWS SES (migrated from SendGrid for cost optimization)
 - SMS notifications via Twilio
 - Push notifications (placeholder for future implementation)
 - Notification preference enforcement
@@ -14,8 +14,11 @@ import os
 
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
+import boto3
+
+from botocore.exceptions import BotoCoreError, ClientError
 from pydantic import BaseModel
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
@@ -79,14 +82,38 @@ class NotificationService:
 
     def __init__(self):
         """Initialize notification service with external service clients"""
-        # SendGrid configuration
+        # Email service configuration (migrated to AWS SES)
+        self.use_ses = os.getenv("USE_AWS_SES", "true").lower() == "true"
+
+        # AWS SES configuration
+        self.ses_client = None
+        self.ses_from_email = os.getenv("SES_FROM_EMAIL", "alerts@habeas.app")
+
+        if self.use_ses:
+            try:
+                # Initialize AWS SES client
+                aws_region = os.getenv("AWS_REGION", "us-east-1")
+
+                # Use environment variables or IAM role for credentials
+                self.ses_client = boto3.client(
+                    "ses",
+                    aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+                    aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+                    region_name=aws_region,
+                )
+                logger.info("AWS SES client initialized successfully")
+            except Exception as e:
+                logger.error(f"Failed to initialize AWS SES client: {e}")
+
+        # Legacy SendGrid configuration (fallback during migration)
         self.sendgrid_api_key = os.getenv("SENDGRID_API_KEY")
         self.sendgrid_from_email = os.getenv("SENDGRID_FROM_EMAIL", "alerts@habeas.app")
         self.sendgrid_client = None
 
-        if self.sendgrid_api_key:
+        if self.sendgrid_api_key and not self.use_ses:
             try:
                 self.sendgrid_client = SendGridAPIClient(api_key=self.sendgrid_api_key)
+                logger.info("SendGrid client initialized as fallback")
             except Exception as e:
                 logger.error(f"Failed to initialize SendGrid client: {e}")
 
@@ -346,14 +373,71 @@ class NotificationService:
     def _send_email(
         self, attorney: Attorney, template: NotificationTemplate, template_data: Dict[str, str]
     ) -> NotificationResult:
-        """Send email notification via SendGrid"""
-        if not self.sendgrid_client:
+        """Send email notification via AWS SES or SendGrid fallback"""
+        if self.use_ses and self.ses_client:
+            return self._send_email_ses(attorney, template, template_data)
+        elif self.sendgrid_client:
+            return self._send_email_sendgrid(attorney, template, template_data)
+        else:
             return NotificationResult(
                 channel=NotificationChannel.EMAIL,
                 status=NotificationStatus.FAILED,
-                error_message="SendGrid client not configured",
+                error_message="No email client configured (SES or SendGrid)",
             )
 
+    def _send_email_ses(
+        self, attorney: Attorney, template: NotificationTemplate, template_data: Dict[str, str]
+    ) -> NotificationResult:
+        """Send email notification via AWS SES"""
+        try:
+            # Format template with data
+            subject = template.subject.format(**template_data)
+            text_content = template.message.format(**template_data)
+            html_content = template.html_content.format(**template_data) if template.html_content else None
+
+            # Prepare email destination
+            destination = {"ToAddresses": [attorney.email]}
+
+            # Prepare message content
+            message: Dict[str, Any] = {
+                "Subject": {"Data": subject, "Charset": "UTF-8"},
+                "Body": {"Text": {"Data": text_content, "Charset": "UTF-8"}},
+            }
+
+            if html_content:
+                message["Body"]["Html"] = {"Data": html_content, "Charset": "UTF-8"}
+
+            # Send email via SES
+            response = self.ses_client.send_email(
+                Source=self.ses_from_email,
+                Destination=destination,
+                Message=message,
+            )
+
+            return NotificationResult(
+                channel=NotificationChannel.EMAIL,
+                status=NotificationStatus.SENT,
+                message_id=response.get("MessageId"),
+                sent_at=datetime.utcnow(),
+            )
+
+        except (ClientError, BotoCoreError) as e:
+            logger.error(f"AWS SES email failed for attorney {attorney.id}: {e}")
+            return NotificationResult(
+                channel=NotificationChannel.EMAIL,
+                status=NotificationStatus.FAILED,
+                error_message=f"SES error: {str(e)}",
+            )
+        except Exception as e:
+            logger.error(f"Email sending failed for attorney {attorney.id}: {e}")
+            return NotificationResult(
+                channel=NotificationChannel.EMAIL, status=NotificationStatus.FAILED, error_message=str(e)
+            )
+
+    def _send_email_sendgrid(
+        self, attorney: Attorney, template: NotificationTemplate, template_data: Dict[str, str]
+    ) -> NotificationResult:
+        """Send email notification via SendGrid (legacy fallback)"""
         try:
             # Format template with data
             subject = template.subject.format(**template_data)
@@ -457,7 +541,23 @@ class NotificationService:
         """Test notification service configuration"""
         results = {}
 
-        # Test SendGrid
+        # Test AWS SES
+        if self.use_ses:
+            results["ses_configured"] = bool(self.ses_client)
+            if self.ses_client:
+                try:
+                    # Test SES connectivity by getting sending quota
+                    self.ses_client.get_send_quota()
+                    results["ses_valid"] = True
+                except Exception:
+                    results["ses_valid"] = False
+            else:
+                results["ses_valid"] = False
+        else:
+            results["ses_configured"] = False
+            results["ses_valid"] = False
+
+        # Test SendGrid (legacy fallback)
         results["sendgrid_configured"] = bool(self.sendgrid_client)
         if self.sendgrid_client:
             try:
