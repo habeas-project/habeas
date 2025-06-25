@@ -13,6 +13,8 @@ import ClientSignupScreen from './screens/ClientSignupScreen';
 import PersonalInfoScreen from './screens/PersonalInfoScreen';
 import UnifiedSignupScreen from './screens/UnifiedSignupScreen';
 import EmergencySetupScreen from './screens/EmergencySetupScreen';
+import AttorneyDashboardScreen from './screens/AttorneyDashboardScreen';
+import AvailableCasesScreen from './screens/AvailableCasesScreen';
 
 export type RootStackParamList = {
     Welcome: undefined;
@@ -23,6 +25,14 @@ export type RootStackParamList = {
     PersonalInfo: undefined;
     UnifiedSignup: undefined;
     EmergencySetup: undefined;
+
+    // Attorney-specific screens
+    AttorneyDashboard: undefined;
+    AvailableCases: { courtId?: number };
+    CaseDetail: { caseId: number };
+    NotificationPreferences: undefined;
+    DailyDigest: undefined;
+    AttorneyProfile: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -72,6 +82,16 @@ export default function App() {
                             name="EmergencySetup"
                             component={EmergencySetupScreen}
                             options={{ title: 'Emergency Setup' }}
+                        />
+                        <Stack.Screen
+                            name="AttorneyDashboard"
+                            component={AttorneyDashboardScreen}
+                            options={{ title: 'Attorney Dashboard' }}
+                        />
+                        <Stack.Screen
+                            name="AvailableCases"
+                            component={AvailableCasesScreen}
+                            options={{ title: 'Available Cases' }}
                         />
                     </Stack.Navigator>
                 </NavigationContainer>

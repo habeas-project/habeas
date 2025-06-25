@@ -17,7 +17,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     const [emergencyActive, setEmergencyActive] = useState(false);
     const [activeCaseId, setActiveCaseId] = useState<number | undefined>(undefined);
     const [showLovedOneModal, setShowLovedOneModal] = useState(false);
-    const { isAuthenticated, user, logout, emergencyStatus, checkEmergencyEligibility, refreshEmergencyStatus } = useAuth();
+    const { isAuthenticated, user, logout, emergencyStatus, checkEmergencyEligibility, refreshEmergencyStatus, isAttorney } = useAuth();
 
     // Check if emergency is already active on component mount
     useEffect(() => {
@@ -107,8 +107,24 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
                     )}
                 </View>
 
-                {/* Emergency Section - Only show if authenticated */}
-                {isAuthenticated && (
+                {/* Attorney Dashboard Section - Only show for attorneys */}
+                {isAuthenticated && isAttorney() && (
+                    <View style={styles.attorneySection}>
+                        <Text style={styles.attorneyTitle}>⚖️ Attorney Dashboard</Text>
+                        <Text style={styles.attorneyDescription}>
+                            Manage your emergency cases and notification preferences
+                        </Text>
+                        <TouchableOpacity
+                            style={styles.attorneyButton}
+                            onPress={() => navigation.navigate('AttorneyDashboard')}
+                        >
+                            <Text style={styles.attorneyButtonText}>Open Attorney Dashboard</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+
+                {/* Emergency Section - Only show if authenticated and not attorney */}
+                {isAuthenticated && !isAttorney() && (
                     <View style={styles.emergencySection}>
                         <View style={styles.emergencyHeader}>
                             <Text style={styles.emergencyTitle}>
@@ -284,6 +300,40 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         letterSpacing: -0.5,
         marginBottom: 16,
+    },
+    attorneyButton: {
+        backgroundColor: '#1e40af',
+        borderRadius: 8,
+        paddingHorizontal: 24,
+        paddingVertical: 12,
+    },
+    attorneyButtonText: {
+        color: '#ffffff',
+        fontSize: 16,
+        fontWeight: '600',
+        textAlign: 'center',
+    },
+    attorneyDescription: {
+        color: '#1e40af',
+        fontSize: 14,
+        lineHeight: 20,
+        marginBottom: 16,
+        textAlign: 'center',
+    },
+    attorneySection: {
+        backgroundColor: '#f0f9ff',
+        borderColor: '#bfdbfe',
+        borderRadius: 16,
+        borderWidth: 1,
+        marginBottom: 32,
+        padding: 20,
+    },
+    attorneyTitle: {
+        color: '#1e40af',
+        fontSize: 18,
+        fontWeight: '600',
+        marginBottom: 8,
+        textAlign: 'center',
     },
     authButton: {
         backgroundColor: '#c00',

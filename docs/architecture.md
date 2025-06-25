@@ -60,6 +60,7 @@ The project follows a monorepo structure with a React Native mobile application 
 - **Key Dependencies:**
   - `expo-location`: GPS location services with permission management
   - `@react-native-async-storage/async-storage`: Persistent authentication storage
+  - `@react-navigation/native`: Type-safe navigation with stack and tab routing
   - Navigation and UI components (React Navigation, React Native Elements)
 
 ### Backend
@@ -69,6 +70,7 @@ The project follows a monorepo structure with a React Native mobile application 
 - **ORM:** SQLAlchemy with SQLModel patterns
 - **Package Management:** uv
 - **API Documentation:** Auto-generated with Swagger/OpenAPI (built into FastAPI)
+- **Background Jobs:** Celery with Redis message broker
 - **External Services:**
   - **Email:** AWS SES for cost-effective, scalable notification delivery
   - **SMS:** Twilio for text message notifications
@@ -76,6 +78,7 @@ The project follows a monorepo structure with a React Native mobile application 
 - **Key Dependencies:**
   - `boto3`: AWS SES email notification delivery
   - `twilio`: SMS notification delivery
+  - `celery[redis]`: Background task processing with Redis broker
   - `requests`: HTTP client for geocoding API calls
   - `phonenumbers`: Phone number validation and formatting
   - `pydantic[email]`: Email validation
@@ -150,11 +153,13 @@ User (primary_role: attorney|client_helper|admin)
 - **ClientProfile Integration**: References `client_profile_id` instead of `client_id`
 - **Cascade Support**: Proper deletion cascading for data integrity
 
-**Emergency Case System**:
+**Emergency Case System** (Operational):
 - **EmergencyCase Model**: Tracks detention cases with GPS coordinates and court assignments
 - **AttorneyNotificationPreference Model**: Multi-channel notification preferences (email, SMS, push)
 - **Court Integration**: Leverages existing Court and CourtCounty models for jurisdiction mapping
 - **Location Services**: GPS coordinate capture with geocoding to court jurisdictions
+- **Background Jobs**: Celery/Redis system for escalated notifications and daily digest
+- **Notification Delivery**: Multi-channel system (email/SMS/push) with AWS SES and Twilio
 
 ### Architecture Benefits
 
@@ -198,14 +203,21 @@ Success → Return to HomeScreen
 
 ### Screen Architecture
 
+#### Client-Facing Screens
 - **UnifiedSignupScreen**: 4-step progressive disclosure signup process
 - **HomeScreen**: Simplified with single "Get Help" entry point + Emergency Slider
 - **Profile Management**: Future screens for managing multiple client profiles
 - **Emergency Components**: Emergency slider, status display, and setup screens
 
+#### Attorney-Facing Screens (Phase 9B Complete)
+- **AttorneyDashboardScreen**: Professional dashboard with case statistics and quick actions
+- **AvailableCasesScreen**: Complete case browsing interface with filtering and acceptance workflow
+- **Attorney Navigation**: Role-based routing with attorney-specific navigation stack
+- **CaseDetailModal**: Component structure for detailed case viewing (Phase 9C)
+
 ### Emergency System Architecture
 
-The mobile app implements a comprehensive emergency response system with conditional display and multi-scenario support:
+The mobile app implements a **complete and operational** emergency response system with conditional display, multi-scenario support, and attorney notification workflow:
 
 ```
 HomeScreen (Authenticated User)
@@ -247,6 +259,15 @@ Real-time Updates: "Attorney accepted case: [Name]"
 - **Geocoding**: Backend reverse geocoding via Nominatim/OpenStreetMap
 - **Court Mapping**: GPS coordinates to federal district court jurisdiction
 - **Fallback Flow**: Manual location entry if GPS unavailable
+
+#### Attorney Interface Integration (Phase 9B Complete)
+
+- **Role Detection**: AuthContext automatically detects attorney vs client users
+- **Attorney Dashboard**: Professional mobile interface with case statistics and navigation
+- **Case Management**: Complete case browsing with urgency indicators and filtering
+- **Case Acceptance**: Confirmation dialogs and success feedback workflow
+- **Professional UI**: Attorney-focused design optimized for mobile devices
+- **Mock Data Integration**: Realistic test data aligned with backend API structure
 
 ## Service Layer Architecture
 
@@ -302,14 +323,47 @@ The backend implements a comprehensive service layer that encapsulates business 
 3. → EmergencyService._notify_attorneys_for_court()
 4. → NotificationService.send_immediate_case_notification()
 5. → AWS SES/Twilio API calls (based on preferences)
+6. → Schedule background jobs for escalated notifications
 ```
 
-#### Notification Scheduling
+#### Notification Scheduling (Celery/Redis Background Jobs)
 ```
-1. Immediate: T+0 (case creation)
-2. Escalated: T+1 hour (EmergencyService.send_escalated_notifications())
-3. Daily Digest: Morning (EmergencyService.send_daily_digest())
+1. Immediate: T+0 (case creation) - Direct service call
+2. Escalated: T+1 hour - Celery scheduled task
+3. Daily Digest: Daily at configured time - Celery beat scheduled task
 ```
+
+## Background Job System Architecture
+
+The system implements a comprehensive background job infrastructure using **Celery** with **Redis** as the message broker for scheduled emergency notifications:
+
+### Background Job Components
+
+#### Celery Configuration (`apps/backend/app/celery_app.py`)
+- **Worker Process**: Handles background task execution
+- **Beat Scheduler**: Manages periodic task scheduling
+- **Redis Integration**: Message broker and result backend
+- **Task Monitoring**: Flower web interface for job monitoring
+
+#### Background Tasks (`apps/backend/app/tasks.py`)
+- **`send_escalated_notifications()`**: 1-hour follow-up for unaccepted cases
+- **`send_daily_digest()`**: Daily summary of unassigned cases to all attorneys
+- **Retry Logic**: Automatic retry on failure with exponential backoff
+- **Error Handling**: Comprehensive logging and notification on persistent failures
+
+#### Docker Integration
+- **Celery Worker**: `docker-compose.yml` service for task execution
+- **Celery Beat**: Separate service for scheduled task management
+- **Redis Service**: Message broker with persistence and monitoring
+- **Flower Monitor**: Web interface for job monitoring and management
+
+### Background Job Workflow
+
+1. **Emergency Case Creation**: Immediate notifications sent via direct service calls
+2. **Escalated Scheduling**: 1-hour task scheduled via `celery_app.send_task()`
+3. **Daily Digest Scheduling**: Configured via Celery beat for daily execution
+4. **Task Execution**: Workers process jobs asynchronously with retry logic
+5. **Monitoring**: Flower web interface provides real-time job status and metrics
 
 ## Testing Architecture
 

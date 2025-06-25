@@ -202,6 +202,84 @@ export interface CourtJurisdictionResponse {
   message: string;
 }
 
+// Attorney case management interfaces
+export interface AvailableCaseResponse {
+  case_id: number;
+  case_type: 'self' | 'loved_one';
+  location_description: string;
+  court_name: string;
+  created_at: string;
+  urgency_level: 'urgent' | 'high' | 'medium' | 'low';
+}
+
+export interface AttorneyCaseAcceptanceRequest {
+  message?: string;
+}
+
+export interface AttorneyCaseAcceptanceResponse {
+  success: boolean;
+  message: string;
+  case_id: number;
+  client_contact_info: {
+    client_info: {
+      first_name: string;
+      last_name: string;
+      phone_number?: string;
+      email?: string;
+    };
+    emergency_contacts: Array<{
+      name: string;
+      relationship: string;
+      phone: string;
+      email?: string;
+    }>;
+    case_notes?: string;
+  };
+}
+
+export interface DetailedCaseResponse {
+  case_id: number;
+  case_type: 'self' | 'loved_one';
+  status: 'active' | 'attorney_assigned' | 'resolved' | 'deactivated';
+  created_at: string;
+  updated_at: string;
+  urgency_level: 'urgent' | 'high' | 'medium' | 'low';
+  detention_location: {
+    description: string;
+    city?: string;
+    state?: string;
+    latitude?: number;
+    longitude?: number;
+  };
+  court_info: {
+    court_name: string;
+    court_abbreviation: string;
+    district_court_contact?: {
+      phone?: string;
+      email?: string;
+    };
+  };
+  client_info: {
+    first_name: string;
+    last_name: string;
+    case_type: 'self' | 'loved_one';
+  };
+  time_since_created: string;
+  attorneys_notified_count: number;
+  case_notes?: string;
+  // Full contact info only available after case acceptance
+  full_contact_info?: {
+    phone_number?: string;
+    email?: string;
+    emergency_contacts?: Array<{
+      name: string;
+      relationship: string;
+      phone: string;
+      email?: string;
+    }>;
+  };
+}
+
 // --- Smart Configuration from Environment Variables ---
 
 // Function to detect the best API base URL
@@ -672,5 +750,102 @@ export const getCurrentLocation = async (): Promise<LocationData | null> => {
   } catch (error) {
     console.error('Failed to get current location:', error);
     return null;
+  }
+};
+
+// --- Attorney Case Management API Methods ---
+
+/**
+ * Get available emergency cases for an attorney
+ */
+export const getAvailableCases = async (
+  attorneyId: number,
+  courtId?: number
+): Promise<AvailableCaseResponse[]> => {
+  try {
+    const url = courtId
+      ? `/emergency/cases/available/${courtId}?attorney_id=${attorneyId}`
+      : `/emergency/cases/unassigned?attorney_id=${attorneyId}`;
+
+    const response = await axiosInstance.get(url);
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch available cases:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get detailed information about a specific case
+ */
+export const getCaseDetails = async (caseId: number): Promise<DetailedCaseResponse> => {
+  try {
+    // Note: This endpoint might need to be created on the backend
+    // For now, we'll use the status endpoint and map the response
+    const response = await axiosInstance.get(`/emergency/cases/${caseId}/status`);
+    const status = response.data;
+
+    // Map the status response to detailed case response format
+    // Calculate urgency level based on creation time
+    const createdAt = new Date(status.created_at || new Date());
+    const hoursElapsed = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60);
+
+    let urgencyLevel: 'urgent' | 'high' | 'medium' | 'low';
+    if (hoursElapsed < 1) urgencyLevel = 'urgent';
+    else if (hoursElapsed < 6) urgencyLevel = 'high';
+    else if (hoursElapsed < 24) urgencyLevel = 'medium';
+    else urgencyLevel = 'low';
+
+    const timeAgo = hoursElapsed < 1
+      ? `${Math.round(hoursElapsed * 60)} minutes ago`
+      : `${Math.round(hoursElapsed)} hours ago`;
+
+    // This is a mock response structure - actual backend integration would need
+    // the case details endpoint to be implemented
+    return {
+      case_id: status.case_id,
+      case_type: 'self', // Would come from backend
+      status: status.status,
+      created_at: status.created_at || new Date().toISOString(),
+      updated_at: status.last_updated,
+      urgency_level: urgencyLevel,
+      detention_location: {
+        description: 'Detention facility details', // Would come from backend
+      },
+      court_info: {
+        court_name: status.assigned_court_name || 'Unknown Court',
+        court_abbreviation: 'TBD',
+      },
+      client_info: {
+        first_name: 'Client', // Would come from backend
+        last_name: 'Name',
+        case_type: 'self',
+      },
+      time_since_created: timeAgo,
+      attorneys_notified_count: 0, // Would come from backend
+    };
+  } catch (error) {
+    console.error('Failed to fetch case details:', error);
+    throw error;
+  }
+};
+
+/**
+ * Accept an emergency case as an attorney
+ */
+export const acceptCase = async (
+  caseId: number,
+  attorneyId: number,
+  request: AttorneyCaseAcceptanceRequest
+): Promise<AttorneyCaseAcceptanceResponse> => {
+  try {
+    const response = await axiosInstance.post(
+      `/emergency/cases/${caseId}/accept?attorney_id=${attorneyId}`,
+      request
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Failed to accept case:', error);
+    throw error;
   }
 };

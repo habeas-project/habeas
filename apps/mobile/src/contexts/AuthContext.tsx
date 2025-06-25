@@ -40,6 +40,12 @@ export interface AuthContextType {
     emergencyStatus: EmergencyStatusResponse | null;
     emergencyStatusLoading: boolean;
 
+    // Role detection methods
+    isAttorney: () => boolean;
+    isClient: () => boolean;
+    isAdmin: () => boolean;
+    getUserRole: () => 'attorney' | 'client_helper' | 'admin' | null;
+
     // Authentication methods
     login: (email: string, password: string) => Promise<boolean>;
     logout: () => Promise<void>;
@@ -126,12 +132,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                     expires_at: Date.now() + (3600 * 1000), // 1 hour from now
                 };
 
-                // Generate mock user data
+                // Generate mock user data - determine role based on email
+                const isAttorney = email.toLowerCase().includes('attorney') || email.toLowerCase().includes('lawyer');
+                const role = isAttorney ? 'attorney' : 'client_helper';
+
                 const mockUser: UserData = {
                     id: Math.floor(Math.random() * 1000), // Mock user ID
                     email,
-                    primary_role: 'client_helper',
-                    user_type: 'client_helper',
+                    primary_role: role,
+                    user_type: role,
                     is_active: true,
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString(),
@@ -247,6 +256,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         token,
         emergencyStatus,
         emergencyStatusLoading,
+        isAttorney: () => user?.primary_role === 'attorney',
+        isClient: () => user?.primary_role === 'client_helper',
+        isAdmin: () => user?.primary_role === 'admin',
+        getUserRole: () => user?.primary_role as 'attorney' | 'client_helper' | 'admin' | null,
         login,
         logout,
         refreshAuth,
