@@ -12,7 +12,7 @@ import {
     Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { useAuth } from '../contexts/AuthContext';
@@ -24,8 +24,6 @@ type AvailableCasesNavigationProp = NativeStackNavigationProp<
     RootStackParamList,
     'AvailableCases'
 >;
-
-type AvailableCasesRouteProp = RouteProp<RootStackParamList, 'AvailableCases'>;
 
 // Case interfaces
 interface EmergencyCase {
@@ -61,7 +59,6 @@ interface CaseFilters {
 
 const AvailableCasesScreen: React.FC = () => {
     const navigation = useNavigation<AvailableCasesNavigationProp>();
-    const route = useRoute<AvailableCasesRouteProp>();
     const { isAttorney } = useAuth();
 
     const [cases, setCases] = useState<EmergencyCase[]>([]);

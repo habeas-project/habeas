@@ -15,6 +15,8 @@ import UnifiedSignupScreen from './screens/UnifiedSignupScreen';
 import EmergencySetupScreen from './screens/EmergencySetupScreen';
 import AttorneyDashboardScreen from './screens/AttorneyDashboardScreen';
 import AvailableCasesScreen from './screens/AvailableCasesScreen';
+import NotificationPreferencesScreen from './screens/NotificationPreferencesScreen';
+import DailyDigestScreen from './screens/DailyDigestScreen';
 
 export type RootStackParamList = {
     Welcome: undefined;
@@ -92,6 +94,16 @@ export default function App() {
                             name="AvailableCases"
                             component={AvailableCasesScreen}
                             options={{ title: 'Available Cases' }}
+                        />
+                        <Stack.Screen
+                            name="NotificationPreferences"
+                            component={NotificationPreferencesScreen}
+                            options={{ title: 'Notification Preferences' }}
+                        />
+                        <Stack.Screen
+                            name="DailyDigest"
+                            component={DailyDigestScreen}
+                            options={{ title: 'Daily Digest' }}
                         />
                     </Stack.Navigator>
                 </NavigationContainer>

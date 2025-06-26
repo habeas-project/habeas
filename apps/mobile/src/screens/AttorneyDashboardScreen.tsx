@@ -101,11 +101,11 @@ const AttorneyDashboardScreen: React.FC = () => {
     };
 
     const navigateToNotificationPreferences = (): void => {
-        Alert.alert('Coming Soon', 'Notification Preferences screen will be implemented next.');
+        navigation.navigate('NotificationPreferences');
     };
 
     const navigateToDailyDigest = (): void => {
-        Alert.alert('Coming Soon', 'Daily Digest screen will be implemented next.');
+        navigation.navigate('DailyDigest');
     };
 
     const navigateToProfile = (): void => {

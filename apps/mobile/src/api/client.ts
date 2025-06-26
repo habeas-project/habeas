@@ -280,6 +280,46 @@ export interface DetailedCaseResponse {
   };
 }
 
+// --- Attorney Notification Preferences Interfaces ---
+
+export interface AttorneyNotificationPreferencesRequest {
+  email_enabled: boolean;
+  sms_enabled: boolean;
+  push_enabled: boolean;
+  sms_phone_number?: string;
+  daily_digest_enabled: boolean;
+  escalated_notifications_enabled: boolean;
+}
+
+export interface AttorneyNotificationPreferencesResponse {
+  attorney_id: number;
+  email_enabled: boolean;
+  sms_enabled: boolean;
+  push_enabled: boolean;
+  sms_phone_number?: string;
+  daily_digest_enabled: boolean;
+  escalated_notifications_enabled: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// --- Daily Digest Interfaces ---
+
+export interface CourtCoverageStats {
+  court_id: number;
+  court_name: string;
+  total_attorneys: number;
+  active_cases: number;
+  unassigned_cases: number;
+}
+
+export interface DailyDigestResponse {
+  unassigned_cases: AvailableCaseResponse[];
+  court_coverage_stats: { [courtId: string]: CourtCoverageStats };
+  total_unassigned: number;
+  digest_date: string;
+}
+
 // --- Smart Configuration from Environment Variables ---
 
 // Function to detect the best API base URL
@@ -846,6 +886,70 @@ export const acceptCase = async (
     return response.data;
   } catch (error) {
     console.error('Failed to accept case:', error);
+    throw error;
+  }
+};
+
+// --- Attorney Notification Preferences API Methods ---
+
+/**
+ * Get attorney notification preferences
+ */
+export const getAttorneyNotificationPreferences = async (
+  attorneyId: number
+): Promise<AttorneyNotificationPreferencesResponse> => {
+  try {
+    const response = await axiosInstance.get(`/emergency/attorneys/${attorneyId}/preferences`);
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch attorney notification preferences:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update attorney notification preferences
+ */
+export const updateAttorneyNotificationPreferences = async (
+  attorneyId: number,
+  preferences: AttorneyNotificationPreferencesRequest
+): Promise<AttorneyNotificationPreferencesResponse> => {
+  try {
+    const response = await axiosInstance.put(
+      `/emergency/attorneys/${attorneyId}/preferences`,
+      preferences
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Failed to update attorney notification preferences:', error);
+    throw error;
+  }
+};
+
+// --- Daily Digest API Methods ---
+
+/**
+ * Get daily digest of all unassigned cases across all courts
+ */
+export const getDailyDigest = async (): Promise<DailyDigestResponse> => {
+  try {
+    const response = await axiosInstance.get('/emergency/daily-digest');
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch daily digest:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get all unassigned cases without court coverage statistics
+ */
+export const getAllUnassignedCases = async (): Promise<AvailableCaseResponse[]> => {
+  try {
+    const response = await axiosInstance.get('/emergency/cases/unassigned');
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch unassigned cases:', error);
     throw error;
   }
 };

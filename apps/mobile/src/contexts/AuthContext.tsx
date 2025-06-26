@@ -17,6 +17,10 @@ export interface UserData {
     is_active: boolean;
     created_at: string;
     updated_at: string;
+    // Role-specific IDs
+    attorney_id?: number;
+    client_helper_id?: number;
+    admin_id?: number;
 }
 
 // Mock authentication token interface
@@ -135,15 +139,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 // Generate mock user data - determine role based on email
                 const isAttorney = email.toLowerCase().includes('attorney') || email.toLowerCase().includes('lawyer');
                 const role = isAttorney ? 'attorney' : 'client_helper';
+                const userId = Math.floor(Math.random() * 1000); // Mock user ID
 
                 const mockUser: UserData = {
-                    id: Math.floor(Math.random() * 1000), // Mock user ID
+                    id: userId,
                     email,
                     primary_role: role,
                     user_type: role,
                     is_active: true,
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString(),
+                    // Add role-specific IDs for mock authentication
+                    attorney_id: isAttorney ? userId : undefined,
+                    client_helper_id: !isAttorney ? userId : undefined,
                 };
 
                 // Store authentication data
