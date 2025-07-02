@@ -11,6 +11,10 @@ import {
   // MockAuthApi removed as it's not generated
 } from './generated';
 import axios from 'axios';
+import { logger, LogCategory } from '../utils/logger';
+
+// Track request metadata using a Map to avoid axios type conflicts
+const requestMetadata = new Map<string, { requestId: string; startTime: number }>();
 
 // --- Interfaces for API Data ---
 
@@ -338,8 +342,8 @@ function getApiBaseUrl(): string {
 
   // 3. Development warning - configuration should be provided
   if (__DEV__) {
-    console.warn('⚠️  No API_BASE_URL configured. Using localhost fallback.');
-    console.warn('💡 For WSL testing, run: ./temp/update_wsl_ip.sh to configure proper IP');
+    logger.warn(LogCategory.API, 'No API_BASE_URL configured. Using localhost fallback.');
+    logger.warn(LogCategory.API, 'For WSL testing, run: ./temp/update_wsl_ip.sh to configure proper IP');
     return 'http://localhost:8000';
   }
 
@@ -356,7 +360,10 @@ function getAuthMode(): string {
 const apiBaseUrl = getApiBaseUrl();
 const authMode = getAuthMode();
 
-console.log(`API Config: BaseURL=${apiBaseUrl}, AuthMode=${authMode}`); // For debugging
+logger.info(LogCategory.API, 'API Configuration initialized', {
+  baseUrl: apiBaseUrl,
+  authMode: authMode
+});
 
 // --- Base Configuration ---
 
@@ -369,7 +376,87 @@ const baseConfiguration = new Configuration({
 // Create an axios instance configured with the base URL
 const axiosInstance = axios.create({
   baseURL: apiBaseUrl,
+  timeout: 30000,
 });
+
+// Add request interceptor for comprehensive logging
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const requestId = Math.random().toString(36).substr(2, 9);
+    const startTime = performance.now();
+    const requestKey = `${config.method}_${config.url}_${Date.now()}`;
+
+    // Store metadata in our Map
+    requestMetadata.set(requestKey, { requestId, startTime });
+
+    // Add request key to config for retrieval in response
+    config.headers = config.headers || {};
+    config.headers['X-Request-Key'] = requestKey;
+
+    logger.info(LogCategory.API, `API Request initiated`, {
+      method: config.method?.toUpperCase(),
+      url: config.url,
+      baseURL: config.baseURL,
+      requestId: requestId,
+      hasData: !!config.data,
+      hasAuth: !!config.headers?.Authorization,
+    });
+
+    return config;
+  },
+  (error) => {
+    logger.error(LogCategory.API, 'API Request setup failed', {}, error);
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor for comprehensive logging
+axiosInstance.interceptors.response.use(
+  (response) => {
+    const requestKey = response.config.headers?.['X-Request-Key'] as string;
+    const metadata = requestKey ? requestMetadata.get(requestKey) : undefined;
+    const { requestId, startTime } = metadata || {};
+    const duration = startTime ? performance.now() - startTime : 0;
+
+    // Clean up metadata
+    if (requestKey) {
+      requestMetadata.delete(requestKey);
+    }
+
+    logger.logApiCall(
+      response.config.method?.toUpperCase() || 'GET',
+      response.config.url || '',
+      response.status,
+      duration,
+      undefined,
+      requestId
+    );
+
+    return response;
+  },
+  (error) => {
+    const requestKey = error.config?.headers?.['X-Request-Key'] as string;
+    const metadata = requestKey ? requestMetadata.get(requestKey) : undefined;
+    const { requestId, startTime } = metadata || {};
+    const duration = startTime ? performance.now() - startTime : 0;
+
+    // Clean up metadata
+    if (requestKey) {
+      requestMetadata.delete(requestKey);
+    }
+
+    logger.logApiCall(
+      error.config?.method?.toUpperCase() || 'GET',
+      error.config?.url || '',
+      error.response?.status,
+      duration,
+      error.message,
+      requestId
+    );
+
+    return Promise.reject(error);
+  }
+);
 
 // --- API Client Instances ---
 
@@ -387,14 +474,16 @@ const api = {
   // --- Authentication ---
   register: async (userData: UserRegistrationData) => {
     if (authMode === 'mock') {
-      console.log("Using MOCK registration endpoint");
+      logger.info(LogCategory.AUTH, 'Using MOCK registration endpoint', {
+        email: userData.email
+      });
       // Call mock endpoint directly using axiosInstance
       // The backend mock router expects { email: string, password: string }
       // We only need email and password for the mock call, even if more data is present
       const mockRegisterData = { email: userData.email, password: userData.password };
       return axiosInstance.post('/mock/register', mockRegisterData);
     } else {
-      console.log("Using REAL registration endpoint (Not Implemented Yet)");
+      logger.warn(LogCategory.AUTH, 'Using REAL registration endpoint (Not Implemented Yet)');
       // TODO: Implement call to real registration endpoint (Cognito flow)
 
       // Example placeholder for real attorney registration
@@ -418,7 +507,10 @@ const api = {
   },
 
   registerAttorney: async (formData: AttorneyRegistrationData) => {
-    console.log("Using attorney signup endpoint");
+    logger.info(LogCategory.AUTH, 'Attorney signup initiated', {
+      email: formData.email,
+      jurisdiction: formData.jurisdiction
+    });
 
     // Prepare the signup data according to the backend schema
     const signupData = {
@@ -438,13 +530,19 @@ const api = {
       const response = await axiosInstance.post('/signup/attorney', signupData);
       return response.data;
     } catch (error) {
-      console.error('Attorney registration failed:', error);
+      logger.error(LogCategory.AUTH, 'Attorney registration failed', {
+        email: formData.email
+      }, error as Error);
       throw error;
     }
   },
 
   registerClient: async (formData: ClientRegistrationData) => {
-    console.log("Using client signup endpoint");
+    logger.info(LogCategory.AUTH, 'Client signup initiated', {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      countryOfBirth: formData.countryOfBirth
+    });
 
     // Prepare the signup data according to the backend schema
     const signupData = {
@@ -466,7 +564,10 @@ const api = {
       const response = await axiosInstance.post('/signup/client', signupData);
       return response.data;
     } catch (error) {
-      console.error('Client registration failed:', error);
+      logger.error(LogCategory.AUTH, 'Client registration failed', {
+        firstName: formData.firstName,
+        lastName: formData.lastName
+      }, error as Error);
       throw error;
     }
   },
@@ -509,7 +610,7 @@ export const registerUnified = async (
   roleData: RoleSpecificData
 ): Promise<UnifiedSignupResponse> => {
   try {
-    console.log('Registering user via unified signup:', {
+    logger.info(LogCategory.AUTH, 'Unified signup initiated', {
       email: signupData.email,
       role: signupData.primary_role
     });
@@ -519,10 +620,17 @@ export const registerUnified = async (
       role_data: roleData
     });
 
-    console.log('Unified signup successful:', response.data);
+    logger.info(LogCategory.AUTH, 'Unified signup successful', {
+      email: signupData.email,
+      userId: response.data.user_id,
+      role: response.data.primary_role
+    });
     return response.data;
   } catch (error) {
-    console.error('Unified signup failed:', error);
+    logger.error(LogCategory.AUTH, 'Unified signup failed', {
+      email: signupData.email,
+      role: signupData.primary_role
+    }, error as Error);
     throw error;
   }
 };
@@ -759,14 +867,14 @@ export const getCurrentLocation = async (): Promise<LocationData | null> => {
     // Check if location services are enabled
     const isLocationEnabled = await Location.hasServicesEnabledAsync();
     if (!isLocationEnabled) {
-      console.log('Location services are disabled');
+      logger.warn(LogCategory.LOCATION, 'Location services are disabled');
       return null;
     }
 
     // Request permission if not already granted
     const hasPermission = await requestLocationPermission();
     if (!hasPermission) {
-      console.log('Location permission denied');
+      logger.warn(LogCategory.LOCATION, 'Location permission denied by user');
       return null;
     }
 
@@ -778,7 +886,7 @@ export const getCurrentLocation = async (): Promise<LocationData | null> => {
     });
 
     if (!location) {
-      console.log('Failed to get location');
+      logger.error(LogCategory.LOCATION, 'Failed to get location coordinates');
       return null;
     }
 
@@ -788,7 +896,7 @@ export const getCurrentLocation = async (): Promise<LocationData | null> => {
       description: `GPS: ${location.coords.latitude.toFixed(4)}, ${location.coords.longitude.toFixed(4)}`,
     };
   } catch (error) {
-    console.error('Failed to get current location:', error);
+    logger.error(LogCategory.LOCATION, 'Failed to get current location', {}, error as Error);
     return null;
   }
 };

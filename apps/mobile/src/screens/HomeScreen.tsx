@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { deactivateEmergencyCase } from '../api/client';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../App';
+import { logger, LogCategory } from '../utils/logger';
 
 type HomeScreenProps = {
     navigation: NativeStackNavigationProp<RootStackParamList, 'Home'>;
@@ -41,7 +42,10 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
             const emergencyState = await EmergencyHandler.getEmergencyState();
             setEmergencyActive(emergencyState.activated);
         } catch (error) {
-            console.error('Failed to check emergency status:', error);
+            logger.error(LogCategory.EMERGENCY, 'Failed to check emergency status', {
+                userId: user?.id,
+                screen: 'HomeScreen'
+            }, error as Error);
         }
     };
 
@@ -51,7 +55,10 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
             await EmergencyHandler.activateEmergency();
             setEmergencyActive(true);
         } catch (error) {
-            console.error('Failed to handle emergency activation:', error);
+            logger.error(LogCategory.EMERGENCY, 'Failed to handle emergency activation', {
+                userId: user?.id,
+                screen: 'HomeScreen'
+            }, error as Error);
         }
     };
 
@@ -76,7 +83,10 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
             setEmergencyActive(false);
             setActiveCaseId(undefined);
         } catch (error) {
-            console.error('Failed to deactivate emergency:', error);
+            logger.error(LogCategory.EMERGENCY, 'Failed to deactivate emergency', {
+                userId: user?.id,
+                screen: 'HomeScreen'
+            }, error as Error);
         }
     };
 

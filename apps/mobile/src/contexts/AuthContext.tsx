@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { SecureStorage } from '../utils/secureStorage';
+import { logger, LogCategory } from '../utils/logger';
 import { getUserEmergencyStatus, EmergencyStatusResponse } from '../api/client';
 
 // Storage keys
@@ -109,12 +110,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                     setIsAuthenticated(true);
                 } else {
                     // Token expired, try to refresh
-                    console.log('Token expired, attempting refresh...');
+                    logger.info(LogCategory.AUTH, 'Token expired, attempting refresh', {
+                        userId: storedUser?.id,
+                        lastRefresh: new Date().toISOString()
+                    });
                     await clearStoredAuth();
                 }
             }
         } catch (error) {
-            console.error('Failed to initialize auth:', error);
+            logger.error(LogCategory.AUTH, 'Failed to initialize auth context', {}, error as Error);
             await clearStoredAuth();
         } finally {
             setIsLoading(false);
@@ -210,7 +214,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
             return true;
         } catch (error) {
-            console.error('Token refresh failed:', error);
+            logger.error(LogCategory.AUTH, 'Token refresh failed', {
+                userId: user?.id
+            }, error as Error);
             await logout();
             return false;
         }
@@ -229,7 +235,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             // Cache the status for offline access
             await SecureStorage.saveData(EMERGENCY_STATUS_KEY, status);
         } catch (error) {
-            console.error('Failed to fetch emergency status:', error);
+            logger.error(LogCategory.EMERGENCY, 'Failed to fetch emergency status', {
+                userId: user?.id
+            }, error as Error);
 
             // Try to load cached status
             try {
@@ -238,7 +246,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                     setEmergencyStatus(cachedStatus);
                 }
             } catch (cacheError) {
-                console.error('Failed to load cached emergency status:', cacheError);
+                logger.error(LogCategory.STORAGE, 'Failed to load cached emergency status', {
+                    userId: user?.id
+                }, cacheError as Error);
             }
         } finally {
             setEmergencyStatusLoading(false);
