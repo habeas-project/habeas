@@ -10,11 +10,14 @@ from fastapi.openapi.utils import get_openapi
 # Import routers
 from app.routers import (
     attorney_router,
-    client_router,
+    client_profile_router,
     emergency_contact_router,
+    emergency_router,
     example_router,
     health,  # Import the new health router
+    mock_auth_router,
     signup_router,
+    unified_signup_router,
     user_router,
 )
 
@@ -56,14 +59,13 @@ def root():
 app.include_router(health.router)  # Include the new health router
 app.include_router(example_router.router)
 app.include_router(attorney_router.router)
-app.include_router(client_router.router)
 app.include_router(emergency_contact_router.router)
+app.include_router(emergency_router.router)  # Include the new emergency router
 app.include_router(user_router.router)
 app.include_router(signup_router.router)
-
-# Conditionally register mock auth router
-if ENABLE_MOCK_AUTH:
-    app.include_router(mock_auth_router.router)
+app.include_router(mock_auth_router.router)
+app.include_router(unified_signup_router.router)
+app.include_router(client_profile_router.router)
 
 
 @app.get("/custom-docs", include_in_schema=False)

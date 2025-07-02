@@ -12,7 +12,7 @@ from app.database import Base
 from app.models.admin import Admin
 from app.models.attorney import Attorney
 from app.models.attorney_court_admission import attorney_court_admission_table
-from app.models.client import Client
+from app.models.client_profile import ClientProfile
 from app.models.court import Court
 from app.models.user import User
 
@@ -42,7 +42,7 @@ def create_all_tables(engine: Engine) -> list[str]:
     print(f"\nTables in test database: {tables}\n")
 
     # Verify critical tables exist
-    required_tables = ["users", "attorneys", "courts", "attorney_court_admissions", "clients", "admins"]
+    required_tables = ["users", "attorneys", "courts", "attorney_court_admissions", "client_profiles", "admins"]
     missing_tables = [table for table in required_tables if table not in tables]
 
     if missing_tables:
@@ -61,9 +61,9 @@ def create_all_tables(engine: Engine) -> list[str]:
                 elif missing == "courts":
                     print(f"Attempting to create missing table: {missing}")
                     Court.__table__.create(bind=engine, checkfirst=True)
-                elif missing == "clients":
+                elif missing == "client_profiles":
                     print(f"Attempting to create missing table: {missing}")
-                    Client.__table__.create(bind=engine, checkfirst=True)
+                    ClientProfile.__table__.create(bind=engine, checkfirst=True)
                 elif missing == "admins":
                     print(f"Attempting to create missing table: {missing}")
                     Admin.__table__.create(bind=engine, checkfirst=True)

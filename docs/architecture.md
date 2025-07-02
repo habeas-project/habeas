@@ -8,6 +8,12 @@ Habeas is an open-source project designed to help detained individuals connect w
 
 The project follows a monorepo structure with a React Native mobile application frontend (written in TypeScript) and a Python FastAPI backend that communicates with a PostgreSQL database. The architecture separates the frontend and backend while providing a clear organization for shared resources.
 
+**Key Architectural Features:**
+- **Multi-Profile Data Model**: Support allowing family helpers to manage multiple client profiles
+- **Unified Signup Workflow**: Human-centered signup flow with progressive disclosure
+- **Role-Based Architecture**: Single user accounts with role-specific capabilities
+- **Enhanced Profile Management**: Support for users managing multiple client profiles under one account
+
 ## Repository Structure
 
 ```
@@ -48,18 +54,34 @@ The project follows a monorepo structure with a React Native mobile application 
 ## Technology Stack
 
 ### Frontend (Mobile)
-- **Framework:** React Native
+- **Framework:** React Native (Expo managed workflow)
 - **Language:** TypeScript
 - **Package Management:** Yarn Classic (v1)
-- **Key Dependencies:** (To be determined as development progresses)
+- **Key Dependencies:**
+  - `expo-location`: GPS location services with permission management
+  - `@react-native-async-storage/async-storage`: Persistent authentication storage
+  - `@react-navigation/native`: Type-safe navigation with stack and tab routing
+  - Navigation and UI components (React Navigation, React Native Elements)
 
 ### Backend
 - **Framework:** FastAPI
 - **Language:** Python 3.12
 - **Database:** PostgreSQL
-- **ORM:** SQLAlchemy or SQLModel
+- **ORM:** SQLAlchemy with SQLModel patterns
 - **Package Management:** uv
 - **API Documentation:** Auto-generated with Swagger/OpenAPI (built into FastAPI)
+- **Background Jobs:** Celery with Redis message broker
+- **External Services:**
+  - **Email:** AWS SES for cost-effective, scalable notification delivery
+  - **SMS:** Twilio for text message notifications
+  - **Geocoding:** Nominatim/OpenStreetMap for location services
+- **Key Dependencies:**
+  - `boto3`: AWS SES email notification delivery
+  - `twilio`: SMS notification delivery
+  - `celery[redis]`: Background task processing with Redis broker
+  - `requests`: HTTP client for geocoding API calls
+  - `phonenumbers`: Phone number validation and formatting
+  - `pydantic[email]`: Email validation
 
 ### Development Tools
 - **Monorepo Management:** Yarn Workspaces
@@ -79,13 +101,269 @@ The API will handle authentication, data retrieval/storage, and any other server
 
 ### API Router Architecture
 
-The backend implements a **three-router architecture** that provides clear separation of concerns:
+The backend implements an **enhanced router architecture** that provides clear separation of concerns while supporting the new multi-profile system and emergency response capabilities:
 
-- **`/signup`** - User registration workflows (creates User + Attorney/Client + handles authentication)
+- **`/signup`** - User registration workflows (creates User + Attorney/ClientProfile + handles authentication)
+- **`/unified-signup`** - **NEW**: Human-centered unified signup with role-based routing
+- **`/client-profiles`** - **NEW**: Multi-profile management for client profiles
 - **`/users`** - User entity management (authentication system integration, profile updates)
 - **`/attorneys`** - Attorney entity management (discovery, profiles, court admissions)
+- **`/emergency`** - **NEW**: Emergency case management and attorney notification system
 
-This architecture separates complex signup workflows from standard CRUD operations, ensuring transaction safety for multi-entity creation while maintaining clear API semantics. For detailed information about router responsibilities and design rationale, see the [Router Architecture section in technical.md](technical.md#router-architecture).
+#### Emergency Router (`/emergency`)
+
+The emergency router provides comprehensive emergency response capabilities:
+
+- **Case Management**: Create, deactivate, and track emergency cases
+- **Attorney Notifications**: Immediate, escalated, and daily digest notifications
+- **Court Jurisdiction**: GPS-based court determination and jurisdiction mapping
+- **Case Assignment**: Attorney case acceptance and voluntary assignment
+- **Notification Preferences**: Attorney notification channel management
+- **Status Tracking**: Real-time case status updates and progress monitoring
+
+This enhanced architecture supports both traditional single-profile users and modern multi-profile family helpers, ensuring transaction safety for multi-entity creation while maintaining clear API semantics. For detailed information about router responsibilities and design rationale, see the [Router Architecture section in technical.md](technical.md#router-architecture).
+
+## Data Model Architecture
+
+### Enhanced User Model
+
+The system uses an **enhanced approach** that combines the benefits of unified user accounts with multi-profile support:
+
+```
+User (primary_role: attorney|client_helper|admin)
+├── Attorney (1:1) - if primary_role = attorney
+├── ClientProfile (1:many) - if primary_role = client_helper
+└── Admin (1:1) - if primary_role = admin
+```
+
+### Key Model Changes
+
+**ClientProfile Model** (replaces Client):
+- **Multi-Profile Support**: Users can have multiple ClientProfile records
+- **Profile Identification**: `profile_name` and `is_self` fields for profile management
+- **Family Helper Support**: Allows one account to manage multiple people's information
+- **Clean Relationships**: Proper foreign keys with `client_profiles` table
+
+**Enhanced User Model**:
+- **Primary Role Field**: `primary_role` enum (attorney, client_helper, admin)
+- **Multi-Profile Relationships**: `client_profiles` relationship for 1:many support
+- **Backward Compatible**: Maintains existing attorney and admin relationships
+
+**Updated Emergency Contacts**:
+- **ClientProfile Integration**: References `client_profile_id` instead of `client_id`
+- **Cascade Support**: Proper deletion cascading for data integrity
+
+**Emergency Case System** (Operational):
+- **EmergencyCase Model**: Tracks detention cases with GPS coordinates and court assignments
+- **AttorneyNotificationPreference Model**: Multi-channel notification preferences (email, SMS, push)
+- **Court Integration**: Leverages existing Court and CourtCounty models for jurisdiction mapping
+- **Location Services**: GPS coordinate capture with geocoding to court jurisdictions
+- **Background Jobs**: Celery/Redis system for escalated notifications and daily digest
+- **Notification Delivery**: Multi-channel system (email/SMS/push) with AWS SES and Twilio
+
+### Architecture Benefits
+
+1. **Multi-Profile Support**: Family helpers can manage multiple client profiles
+2. **Clean Data Model**: No duplicate user records, proper normalization
+3. **Flexible Roles**: Users can have attorney capability + client profiles
+4. **Simplified Signup**: Single entry point with progressive disclosure
+5. **Enhanced UX**: Human-centered language and workflow
+6. **Emergency Response**: Real-time emergency case creation and attorney notification system
+7. **Location Intelligence**: GPS-based court jurisdiction determination and address geocoding
+
+## Mobile Application Architecture
+
+### Unified Signup Flow
+
+The mobile app implements a **human-centered signup workflow** with progressive disclosure:
+
+```
+HomeScreen → "Get Help" → UnifiedSignupScreen
+    ↓
+Intent Selection:
+- "I'm worried that ICE may detain me or a loved one"
+- "I am an attorney willing to file a habeas petition"
+    ↓
+Account Info (email, password)
+    ↓
+Role-Specific Details (based on intent)
+    ↓
+Confirmation & Account Creation
+    ↓
+Success → Return to HomeScreen
+```
+
+### Key UX Improvements
+
+- **Human-Centered Language**: "I'm worried that ICE may detain me or a loved one" vs technical role selection
+- **Empathetic Messaging**: "Get connected with legal help and prepare for potential detention"
+- **Unified Entry Point**: Single "Get Help" button replaces separate signup buttons
+- **Progressive Disclosure**: Intent → Account → Details → Confirmation flow
+- **Role-Based Forms**: Different form fields based on user selection
+
+### Screen Architecture
+
+#### Client-Facing Screens
+- **UnifiedSignupScreen**: 4-step progressive disclosure signup process
+- **HomeScreen**: Simplified with single "Get Help" entry point + Emergency Slider
+- **Profile Management**: Future screens for managing multiple client profiles
+- **Emergency Components**: Emergency slider, status display, and setup screens
+
+#### Attorney-Facing Screens (Phase 9B Complete)
+- **AttorneyDashboardScreen**: Professional dashboard with case statistics and quick actions
+- **AvailableCasesScreen**: Complete case browsing interface with filtering and acceptance workflow
+- **Attorney Navigation**: Role-based routing with attorney-specific navigation stack
+- **CaseDetailModal**: Component structure for detailed case viewing (Phase 9C)
+
+### Emergency System Architecture
+
+The mobile app implements a **complete and operational** emergency response system with conditional display, multi-scenario support, and attorney notification workflow:
+
+```
+HomeScreen (Authenticated User)
+    ↓
+Emergency Status Check → Has Emergency Info?
+    ↓                           ↓
+    Yes                         No
+    ↓                           ↓
+Emergency Slider            Emergency Setup Screen
+    ↓
+Activation Options:
+- "I am about to be detained" (self)
+- "Report Loved One Detention" (family member)
+    ↓
+Location Capture:
+- GPS coordinates (with permission)
+- Manual location entry (fallback)
+    ↓
+Case Creation & Attorney Notification
+    ↓
+Status Display: "Case posted - attorneys notified"
+    ↓
+Real-time Updates: "Attorney accepted case: [Name]"
+```
+
+#### Emergency Components
+
+- **EmergencySlider**: Conditional display with "I am about to be detained" activation
+- **EmergencyStatusDisplay**: Post-activation status with real-time attorney updates
+- **EmergencySetupScreen**: Guided setup for users without emergency information
+- **LovedOneEmergencyModal**: Multi-step loved one detention reporting
+- **DetentionLocationInput**: Location capture with city/state or zip code input
+- **LocationPermissionModal**: GPS permission education and request
+- **PhoneSecurityModal**: Platform-specific phone locking instructions
+
+#### Location Services Integration
+
+- **GPS Capture**: expo-location with permission management
+- **Geocoding**: Backend reverse geocoding via Nominatim/OpenStreetMap
+- **Court Mapping**: GPS coordinates to federal district court jurisdiction
+- **Fallback Flow**: Manual location entry if GPS unavailable
+
+#### Attorney Interface Integration (Phase 9B Complete)
+
+- **Role Detection**: AuthContext automatically detects attorney vs client users
+- **Attorney Dashboard**: Professional mobile interface with case statistics and navigation
+- **Case Management**: Complete case browsing with urgency indicators and filtering
+- **Case Acceptance**: Confirmation dialogs and success feedback workflow
+- **Professional UI**: Attorney-focused design optimized for mobile devices
+- **Mock Data Integration**: Realistic test data aligned with backend API structure
+
+## Service Layer Architecture
+
+The backend implements a comprehensive service layer that encapsulates business logic and external integrations:
+
+### Core Services
+
+#### EmergencyService (`app/services/emergency_service.py`)
+- **Case Management**: Create, deactivate, and track emergency cases
+- **Court Jurisdiction**: Determine federal district court from location data
+- **Attorney Notification**: Integrate with NotificationService for multi-channel alerts
+- **Status Tracking**: Monitor case progression and attorney assignment
+- **Preference Management**: Handle attorney notification preferences
+
+#### NotificationService (`app/services/notification_service.py`)
+- **Multi-Channel Delivery**: Email (AWS SES), SMS (Twilio), Push (framework ready)
+- **Template System**: Professional emergency notification templates
+- **Preference Enforcement**: Respect attorney notification channel preferences
+- **Delivery Tracking**: Monitor notification success/failure with retry logic
+- **Configuration Testing**: Built-in service health checks
+
+#### GeocodingService (`app/services/geocoding_service.py`)
+- **Reverse Geocoding**: Convert GPS coordinates to addresses via Nominatim/OpenStreetMap
+- **Court Mapping**: Determine federal district court jurisdiction from coordinates
+- **Rate Limiting**: Comply with free service requirements (1 request/second)
+- **Error Handling**: Graceful fallback for API failures
+- **Coordinate Validation**: Ensure GPS coordinates are within valid bounds
+
+### External Service Integration
+
+#### Email Notifications (AWS SES)
+- **Professional Templates**: HTML email with action buttons and emergency branding
+- **Delivery Tracking**: Message ID tracking and delivery status monitoring
+- **Error Handling**: Graceful degradation when service unavailable
+
+#### SMS Notifications (Twilio)
+- **Concise Messaging**: Automatic truncation for SMS length limits
+- **Phone Number Management**: Separate SMS numbers from attorney contact info
+- **Delivery Status**: Track SMS delivery and handle failures
+
+#### Location Services (Nominatim/OpenStreetMap)
+- **Free Service**: No API key required for basic geocoding
+- **Rate Limiting**: Built-in compliance with service terms
+- **Address Parsing**: Extract city, county, state, postal code
+- **Court Jurisdiction**: Map location data to federal district courts
+
+### Service Integration Patterns
+
+#### Emergency Case Creation Flow
+```
+1. EmergencyService.create_emergency_case()
+2. → GeocodingService.geocode_and_determine_jurisdiction()
+3. → EmergencyService._notify_attorneys_for_court()
+4. → NotificationService.send_immediate_case_notification()
+5. → AWS SES/Twilio API calls (based on preferences)
+6. → Schedule background jobs for escalated notifications
+```
+
+#### Notification Scheduling (Celery/Redis Background Jobs)
+```
+1. Immediate: T+0 (case creation) - Direct service call
+2. Escalated: T+1 hour - Celery scheduled task
+3. Daily Digest: Daily at configured time - Celery beat scheduled task
+```
+
+## Background Job System Architecture
+
+The system implements a comprehensive background job infrastructure using **Celery** with **Redis** as the message broker for scheduled emergency notifications:
+
+### Background Job Components
+
+#### Celery Configuration (`apps/backend/app/celery_app.py`)
+- **Worker Process**: Handles background task execution
+- **Beat Scheduler**: Manages periodic task scheduling
+- **Redis Integration**: Message broker and result backend
+- **Task Monitoring**: Flower web interface for job monitoring
+
+#### Background Tasks (`apps/backend/app/tasks.py`)
+- **`send_escalated_notifications()`**: 1-hour follow-up for unaccepted cases
+- **`send_daily_digest()`**: Daily summary of unassigned cases to all attorneys
+- **Retry Logic**: Automatic retry on failure with exponential backoff
+- **Error Handling**: Comprehensive logging and notification on persistent failures
+
+#### Docker Integration
+- **Celery Worker**: `docker-compose.yml` service for task execution
+- **Celery Beat**: Separate service for scheduled task management
+- **Redis Service**: Message broker with persistence and monitoring
+- **Flower Monitor**: Web interface for job monitoring and management
+
+### Background Job Workflow
+
+1. **Emergency Case Creation**: Immediate notifications sent via direct service calls
+2. **Escalated Scheduling**: 1-hour task scheduled via `celery_app.send_task()`
+3. **Daily Digest Scheduling**: Configured via Celery beat for daily execution
+4. **Task Execution**: Workers process jobs asynchronously with retry logic
+5. **Monitoring**: Flower web interface provides real-time job status and metrics
 
 ## Testing Architecture
 

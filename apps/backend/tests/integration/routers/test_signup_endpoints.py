@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.models.admin import Admin
 from app.models.attorney import Attorney
-from app.models.client import Client
+from app.models.client_profile import ClientProfile
 from app.models.user import User
 
 
@@ -92,7 +92,7 @@ class TestSignupEndpoints:
         error_data = response2.json()
         assert "attorney with this email already exists" in error_data["detail"]
 
-    # --- Client Signup Tests ---
+    # --- ClientProfile Signup Tests ---
 
     def test_client_signup_success(self, client, session: Session):
         """Test successful client registration."""
@@ -136,10 +136,10 @@ class TestSignupEndpoints:
 
         # Verify database records
         db_client = (
-            session.query(Client)
+            session.query(ClientProfile)
             .filter(
-                Client.first_name == client_data["first_name"],
-                Client.last_name == client_data["last_name"],
+                ClientProfile.first_name == client_data["first_name"],
+                ClientProfile.last_name == client_data["last_name"],
             )
             .first()
         )
@@ -334,7 +334,7 @@ class TestSignupEndpoints:
         client_response = client.post(
             "/signup/client",
             json={
-                "first_name": "Client",
+                "first_name": "ClientProfile",
                 "last_name": "Johnson",
                 "country_of_birth": "USA",
                 "birth_date": "1990-01-01",
@@ -533,11 +533,11 @@ class TestSignupEndpoints:
         assert db_user.admin == db_admin
 
     def test_user_client_relationship_integrity(self, client, session: Session):
-        """Test that User and Client records are properly linked."""
+        """Test that User and ClientProfile records are properly linked."""
         # Arrange
         client_data = {
             "first_name": "Linked",
-            "last_name": "Client",
+            "last_name": "ClientProfile",
             "country_of_birth": "USA",
             "birth_date": "1990-01-01",
             "password": "SecurePassword123!",
@@ -548,7 +548,11 @@ class TestSignupEndpoints:
         assert response.status_code == 201
 
         # Assert - Verify proper linking
-        db_client = session.query(Client).filter(Client.first_name == "Linked", Client.last_name == "Client").first()
+        db_client = (
+            session.query(ClientProfile)
+            .filter(ClientProfile.first_name == "Linked", ClientProfile.last_name == "ClientProfile")
+            .first()
+        )
         assert db_client is not None
         assert db_client.user_id is not None
 
@@ -605,7 +609,7 @@ class TestSignupEndpoints:
 
         # Verify all were created successfully
         attorney_count = session.query(Attorney).count()
-        client_count = session.query(Client).count()
+        client_count = session.query(ClientProfile).count()
         admin_count = session.query(Admin).count()
 
         assert attorney_count >= 1

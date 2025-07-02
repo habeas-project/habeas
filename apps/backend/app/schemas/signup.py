@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.schemas.admin import AdminBase
 from app.schemas.attorney import AttorneyBase
-from app.schemas.client import ClientBase
+from app.schemas.client_profile import ClientProfileBase
 from app.schemas.user import UserResponse
 
 
@@ -51,14 +51,14 @@ class AttorneyInfo(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class ClientSignupRequest(ClientBase):
+class ClientSignupRequest(ClientProfileBase):
     """Schema for client signup request - combines client data with password"""
 
     password: str = Field(
         ..., min_length=8, description="Password for the client account", examples=["SecurePassword123!"]
     )
 
-    # The client fields (first_name, last_name, country_of_birth, birth_date, etc.) are inherited from ClientBase
+    # The client fields (first_name, last_name, country_of_birth, birth_date, etc.) are inherited from ClientProfileBase
 
 
 class ClientSignupResponse(BaseModel):

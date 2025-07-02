@@ -40,8 +40,21 @@ When someone is in imminent threat of detention, they or their friends and famil
 ## Documentation
 
 Project documentation is available in the `docs/` directory:
-- [Architecture](docs/architecture.md) - Application architecture and technology stack
-- [Technical](docs/technical.md) - Technical details, tools, and implementation guidelines
+
+### For Users
+- [User Guide](docs/user-guide.md) - Complete guide to using the app, including the new unified signup flow and multi-profile management
+
+### For Developers
+- [Architecture](docs/architecture.md) - Application architecture and multi-profile data model
+- [Technical](docs/technical.md) - Comprehensive technical documentation including development setup, testing, and data ingestion
+- [API Reference](docs/api-reference.md) - Complete API documentation for the multi-profile architecture
+- [Database Schema](docs/database-schema.md) - Database schema documentation with ClientProfile model
+
+### Key Features (v2.0 - Multi-Profile Architecture)
+- **Human-Centered Signup**: Empathetic language and progressive disclosure
+- **Multi-Profile Support**: Family helpers can manage multiple client profiles under one account
+- **Unified API**: Modern endpoints with backward compatibility
+- **Enhanced UX**: Simplified workflow designed for stressful situations
 
 
 This project is still in the development phase. There's an amazing team of engineers and lawyers working to build this. Please contact us if you are interested in being involved:

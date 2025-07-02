@@ -13,6 +13,7 @@ services:
 
     depends_on:
       - db
+      - redis
 
   db:
     image: postgres:16-alpine
@@ -28,6 +29,73 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    command: redis-server --appendonly yes
+
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: celery -A app.celery_app worker --loglevel=info --queues=default,priority
+    env_file:
+      - ../.env
+    volumes:
+      - ./backend/app:/app/app
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+
+  celery-beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: celery -A app.celery_app beat --loglevel=info --scheduler=celery.beat:PersistentScheduler
+    env_file:
+      - ../.env
+    volumes:
+      - ./backend/app:/app/app
+      - celery_beat_data:/app/celerybeat-schedule
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+
+  celery-flower:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: celery -A app.celery_app flower --port=5555
+    ports:
+      - "127.0.0.1:5555:5555"
+    env_file:
+      - ../.env
+    volumes:
+      - ./backend/app:/app/app
+    depends_on:
+      - redis
+    restart: unless-stopped
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
 
   migration:
     build:
@@ -62,3 +130,5 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
+  celery_beat_data:

@@ -30,11 +30,20 @@
     },
     "newArchEnabled": true,
     "plugins": [
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "This app needs access to location to connect you with attorneys in your area during emergencies.",
+          "locationAlwaysPermission": "This app needs access to location to connect you with attorneys in your area during emergencies.",
+          "locationWhenInUsePermission": "This app needs access to location to connect you with attorneys in your area during emergencies.",
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false,
+          "isAndroidForegroundServiceEnabled": false
+        }
+      ]
     ],
     "extra": {
-      "EXPO_PUBLIC_API_BASE_URL": "http://localhost:8000",
-      "EXPO_PUBLIC_AUTH_MODE": "cognito",
       "eas": {
         "projectId": "YOUR_EAS_PROJECT_ID"
       }
